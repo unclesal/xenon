@@ -1,0 +1,73 @@
+QWidget {
+    background: yellow;
+}
+/*
+QTabWidget QTabBar::tab {
+    background-color: #136ba2;
+};
+*/
+
+/*
+QTabWidget QTabBar{background-color: #136ba2; }
+QTabWidget QTabBar::tab{background-color: #136ba2; height: 50px; color: #e6e6e6}
+*/
+
+/*
+QTabWidget::pane { 
+    border-top: 2px solid #C2C7CB;
+}
+*/
+
+/*
+QTabWidget::tab-bar {
+    background-color: #FF0000;
+    left: 5px; 
+}
+*/
+
+/* Style the tab using the tab sub-control. Note that it reads QTabBar _not_ QTabWidget */
+/*
+QTabBar::tab {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E1E1E1, stop: 0.4 #DDDDDD, stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
+    border: 2px solid #C4C4C3;
+    border-bottom-color: #C2C7CB; 
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    min-width: 8ex;
+    padding: 2px;
+}
+*/
+/*
+QTabBar::tab:selected, QTabBar::tab:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fafafa, stop: 0.4 #f4f4f4, stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+}
+*/
+/*
+QTabBar::tab:selected {
+    border-color: #9B9B9B;
+    border-bottom-color: #C2C7CB; 
+}
+*/
+/*
+QTabBar::tab:!selected {
+    margin-top: 2px; 
+}
+*/
+/*
+QTabBar::tab:selected {  
+    margin-left: -4px; 
+    margin-right: -4px; 
+} 
+
+QTabBar::tab:first:selected { 
+    margin-left: 0;  
+} 
+
+QTabBar::tab:last:selected { 
+    margin-right: 0; 
+} 
+
+QTabBar::tab:only-one { 
+    margin: 0; 
+}
+*/
