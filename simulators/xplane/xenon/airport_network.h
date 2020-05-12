@@ -5,16 +5,59 @@
 // *********************************************************************************************************************
 #pragma once
 #include <string>
-#include <lemon/list_graph.h>
-#include <lemon/maps.h>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
 
-using namespace lemon;
+#include "structures.h"
+
 using namespace std;
+
 namespace xenon {
 
-    class AirportNetwork: public ListDigraph {
+//    point1.set<0>(1.0); 2
+//    point1.set<1>(2.0);
+//
+//    double x = point1.get<0>(); 3
+//    double y = point1.get<1>();
+
+    class AirportNetwork {
 
         public:
+
+            struct node_t {
+                // Latitude of node in decimal degrees Eight decimal places supported
+                // double latitude = 0.0;
+                // Longitude of node in decimal degrees Eight decimal places supported
+                // double longitude = 0.0;
+                boost_location_t location = {
+                    0.0, 0.0, 0.0
+                };
+
+                // Usage of node in network (begin or end a taxi path, or both)
+                // “dest”, “init”, “both” or “junc”
+                string usage;
+                // Node identifier (defined in 0 based sequence, ascending)
+                // Integer. Must be unique within scope of an airport.
+                // Минус 1 означает, что реально узла - нет.
+                int xp_id = -1;
+                // Node name. Not currently used. String (max 16 characters)
+                string name = "";
+
+//                location_t location() {
+//                    return location_t {
+//                        .latitude = latitude,
+//                        .longitude = longitude
+//                    };
+//                };
+            };
+
+            struct active_zone_t {
+                string classification;
+                string runways;
+            };
+
+            // typedef boost::graph_traits<graph_t>::vertex_descriptor vertex_descriptor_t;
 
             // Типы транспорта, для которых предназначена данная рулежка (ребро графа).
             enum vehicles_t {
@@ -31,34 +74,48 @@ namespace xenon {
                 WAY_TAXIWAY
             };
 
-            struct active_zone_t {
-                string classification;
-                string runways;
+            struct edge_t {
+                vehicles_t vehicles = VT_UNKNOWN;
+                // Node identifier for start of edge Integer. Must refer to valid node (row code ‘1201’)
+                int xp_start_id = -1;
+                // Node identifier for end of edge Integer. Must refer to valid node (row code ‘1201’)
+                int xp_end_id = -1;
+                // Edge can be used in both directions “twoway” or “oneway”
+                // string directions = "";
+                // Node is on a regular taxiway. If on “runway” a clearance is needed from ATC
+                // “taxiway” or “runway”
+                // string type = "";
+                way_type_t way_type = WAY_NONE;
+                // Taxiway identifier. Used to build ATC taxi clearances (eg. “.. .taxi via A, T, Q”)
+                // String. Taxiway or runway identifier (eg. “A” or “16L/34R”)
+                string name = "";
+                vector< active_zone_t > active_zones;
             };
 
+            // Описание собственно графа.
+            typedef boost::adjacency_list<
+                // selects the STL list container to store the OutEdge list
+                boost::listS,
+                // selects the STL vector container to store the vertices
+                boost::vecS,
+                boost::directedS,
+                node_t, edge_t> graph_t;
+
             AirportNetwork();
-            AirportNetwork & operator = ( const AirportNetwork & anet );
+            AirportNetwork & operator = ( const AirportNetwork & anet ) = default;
             ~AirportNetwork() = default;
 
-            Digraph::NodeMap<double>                    node_latitude;
-            Digraph::NodeMap<double>                    node_longitude;
-            // Оригинальный идентификатор узла в X-Plane.
-            Digraph::NodeMap<int>                       node_xp_id;
-            // Usage of node in network (begin or end a taxi path, or both)
-            // “dest”, “init”, “both” or “junc”
-            Digraph::NodeMap<string>                    node_usage;
-            Digraph::NodeMap<string>                    node_name;
+            void add_apt_dat_node( const string & line, const vector<string> & contents );
+            void add_apt_dat_edge( int i_type, const string & line, const vector<string> & contents );
+            void add_apt_dat_active_zone( const string & line, const vector<string> & contents );
 
-            ListDigraph::NodeIt get_node_by_xp_id( const int & xp_id );
-
-            Digraph::ArcMap<vehicles_t>                 arc_vehicle_type;
-            Digraph::ArcMap<way_type_t>                 arc_way_type;
-            Digraph::ArcMap< string >                   arc_name;
-            Digraph::ArcMap< vector<active_zone_t> >    arc_active_zones;
+            graph_t::vertex_descriptor get_node_by_xp_id( const int & xp_id );
 
         private:
 
-
+            graph_t __graph;
+            graph_t::edge_descriptor __last_added_direct_edge;
+            graph_t::edge_descriptor __last_added_reverse_edge;
     };
 
 };

@@ -442,6 +442,7 @@ namespace xenon {
             Airport( const Airport & apt ) {
                 * this = apt;
             };
+            Airport & operator = ( const Airport & apt ) = default;
             virtual ~Airport() = default;
             // Airport & operator = ( const Airport & apt );
             // Получить ближайший по координатам.

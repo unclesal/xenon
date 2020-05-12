@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(airport LANGUAGES C CXX)
 
-find_package(LEMON REQUIRED)
+# find_package(LEMON REQUIRED)
+
 
 include_directories(
     ../../common
@@ -20,7 +21,7 @@ target_sources(airport PUBLIC
 #    ../../simulators/xplane/xenon/exceptions.h
 )
 
-if (LEMON_FOUND)
-    include_directories(${LEMON_INCLUDE_DIRS})
-    # target_link_libraries (airport ${LEMON_LIBRARIES})
-endif (LEMON_FOUND)
+#if (LEMON_FOUND)
+#    include_directories(${LEMON_INCLUDE_DIRS})
+#    # target_link_libraries (airport ${LEMON_LIBRARIES})
+#endif (LEMON_FOUND)

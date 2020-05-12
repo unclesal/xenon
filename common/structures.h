@@ -6,6 +6,9 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
+
 #include "constants.h"
 
 using namespace std;
@@ -30,6 +33,11 @@ namespace xenon {
         double longitude = 0.0;
         double altitude = 0.0;
     };
+
+    typedef boost::geometry::model::point<
+        double, 3, boost::geometry::cs::geographic < boost::geometry::degree
+        >> boost_location_t;
+
 
     // Текущие углы OGL (в 3D игровом пространстве).
     struct rotation_t {

@@ -184,9 +184,6 @@ void Airport::read( const string & full_path_to_apt_dat ) {
     node_container_t * node_container = nullptr;
     startup_location_t * startup_location = nullptr;
     traffic_flow_t * traffic_flow = nullptr;
-    // Последние id добавленных ребер графа, в прямом и обратном направлении.
-    int last_direct_arc_id = -1;
-    int last_reverse_arc_id = -1;
 
     ifstream file( full_path_to_apt_dat );
 
@@ -654,110 +651,47 @@ void Airport::read( const string & full_path_to_apt_dat ) {
         }
 
         if ( i_type == 1201 ) {
-            // taxi routing node.
+            // taxi routing NODE.
             if ( ! apt ) throw runtime_error("got taxi routing node but apt is emtpy, line=" + to_string( lines_count ));
 
-            // Old style, x-plane structure. TODO must be delete.
-            taxi_network_routing_node_t old_style_node;
-            old_style_node.latitude = stod( contents[1] );
-            old_style_node.longitude = stod( contents[2] );
-            old_style_node.usage = contents[3];
-            old_style_node.id = stoi( contents[4] );
-            if (contents.size() >= 6 ) {
-                pos = line.find( contents[5] );
-                old_style_node.name = line.substr( pos );
-            }
-            apt->_taxi_network.nodes.push_back( old_style_node );
+//            // Old style, x-plane structure.
+//            taxi_network_routing_node_t old_style_node;
+//            old_style_node.latitude = stod( contents[1] );
+//            old_style_node.longitude = stod( contents[2] );
+//            old_style_node.usage = contents[3];
+//            old_style_node.id = stoi( contents[4] );
+//            if (contents.size() >= 6 ) {
+//                pos = line.find( contents[5] );
+//                old_style_node.name = line.substr( pos );
+//            }
+//            apt->_taxi_network.nodes.push_back( old_style_node );
 
-            // using lemon graph
-
-            ListDigraph::Node lemon_node = apt->_routes.addNode();
-            apt->_routes.node_latitude[lemon_node] = stod( contents[1] );
-            apt->_routes.node_longitude[lemon_node] = stod( contents[2] );
-            apt->_routes.node_usage[lemon_node] = contents[3];
-            apt->_routes.node_xp_id[lemon_node] = stoi( contents[4] );
-            if (contents.size() >= 6 ) {
-                pos = line.find( contents[5] );
-                apt->_routes.node_name[lemon_node] = line.substr( pos );
-            }
+            // using airport network
+            apt->_routes.add_apt_dat_node( line, contents );
 
             continue;
         }
 
         if (( i_type == 1202 ) || ( i_type == 1206 )) {
-            // Taxi routing edge. Segment in taxi routing network
+            // Taxi routing EDGE. Segment in taxi routing network
             if ( ! apt ) throw runtime_error("got routing edge but apt is empty, line=" + to_string( lines_count ));
+            apt->_routes.add_apt_dat_edge( i_type, line, contents );
 
-            // old style, native x-plane graph.
-            taxi_network_routing_edge_t old_style_edge;
-            old_style_edge.start_id = stoi( contents[1] );
-            old_style_edge.end_id = stoi( contents[2] );
-            old_style_edge.directions = contents[3];
-            if ( contents.size() >= 5 ) {
-                // Он, оказывается, тоже не является обязательным.
-                old_style_edge.type = contents[4];
-                if ( contents.size() >= 6 ) {
-                    pos = line.rfind( contents[ 5 ] );
-                    old_style_edge.name = line.substr( pos );
-                }
-            }
-            if ( i_type == 1202 ) apt->_taxi_network.edges.push_back( old_style_edge );
-            else apt->_taxi_network.ground_vehicle_edges.push_back( old_style_edge );
-
-            // new style, lemon-based.
-            last_direct_arc_id = -1;
-            last_reverse_arc_id = -1;
-
-            auto vehicle_type = AirportNetwork::VT_UNKNOWN;
-            i_type == 1202 ?
-                vehicle_type = AirportNetwork::VT_AIRCRAFTS
-                : vehicle_type = AirportNetwork::VT_GROUND_VEHICLES;
-
-            auto way_type = AirportNetwork::WAY_NONE;
-            string way_name;
-
-            if ( contents.size() >= 5 ) {
-                // Он, оказывается, тоже не является обязательным.
-                if ( contents[4] == "runway" ) way_type = AirportNetwork::WAY_RUNWAY;
-                else if ( contents[4] == "taxiway" ) way_type = AirportNetwork::WAY_TAXIWAY;
-                else throw runtime_error(
-                    "Unhandled way type " + contents[4] + ", line=" + to_string(lines_count)
-                );
-
-                if ( contents.size() >= 6 ) {
-                    pos = line.rfind( contents[ 5 ] );
-                    way_name = line.substr( pos );
-                }
-            }
-
-            int start_id = stoi( contents[1] );
-            int end_id = stoi( contents[2] );
-            // Edge can be used in both directions “twoway” or “oneway”
-            string directions = contents[3];
-            // Пробуем найти узлы для данного ребра. Они уже должны быть в графе.
-            auto start_node = apt->_routes.get_node_by_xp_id( start_id );
-            auto end_node = apt->_routes.get_node_by_xp_id( end_id );
-            if (( start_node == INVALID ) || ( end_node == INVALID ))
-                throw runtime_error(
-                    "node " + to_string(start_id) + " or " + to_string(end_id)
-                    + " not found for edge. Line=" + to_string( lines_count )
-                );
-            // Прямой путь, т.е. от начала к концу, будет в
-            // любом случае, это обусловлено самим X-Plane.
-            auto arc_direct = apt->_routes.addArc(start_node, end_node);
-            last_direct_arc_id = ListDigraph::id(arc_direct);
-            apt->_routes.arc_vehicle_type[arc_direct] = vehicle_type;
-            apt->_routes.arc_way_type[ arc_direct ] = way_type;
-            apt->_routes.arc_name[ arc_direct ] = way_name;
-
-            if ( directions == "twoway" ) {
-                // Если двухсторонняя, то есть и обратное ребро тоже.
-                auto arc_reverse = apt->_routes.addArc( end_node, start_node );
-                last_reverse_arc_id = ListDigraph::id( arc_reverse );
-                apt->_routes.arc_vehicle_type[ arc_reverse ] = vehicle_type;
-                apt->_routes.arc_way_type[ arc_reverse ] = way_type;
-                apt->_routes.arc_name[ arc_reverse ] = way_name;
-            }
+//            // old style, native x-plane graph.
+//            taxi_network_routing_edge_t old_style_edge;
+//            old_style_edge.start_id = stoi( contents[1] );
+//            old_style_edge.end_id = stoi( contents[2] );
+//            old_style_edge.directions = contents[3];
+//            if ( contents.size() >= 5 ) {
+//                // Он, оказывается, тоже не является обязательным.
+//                old_style_edge.type = contents[4];
+//                if ( contents.size() >= 6 ) {
+//                    pos = line.rfind( contents[ 5 ] );
+//                    old_style_edge.name = line.substr( pos );
+//                }
+//            }
+//            if ( i_type == 1202 ) apt->_taxi_network.edges.push_back( old_style_edge );
+//            else apt->_taxi_network.ground_vehicle_edges.push_back( old_style_edge );
 
             continue;
         }
@@ -766,30 +700,30 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // Edge active zone Identifies an edge as in a runway active zone.
             if ( ! apt ) throw runtime_error("got active zone but apt is empty, line=" + to_string( lines_count ));
 
-            // old style, x-plane based.
-            if ( apt->_taxi_network.edges.empty() ) throw runtime_error(
-                "got active zone but edges is empty, line=" + to_string( lines_count )
-            );
+            apt->_routes.add_apt_dat_active_zone( line, contents );
+//            // old style, x-plane based.
+//            if ( apt->_taxi_network.edges.empty() ) throw runtime_error(
+//                "got active zone but edges is empty, line=" + to_string( lines_count )
+//            );
+//
+//            taxi_network_routing_edge_active_zone_t old_style_zone;
+//            old_style_zone.classification = contents[1];
+//            old_style_zone.runways = contents[2];
+//            // Ставится на последний добавленный в taxi_network edge.
+//            auto last_idx = apt->_taxi_network.edges.size() - 1;
+//            apt->_taxi_network.edges[ last_idx ].active_zones.push_back( old_style_zone );
+//            // old style, x-plane based.
+//            if ( apt->_taxi_network.edges.empty() ) throw runtime_error(
+//                "got active zone but edges is empty, line=" + to_string( lines_count )
+//            );
+//
+//            taxi_network_routing_edge_active_zone_t old_style_zone;
+//            old_style_zone.classification = contents[1];
+//            old_style_zone.runways = contents[2];
+//            // Ставится на последний добавленный в taxi_network edge.
+//            auto last_idx = apt->_taxi_network.edges.size() - 1;
+//            apt->_taxi_network.edges[ last_idx ].active_zones.push_back( old_style_zone );
 
-            taxi_network_routing_edge_active_zone_t old_style_zone;
-            old_style_zone.classification = contents[1];
-            old_style_zone.runways = contents[2];
-            // Ставится на последний добавленный в taxi_network edge.
-            auto last_idx = apt->_taxi_network.edges.size() - 1;
-            apt->_taxi_network.edges[ last_idx ].active_zones.push_back( old_style_zone );
-
-            // lemon-based graph.
-            AirportNetwork::active_zone_t zone;
-            zone.classification = contents[1];
-            zone.runways = contents[2];
-            if ( last_direct_arc_id >= 0 ) {
-                auto arc = ListDigraph::arcFromId( last_direct_arc_id );
-                if ( arc != INVALID ) apt->_routes.arc_active_zones[ arc ].push_back( zone );
-            }
-            if ( last_reverse_arc_id >= 0 ) {
-                auto arc = ListDigraph::arcFromId( last_reverse_arc_id );
-                if ( arc != INVALID ) apt->_routes.arc_active_zones[ arc ].push_back( zone );
-            }
             continue;
         }
 
@@ -1211,9 +1145,11 @@ void Airport::read_all() {
         try {
             Airport::read( path );
         } catch ( bad_format_exception & e ) {
-            XPlaneUtilities::log(string("Airport parse file ") + path + ": " + e.what() );
+            XPlaneUtilities::log( "Airport parse file " + path + ": " + e.what() );
+        } catch ( range_error & e ) {
+            XPlaneUtilities::log( "Airport parse file: " + path + ": " + e.what() );
         } catch ( runtime_error & e ) {
-            XPlaneUtilities::log(string("Airport parse file ") + path + ": " + e.what() );
+            XPlaneUtilities::log( "Airport parse file " + path + ": " + e.what() );
         }
     }
 
