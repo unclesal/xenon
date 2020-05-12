@@ -26,11 +26,22 @@ namespace xenon {
 
         public:
 
+            struct actuator_motion_t {
+
+                // Полное время прохождения от верхней конечной
+                // точки до нижней, берется из констант.
+                float full_time = 1.0;
+                // Затребовано движение или нет.
+                bool requested = false;
+                // Конечная точка, до которой хотим дойти в текущем цикле.
+                float endpoint = 0.0;
+
+            };
+
             BimboAircraft(
                 const std::string & icao_type,
                 const std::string & icao_airline,
-                const std::string & livery,
-                const std::string & model_name = ""
+                const std::string & livery
             );
 
             ~BimboAircraft() override = default;
@@ -44,7 +55,14 @@ namespace xenon {
             void set_rotation( const rotation_t & rotation ) override;
 
             // Перекрытая функция XPMP2::Aircraft
-            void UpdatePosition(float elapsed_since_last_call) override;
+            void UpdatePosition(float elapsed_since_last_call, int fl_counter) override ;
+
+            // Освещение вкл-выкл
+            void set_taxi_lites(bool on);
+            void set_landing_lites(bool on);
+            void set_beacon_lites(bool on);
+            void set_strobe_lites(bool on);
+            void set_nav_lites(bool on);
 
             // Расположить самолет на данной стоянке.
             void place_on_ground( const startup_location_t & ramp );
@@ -90,15 +108,19 @@ namespace xenon {
             aircraft_condition_t _current_condition;
             vector<aircraft_condition_t> _conditions;
 
+            actuator_motion_t __actuators[ XPMP2::V_COUNT ];
+
             static aircraft_condition_t _make_condition_full_taxing_stop(const float & from_speed);
             static aircraft_condition_t _make_condition_straight_push_back( const location_with_angles_t & target );
             static aircraft_condition_t _make_condition_rotated_push_back( const location_with_angles_t & target );
 
             void _prepare_for_taxing( const location_with_angles_t & target );
             void _prepare_for_push_back( const location_with_angles_t & target );
-            void _control_check_request_lites_finished( const unsigned short int & request );
-            void _control_request_lites( const unsigned int & request, const float & elapsed_since_last_call );
-            static void _control_one_light( float & value, const float & dv );
+            // void _control_check_request_lites_finished( const unsigned short int & request );
+            // void _control_request_lites( const unsigned int & request, const float & elapsed_since_last_call );
+            // static void _control_one_light( float & value, const float & dv );
+
+            void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
 
     };  // class BimboAircraft
 

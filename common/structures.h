@@ -120,10 +120,6 @@ namespace xenon {
         // Для внутреннего подсчета оставшейся дистанции до конечной точки.
         double previous_position_distance_to_target = 0.0;
 
-        // Запрос на включение или выключение света. Происходит -
-        // разово, без всякой задержки, в момент переключения фазы.
-        unsigned short int request_lites = REQUEST_LITES_NONE;
-
         // Функция перехода на следующее состояние.
         std::function<bool(
             aircraft_condition_t & condition

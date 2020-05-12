@@ -133,6 +133,7 @@ void XPlanePlugin::__init_around() {
     auto usss = Airport::get_by_icao("USSS");
     auto gate = usss.get_startup_locations()["15"];
     bimbo->place_on_ground( gate );
+    bimbo->set_landing_lites(true);
 
 //    auto location = bimbo->get_location();
 //    auto endpoint = usss.get_start_location_for_departure_taxing( location );

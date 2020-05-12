@@ -33,6 +33,7 @@ add_library(xenon MODULE
         abstract_aircraft.cpp
         abstract_vehicle.cpp
         airport.cpp
+        airport_network.cpp
         bimbo_aircraft.cpp
         main_plugin.cpp
         user_aircraft.cpp
@@ -59,7 +60,7 @@ target_include_directories(xenon PUBLIC
 
 target_link_libraries(xenon ${CMAKE_SOURCE_DIR}/3dparty/libXPMP2/libXPMP2.a )
 
-message("Plugin dir is" $ENV{PLUGIN_DIR})
+message("plugin dir is: " "$ENV{PLUGIN_DIR}")
 
 set_target_properties(xenon PROPERTIES LIBRARY_OUTPUT_DIRECTORY "$ENV{PLUGIN_DIR}")
 set_target_properties(xenon
@@ -68,3 +69,17 @@ set_target_properties(xenon
     OUTPUT_NAME "lin"
     SUFFIX ".xpl"
 )
+
+## Копирование файлов из XPMP2
+#set(XPMP2_ROOT_DIR $ENV{XPMP2_ROOT_DIR})
+#set(XENON_XPMP2_DIR ${XENON_ROOT_DIR}/simulators/xplane/xenon/3dparty/libXPMP2)
+#
+#if (EXISTS ${XENON_ROOT_DIR})
+#    add_custom_command(TARGET XPMP2 POST_BUILD
+#            # copy builded library direct into xenon folder
+#            COMMAND ${CMAKE_COMMAND} -E remove_directory ${XENON_XPMP2_DIR}
+#            COMMAND ${CMAKE_COMMAND} -E make_directory ${XENON_XPMP2_DIR}/include
+#            COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/inc/ ${XENON_XPMP2_DIR}/include/
+#            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:XPMP2> ${XENON_XPMP2_DIR}
+#    )
+#endif()

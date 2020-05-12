@@ -29,8 +29,9 @@ namespace xenon {
     // Ускорение при старте руления или остановке.
     const float TAXI_ACCELERATION = 0.03;
 
-    // Время в секундах полного включения или выключения освещения.
-    const float LITES_FULL_TIME = 3.0;
+    // Время подъема/опускания стоек шасси.
+    constexpr float TIME_FOR_GEAR_MOTION        = 10.0;
+
 
     /**
      * @short Использование ВПП.
@@ -71,18 +72,5 @@ namespace xenon {
     };
 
     // Битовые константы включения или выключения света.
-
-    const unsigned short int REQUEST_LITES_NONE        = 0;
-    const unsigned short int REQUEST_LITES_TAXI_ON     = 0x1;
-    const unsigned short int REQUEST_LITES_TAXI_OFF    = 0x2;
-    const unsigned short int REQUEST_LITES_LANDING_ON  = 0x4;
-    const unsigned short int REQUEST_LITES_LANDING_OFF = 0x8;
-    const unsigned short int REQUEST_LITES_BEACON_ON   = 0x10;
-    const unsigned short int REQUEST_LITES_BEACON_OFF  = 0x20;
-    const unsigned short int REQUEST_LITES_STROBE_ON   = 0x40;
-    const unsigned short int REQUEST_LITES_STROBE_OFF  = 0x80;
-    const unsigned short int REQUEST_LITES_NAV_ON      = 0x100;
-    const unsigned short int REQUEST_LITES_NAV_OFF     = 0x200;
-
 
 }; // namespace xenon

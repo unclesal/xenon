@@ -683,7 +683,6 @@ namespace xenon {
 
             // Taxi routing network
             // TODO: кандидат на удаление
-#warning Delete old style taxi network
             taxi_network_t _taxi_network;
 
             // Положить насчитанный контейнер в аэропорт и освободить динамически созданный блок в памяти.
