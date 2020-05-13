@@ -25,7 +25,7 @@
 
 // Мои инклудники.
 #include "structures.h"
-#include "utils.h"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -229,17 +229,6 @@ namespace xenon {
                 return sqrt(
                     pow(( p1.x - p2.x ), 2) + pow((p1.y - p2.y), 2) + pow((p1.z - p2.z), 2)
                 );
-            }
-
-            /**
-             * @short Полная дистанция в сферических координатах.
-             */
-
-            static inline double distance( const location_t & from, const location_t & to ) {
-                auto boost_from = boost_location_t( from.latitude, from.longitude, from.altitude );
-                auto boost_to = boost_location_t( to.latitude, to.longitude, to.altitude );
-                double distance = boost::geometry::distance( boost_from, boost_to, geoid_distance_t() );
-                return distance;
             }
 
             /**

@@ -15,7 +15,7 @@
 #endif
 
 #include "structures.h"
-#include "utils.h"
+#include "utils.hpp"
 #include "airport.h"
 #include "exceptions.h"
 #include "airport_network.h"
@@ -1521,9 +1521,9 @@ vector< Airport::taxi_network_routing_edge_t > Airport::get_edges_for(const taxi
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-location_with_angles_t Airport::get_start_for_departure_taxing( const location_t & from ) {
+vector<location_t> Airport::get_taxi_way_for_departure( const location_t & from ) {
 
-    location_with_angles_t result;
+    vector<location_t> result;
 
     // ВПП в использовании для взлета.
     land_runway_t departure_rwy = get_runway_for( RUNWAY_USED_DEPARTURE );
@@ -1546,21 +1546,11 @@ location_with_angles_t Airport::get_start_for_departure_taxing( const location_t
     }
 
     // Кратчайший путь от найденного узла до взлетки.
-    __routes.dijkstra_shortest_paths( nearest_node_descriptor, departure_rwy.location() );
-    /*
-    // Соседи найденного ближайшего узла.
-    auto neighbors = boost::adjacent_vertices( nearest_node_descriptor, __routes.graph() );
-
-    auto nearest_node_to_runway = get_nearest_node(departure_rwy.location(), neighbors);
-
-    // Нос должен быть направлен - с ближней к самолету точки рулежки на самую ближнюю к ВПП.
-    float target_heading = (float) XPlaneUtilities::bearing(
-        nearest_node.location, nearest_to_rwy.location
-    );
-
-    result.location = nearest_node.location();
-    result.rotation.heading = target_heading;
-    */
+    auto path = __routes.shortest_path( nearest_node_descriptor, departure_rwy.location() );
+    for ( auto nd: path ) {
+        auto node_itself = __routes.graph()[nd];
+        result.push_back( node_itself.location );
+    }
 
     return result;
 
@@ -1603,7 +1593,7 @@ location_with_angles_t Airport::get_next_nearest_path_item(
 // *                Просчитать координаты точек и курсы в этих точках - для руления с целью вылета                     *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 vector<location_with_angles_t> Airport::get_path_for_departure_taxing( const location_t & location ) {
     vector< location_with_angles_t > way;
     // ВПП для вылета.
@@ -1625,4 +1615,4 @@ vector<location_with_angles_t> Airport::get_path_for_departure_taxing( const loc
 
     return way;
 }
-
+*/

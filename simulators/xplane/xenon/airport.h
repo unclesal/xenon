@@ -601,20 +601,16 @@ namespace xenon {
             );
 
             /**
-             * @short Выдать целевое конечное положение при выталкивании или выруливании.
+             * @short Выдать путь для рулежки к полосе, с которой производится взлет.
              * @param from точка, где сейчас самолет находится. Курс для расчета конечной (целевой) точки -
              * не имеет значения, т.к. первоначальный сегмент все равно будет прямолинейным. Курс влияет
              * на то, будет ли самолет выруливать сам или его надо выталкивать, но это решает уже сам
              * самолет.
-             * @return location_with_angles_t, содержащая
-             *   - .location Координаты целевой точки, где самолет (плюс-минус) должен остановиться.
-             *   - .rotation.heading @param target_heading целевой курс. На целевой точке самолет должен оказаться - с этим курсом
-             * (опять же плюс-минус).
              */
 
-            location_with_angles_t get_start_for_departure_taxing( const location_t & from );
+            vector<location_t> get_taxi_way_for_departure( const location_t & from );
 
-            vector<location_with_angles_t> get_path_for_departure_taxing( const location_t & location );
+            // vector<location_with_angles_t> get_path_for_departure_taxing( const location_t & location );
 
         private:
 

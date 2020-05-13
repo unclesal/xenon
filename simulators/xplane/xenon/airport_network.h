@@ -83,10 +83,12 @@ namespace xenon {
                 // Taxiway identifier. Used to build ATC taxi clearances (eg. “.. .taxi via A, T, Q”)
                 // String. Taxiway or runway identifier (eg. “A” or “16L/34R”)
                 string name = "";
-                double distance = 1.0;
-                double weight = 1.0;
+                double distance = (double) size_t( -1 );
                 vector< active_zone_t > active_zones;
             };
+
+            // "Весом" ребра является его длина в метрах.
+            // typedef boost::property<boost::edge_weight_t, double> edge_weight_property;
 
             // Описание собственно графа.
             typedef boost::adjacency_list<
@@ -95,22 +97,19 @@ namespace xenon {
                 // selects the STL vector container to store the vertices
                 boost::vecS,
                 boost::directedS,
-                node_t, edge_t> graph_t;
-
-            // С целью писать поменьше.
-            using node_descriptor_t = graph_t::vertex_descriptor;
-            using edge_descriptor_t = graph_t::edge_descriptor;
+                node_t, edge_t
+            > graph_t;
 
             // Перекрытый класс Дейкстра-обхода графа (dijkstra visitor)
-            
+
             struct dij_visitor_t : boost::default_dijkstra_visitor {
                     using base = boost::default_dijkstra_visitor;
                     struct done{};
 
-                    dij_visitor_t(node_descriptor_t vd, size_t & visited)
+                    dij_visitor_t(AirportNetwork::graph_t::vertex_descriptor vd, size_t & visited)
                         : destination(vd), visited(visited) {}
 
-                    void finish_vertex(node_descriptor_t v, graph_t const & g) {
+                    void finish_vertex(AirportNetwork::graph_t::vertex_descriptor v, graph_t const & g) {
                         ++visited;
 
                         if (v == destination)
@@ -120,7 +119,7 @@ namespace xenon {
                     }
 
                 private:
-                    graph_t::vertex_descriptor destination;
+                    AirportNetwork::graph_t::vertex_descriptor destination;
                     size_t & visited;
             };
 
@@ -144,7 +143,7 @@ namespace xenon {
             // @todo наверняка здесь может быть правильнее.
             vector<edge_t> get_edges_for( const graph_t::vertex_descriptor & node_descriptor );
 
-            void dijkstra_shortest_paths(
+            std::deque< graph_t::vertex_descriptor > shortest_path(
                 const graph_t::vertex_descriptor & start_node_descriptor, const location_t & to_location
             );
 

@@ -5,7 +5,8 @@
 // *********************************************************************************************************************
 
 #include <string>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <deque>
+#include <boost/property_map/function_property_map.hpp>
 
 #include "constants.h"
 #include "airport_network.h"
@@ -81,6 +82,12 @@ void AirportNetwork::add_apt_dat_edge(int i_type, const string &line, const vect
             edge.name = line.substr( pos );
         }
     }
+
+    // Вычисление дистанции между узлами - один раз при создании дуги. Она все
+    // равно не меняется же, поэтому высчитывать дистанцию каждый раз - грешно.
+    auto elem_node_start = __graph[ node_start ];
+    auto elem_node_end = __graph[ node_end ];
+    edge.distance = xenon::distance(elem_node_start.location, elem_node_end.location);
 
     // Прямая дуга будет в любом случае.
     auto direct_arc = add_edge( node_start, node_end, __graph );
@@ -168,7 +175,7 @@ AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
     const location_t & from, const way_type_t way_type
 ) {
 
-    graph_t::vertex_descriptor result;
+    AirportNetwork::graph_t::vertex_descriptor result;
     double min_distance = FAR_AWAY;
 
     graph_t::vertex_iterator vi, vi_end, next;
@@ -179,10 +186,10 @@ AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
             if ((way_type == WAY_ANY) || ( e.way_type == way_type )) {
                 // Обнаружено ребро с нужным нам типом. Смотрим на расстояние.
                 node_t here_node = __graph[ node_descriptor ];
-                double distance = XPlane::distance(from, here_node.location);
+                double current_distance = distance(from, here_node.location);
 
-                if ( distance <= min_distance ) {
-                    min_distance = distance;
+                if ( current_distance <= min_distance ) {
+                    min_distance = current_distance;
                     result = node_descriptor;
                 }
             }
@@ -197,44 +204,57 @@ AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AirportNetwork::dijkstra_shortest_paths(
+std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::shortest_path(
     const graph_t::vertex_descriptor & start_node_descriptor,
     const location_t & to_location
 ) {
+
+    std::deque< graph_t::vertex_descriptor > path;
 
     auto end_node_descriptor = get_nearest_node( to_location, WAY_ANY );
     size_t visited;
     AirportNetwork::dij_visitor_t vis( end_node_descriptor, visited );
 
-    // auto indexmap = boost::get(boost::vertex_index, __graph);
-    // auto colormap = boost::make_vector_property_map<boost::default_color_type>(indexmap);
-
-    // boost::depth_first_search(__graph, vis, colormap, 1);
-
-    //evaluate dijkstra on graph g with source s, predecessor_map p and distance_map d
-    //note that predecessor_map(..).distance_map(..) is a bgl_named_params<P, T, R>, so a named parameter
-//    std::vector<graph_t::vertex_descriptor> p(num_vertices( __graph ));
-//    std::vector<int> d(num_vertices( __graph ));
-//
-    std::vector<boost::default_color_type> colors(num_vertices( __graph ), boost::default_color_type{});
-    std::vector<graph_t::vertex_descriptor> _pred(num_vertices( __graph ),   __graph.null_vertex());
-    std::vector<size_t>                     _dist(num_vertices( __graph ),   -1ull);
+    auto null_vertex = xenon::AirportNetwork::graph_t::null_vertex();
+    std::vector<boost::default_color_type>  colors(num_vertices( __graph ), boost::default_color_type{});
+    std::vector<graph_t::vertex_descriptor> _pred(num_vertices( __graph ), null_vertex  );
+    std::vector<double>                     _dist(num_vertices( __graph ), FAR_AWAY );
     auto predmap = _pred.data(); // interior properties: boost::get(boost::vertex_predecessor, g);
     auto distmap = _dist.data(); // interior properties: boost::get(boost::vertex_distance, g);
 
+    // лямбда-функция для выдачи дистанции в качестве map'а.
+    auto g = __graph;
+    auto custom_distance = boost::make_function_property_map< graph_t::edge_descriptor >(
+        [ & g ]( graph_t::edge_descriptor e ) {
+            return g[ e ].distance;
+        });
+
     try {
+
         boost::dijkstra_shortest_paths(
             __graph, start_node_descriptor, boost::visitor( vis ).
                 color_map( colors.data() ).
                 distance_map( distmap ).
                 predecessor_map( predmap ).
-                weight_map( boost::make_constant_property< graph_t::edge_descriptor >( 1ul ))
+                weight_map( custom_distance )
         );
-        cout << "Path not found.";
-    } catch ( AirportNetwork::dij_visitor_t::done const & ) {
-        cout << "Visited=" << visited << endl;
-        auto d = distmap[ end_node_descriptor ];
-        cout << "Distance=" << d << endl;
-    }
 
+    } catch ( AirportNetwork::dij_visitor_t::done const & ) {
+
+        auto distance = distmap[ end_node_descriptor ];
+        if ( distance != FAR_AWAY ) {
+
+            for ( graph_t::vertex_descriptor current = end_node_descriptor;
+                  current != xenon::AirportNetwork::graph_t::null_vertex()
+                  && predmap[ current ] != current
+                  && current != start_node_descriptor;
+            ) {
+
+                path.push_front( predmap[ current ] );
+                current = predmap[ current ];
+            }
+
+        }
+    }
+    return path;
 }

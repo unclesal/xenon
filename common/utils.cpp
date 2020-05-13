@@ -5,10 +5,7 @@
 // *********************************************************************************************************************
 #include <sstream>
 
-#include "constants.h"
-#include "utils.h"
-
-using namespace std;
+#include "utils.hpp"
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -16,7 +13,7 @@ using namespace std;
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-vector<string> split (const string & s, char delim) {
+vector<std::string> xenon::split (const string & s, char delim) {
     vector<string> result;
     stringstream ss (s);
     string item;
