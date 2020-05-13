@@ -667,7 +667,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
 //            apt->_taxi_network.nodes.push_back( old_style_node );
 
             // using airport network
-            apt->_routes.add_apt_dat_node( line, contents );
+            apt->__routes.add_apt_dat_node( line, contents );
 
             continue;
         }
@@ -675,7 +675,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
         if (( i_type == 1202 ) || ( i_type == 1206 )) {
             // Taxi routing EDGE. Segment in taxi routing network
             if ( ! apt ) throw runtime_error("got routing edge but apt is empty, line=" + to_string( lines_count ));
-            apt->_routes.add_apt_dat_edge( i_type, line, contents );
+            apt->__routes.add_apt_dat_edge( i_type, line, contents );
 
 //            // old style, native x-plane graph.
 //            taxi_network_routing_edge_t old_style_edge;
@@ -700,7 +700,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // Edge active zone Identifies an edge as in a runway active zone.
             if ( ! apt ) throw runtime_error("got active zone but apt is empty, line=" + to_string( lines_count ));
 
-            apt->_routes.add_apt_dat_active_zone( line, contents );
+            apt->__routes.add_apt_dat_active_zone( line, contents );
 //            // old style, x-plane based.
 //            if ( apt->_taxi_network.edges.empty() ) throw runtime_error(
 //                "got active zone but edges is empty, line=" + to_string( lines_count )
@@ -803,7 +803,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                     ( contents[ 1 ] != "icao_code" ) && ( contents[ 1 ] != "airport_id" ) &&
                     ( contents[ 1 ] != "local_authority" )
                     )
-                    XPlaneUtilities::log( string( "Airport::read: unhandled metadata key " ) + contents[ 1 ] );
+                    XPlane::log( string( "Airport::read: unhandled metadata key " ) + contents[ 1 ] );
             }
             continue;
         }
@@ -845,7 +845,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
 
         if ( i_type != 99 ) { // EOF
             // Если здесь остались - элемент обработан не был.
-            XPlaneUtilities::log(
+            XPlane::log(
                 string( "Airport::read(), unhandled type " ) + to_string( i_type )
                 + ", file=" + full_path_to_apt_dat + ", line=" + to_string( lines_count )
             );
@@ -1098,8 +1098,8 @@ void Airport::read_all() {
     // Без нее идут ошибки преобразования строк в числа.
     setlocale(LC_ALL, "C");
 
-    string system_path = XPlaneUtilities::get_system_path();
-    string sep = XPlaneUtilities::get_directory_separator();
+    string system_path = XPlane::get_system_path();
+    string sep = XPlane::get_directory_separator();
 
     // Вектор полных путей к найденным файлам аэропортов.
     vector<string> founded;
@@ -1145,11 +1145,11 @@ void Airport::read_all() {
         try {
             Airport::read( path );
         } catch ( bad_format_exception & e ) {
-            XPlaneUtilities::log( "Airport parse file " + path + ": " + e.what() );
+            XPlane::log( "Airport parse file " + path + ": " + e.what() );
         } catch ( range_error & e ) {
-            XPlaneUtilities::log( "Airport parse file: " + path + ": " + e.what() );
+            XPlane::log( "Airport parse file: " + path + ": " + e.what() );
         } catch ( runtime_error & e ) {
-            XPlaneUtilities::log( "Airport parse file " + path + ": " + e.what() );
+            XPlane::log( "Airport parse file " + path + ": " + e.what() );
         }
     }
 
@@ -1521,40 +1521,47 @@ vector< Airport::taxi_network_routing_edge_t > Airport::get_edges_for(const taxi
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-location_with_angles_t Airport::get_start_location_for_departure_taxing( const location_t & from ) {
+location_with_angles_t Airport::get_start_for_departure_taxing( const location_t & from ) {
 
     location_with_angles_t result;
 
+    // ВПП в использовании для взлета.
     land_runway_t departure_rwy = get_runway_for( RUNWAY_USED_DEPARTURE );
     if (departure_rwy.runway_number.empty()) {
-        XPlaneUtilities::log("Airport::get_start_location_for_departure_taxing, empty runway name for departure.");
+        XPlane::log("Airport::get_start_location_for_departure_taxing, empty runway name for departure.");
         return result;
     }
 
-    // Ближайший к положению самолета узел, принадлежащий именно рулежным дорожкам.
-    auto nearest_node = get_nearest_taxiway_node( from );
-
-    if ( nearest_node.id < 0 ) {
-        // Реального ближайшего узла найдено не было.
-        XPlaneUtilities::log(
-            "Airport::get_start_location_for_departure_taxing, no nearest node found for lat="
-            + to_string( from.latitude ) + ", lon=" + to_string( from.longitude )
+    // Ближайший к заданному положению узел, принадлежащий именно рулежным дорожкам.
+    auto nearest_node_descriptor = __routes.get_nearest_node( from, AirportNetwork::WAY_TAXIWAY );
+    AirportNetwork::node_t nearest_node;
+    try {
+        nearest_node = __routes.graph()[ nearest_node_descriptor ];
+    } catch ( const range_error & re ) {
+        XPlane::log(
+            "Airport::get_start_for_departure_taxing, no nearest node found for lat="
+            + to_string(from.latitude) + ", lon=" + to_string(from.longitude)
         );
         return result;
     }
 
+    // Кратчайший путь от найденного узла до взлетки.
+    __routes.dijkstra_shortest_paths( nearest_node_descriptor, departure_rwy.location() );
+    /*
     // Соседи найденного ближайшего узла.
-    auto neighbors = get_neighbors( nearest_node );
+    auto neighbors = boost::adjacent_vertices( nearest_node_descriptor, __routes.graph() );
 
-    taxi_network_routing_node_t nearest_to_rwy = get_nearest_node(departure_rwy.location(), neighbors);
+    auto nearest_node_to_runway = get_nearest_node(departure_rwy.location(), neighbors);
 
     // Нос должен быть направлен - с ближней к самолету точки рулежки на самую ближнюю к ВПП.
     float target_heading = (float) XPlaneUtilities::bearing(
-        nearest_node.location(), nearest_to_rwy.location()
+        nearest_node.location, nearest_to_rwy.location
     );
 
     result.location = nearest_node.location();
     result.rotation.heading = target_heading;
+    */
+
     return result;
 
 }
@@ -1584,7 +1591,7 @@ location_with_angles_t Airport::get_next_nearest_path_item(
     auto neighbors = get_neighbors(start_node);
     // Ближайший из них к ВПП.
     auto nearest = get_nearest_node(to, neighbors);
-    float heading = ( float ) XPlaneUtilities::bearing(from, nearest.location());
+    float heading = ( float ) XPlane::bearing(from, nearest.location());
 
     result.location = nearest.location();
     result.rotation.heading = heading;

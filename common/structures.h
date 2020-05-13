@@ -27,16 +27,21 @@ namespace xenon {
         double z = 0.0;
     };
 
+    // boost-style location
+    typedef boost::geometry::model::point<
+        double, 3, boost::geometry::cs::geographic < boost::geometry::degree
+        >> boost_location_t;
+
+    // Стратегия для вычисления расстояния в гео-координатах.
+    typedef boost::geometry::srs::spheroid <double> spheroid_t;
+    typedef boost::geometry::strategy::distance::thomas < spheroid_t > geoid_distance_t;
+
     // Локация в геосистеме
     struct location_t {
         double latitude = 0.0;
         double longitude = 0.0;
         double altitude = 0.0;
     };
-
-    typedef boost::geometry::model::point<
-        double, 3, boost::geometry::cs::geographic < boost::geometry::degree
-        >> boost_location_t;
 
 
     // Текущие углы OGL (в 3D игровом пространстве).

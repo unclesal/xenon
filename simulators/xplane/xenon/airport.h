@@ -12,7 +12,7 @@
 #include <lemon/list_graph.h>
 
 #include "structures.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 #include "airport_network.h"
 
 using namespace std;
@@ -503,6 +503,10 @@ namespace xenon {
                 return _orphanded;
             }
 
+            const xenon::AirportNetwork & routes() {
+                return __routes;
+            }
+
             /**
              * @short Вернуть ссылку на все имеющиеся стоянки.
              * @return
@@ -607,7 +611,9 @@ namespace xenon {
              *   - .rotation.heading @param target_heading целевой курс. На целевой точке самолет должен оказаться - с этим курсом
              * (опять же плюс-минус).
              */
-            location_with_angles_t get_start_location_for_departure_taxing( const location_t & from );
+
+            location_with_angles_t get_start_for_departure_taxing( const location_t & from );
+
             vector<location_with_angles_t> get_path_for_departure_taxing( const location_t & location );
 
         private:
@@ -658,7 +664,7 @@ namespace xenon {
             static void ( * _has_been_parsed_ )( string & icao_code );
 
             // Граф taxi network внутри объекта аэропорта.
-            xenon::AirportNetwork _routes;
+            xenon::AirportNetwork __routes;
 
             // Объекты внутри аэропорта.
             vector< land_runway_t > _land_runways;

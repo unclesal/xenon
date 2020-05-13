@@ -15,7 +15,7 @@ int main() {
     location_t location;
     location.latitude=56.749406;
     location.longitude=60.797907;
-    auto endpoint = usss.get_start_location_for_departure_taxing(location);
+    auto endpoint = usss.get_start_for_departure_taxing(location);
     auto way = usss.get_path_for_departure_taxing(endpoint.location);
 
 //    position_t pos_from {

@@ -6,6 +6,8 @@
 #pragma once
 #include <string>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/property_map/property_map.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
@@ -30,9 +32,7 @@ namespace xenon {
                 // double latitude = 0.0;
                 // Longitude of node in decimal degrees Eight decimal places supported
                 // double longitude = 0.0;
-                boost_location_t location = {
-                    0.0, 0.0, 0.0
-                };
+                location_t location;
 
                 // Usage of node in network (begin or end a taxi path, or both)
                 // “dest”, “init”, “both” or “junc”
@@ -43,13 +43,6 @@ namespace xenon {
                 int xp_id = -1;
                 // Node name. Not currently used. String (max 16 characters)
                 string name = "";
-
-//                location_t location() {
-//                    return location_t {
-//                        .latitude = latitude,
-//                        .longitude = longitude
-//                    };
-//                };
             };
 
             struct active_zone_t {
@@ -71,7 +64,8 @@ namespace xenon {
                 // “taxiway” or “runway”
                 WAY_NONE = 0,
                 WAY_RUNWAY,
-                WAY_TAXIWAY
+                WAY_TAXIWAY,
+                WAY_ANY
             };
 
             struct edge_t {
@@ -89,6 +83,8 @@ namespace xenon {
                 // Taxiway identifier. Used to build ATC taxi clearances (eg. “.. .taxi via A, T, Q”)
                 // String. Taxiway or runway identifier (eg. “A” or “16L/34R”)
                 string name = "";
+                double distance = 1.0;
+                double weight = 1.0;
                 vector< active_zone_t > active_zones;
             };
 
@@ -101,15 +97,56 @@ namespace xenon {
                 boost::directedS,
                 node_t, edge_t> graph_t;
 
+            // С целью писать поменьше.
+            using node_descriptor_t = graph_t::vertex_descriptor;
+            using edge_descriptor_t = graph_t::edge_descriptor;
+
+            // Перекрытый класс Дейкстра-обхода графа (dijkstra visitor)
+            
+            struct dij_visitor_t : boost::default_dijkstra_visitor {
+                    using base = boost::default_dijkstra_visitor;
+                    struct done{};
+
+                    dij_visitor_t(node_descriptor_t vd, size_t & visited)
+                        : destination(vd), visited(visited) {}
+
+                    void finish_vertex(node_descriptor_t v, graph_t const & g) {
+                        ++visited;
+
+                        if (v == destination)
+                            throw done{};
+
+                        base::finish_vertex(v, g);
+                    }
+
+                private:
+                    graph_t::vertex_descriptor destination;
+                    size_t & visited;
+            };
+
             AirportNetwork();
             AirportNetwork & operator = ( const AirportNetwork & anet ) = default;
             ~AirportNetwork() = default;
+
+            const xenon::AirportNetwork::graph_t & graph() {
+                return __graph;
+            }
 
             void add_apt_dat_node( const string & line, const vector<string> & contents );
             void add_apt_dat_edge( int i_type, const string & line, const vector<string> & contents );
             void add_apt_dat_active_zone( const string & line, const vector<string> & contents );
 
             graph_t::vertex_descriptor get_node_by_xp_id( const int & xp_id );
+
+            graph_t::vertex_descriptor get_nearest_node( const location_t & from, const way_type_t way_type );
+            // edge_t get_nearest_node( const location_t & from, const vector<graph_t::vertex_descriptor> & input_set );
+
+            // @todo наверняка здесь может быть правильнее.
+            vector<edge_t> get_edges_for( const graph_t::vertex_descriptor & node_descriptor );
+
+            void dijkstra_shortest_paths(
+                const graph_t::vertex_descriptor & start_node_descriptor, const location_t & to_location
+            );
 
         private:
 

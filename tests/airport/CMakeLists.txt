@@ -18,6 +18,7 @@ target_sources(airport PUBLIC
     ../../common/utils.cpp
     ../../simulators/xplane/xenon/airport.cpp
     ../../simulators/xplane/xenon/airport_network.cpp
+    ../../simulators/xplane/xenon/xplane.hpp
 #    ../../simulators/xplane/xenon/exceptions.h
 )
 

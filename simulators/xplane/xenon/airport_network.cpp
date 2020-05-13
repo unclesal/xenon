@@ -5,9 +5,11 @@
 // *********************************************************************************************************************
 
 #include <string>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 
+#include "constants.h"
 #include "airport_network.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 
 using namespace xenon;
 using namespace std;
@@ -30,9 +32,8 @@ AirportNetwork::AirportNetwork() {
 
 void AirportNetwork::add_apt_dat_node( const string &line, const vector<string> &contents ) {
     AirportNetwork::node_t node;
-    auto latitude = stod( contents[1] );
-    auto longitude = stod( contents[2] );
-    node.location = boost_location_t( latitude, longitude, 0.0 );
+    node.location.latitude = stod( contents[1] );
+    node.location.longitude = stod( contents[2] );
     node.usage = contents[3];
     node.xp_id = stoi( contents[4] );
     if (contents.size() >= 6 ) {
@@ -110,13 +111,13 @@ void AirportNetwork::add_apt_dat_active_zone( const string &line, const vector<s
     try {
         __graph[ __last_added_direct_edge ].active_zones.push_back( az );
     } catch ( std::range_error const & re ) {
-        XPlaneUtilities::log("AirportNetwork::add_active_zone, range error for direct arc.");
+        XPlane::log("AirportNetwork::add_active_zone, range error for direct arc.");
     }
 
     try {
         __graph[ __last_added_reverse_edge ].active_zones.push_back( az );
     } catch ( std::range_error const & re ) {
-        XPlaneUtilities::log("AirportNetwork::add_active_zone, range error for reverse zone.");
+        XPlane::log("AirportNetwork::add_active_zone, range error for reverse zone.");
     }
 
 }
@@ -134,4 +135,106 @@ AirportNetwork::graph_t::vertex_descriptor  AirportNetwork::get_node_by_xp_id(co
         if ( __graph[ it ].xp_id == xp_id ) return it;
     }
     return graph_t::vertex_descriptor();
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                            Получить все ребра данного узла, и входящие, и исходящие                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+vector<AirportNetwork::edge_t> AirportNetwork::get_edges_for( const graph_t::vertex_descriptor & node_descriptor ) {
+    vector<edge_t> result;
+    graph_t::edge_iterator i, end;
+    for (boost::tie(i, end) = edges( __graph ); i != end; ++ i) {
+        auto e_descriptor = * i;
+        graph_t::vertex_descriptor source_descriptor = source( e_descriptor, __graph );
+        graph_t::vertex_descriptor target_descriptor = target( e_descriptor, __graph );
+        if (( source_descriptor == node_descriptor ) || ( target_descriptor == node_descriptor )) {
+            edge_t edge = __graph[ e_descriptor ];
+            result.push_back( edge );
+        }
+    }
+    return result;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                Получить ближайший узел дорожки указанного типа.                                   *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
+    const location_t & from, const way_type_t way_type
+) {
+
+    graph_t::vertex_descriptor result;
+    double min_distance = FAR_AWAY;
+
+    graph_t::vertex_iterator vi, vi_end, next;
+    for ( tie(vi, vi_end) = vertices( __graph ); vi != vi_end; ++vi) {
+        graph_t::vertex_descriptor node_descriptor = * vi;
+        auto edges = get_edges_for( node_descriptor );
+        for ( const auto & e : edges ) {
+            if ((way_type == WAY_ANY) || ( e.way_type == way_type )) {
+                // Обнаружено ребро с нужным нам типом. Смотрим на расстояние.
+                node_t here_node = __graph[ node_descriptor ];
+                double distance = XPlane::distance(from, here_node.location);
+
+                if ( distance <= min_distance ) {
+                    min_distance = distance;
+                    result = node_descriptor;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                         Кратчайший путь по Dijkstra                                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AirportNetwork::dijkstra_shortest_paths(
+    const graph_t::vertex_descriptor & start_node_descriptor,
+    const location_t & to_location
+) {
+
+    auto end_node_descriptor = get_nearest_node( to_location, WAY_ANY );
+    size_t visited;
+    AirportNetwork::dij_visitor_t vis( end_node_descriptor, visited );
+
+    // auto indexmap = boost::get(boost::vertex_index, __graph);
+    // auto colormap = boost::make_vector_property_map<boost::default_color_type>(indexmap);
+
+    // boost::depth_first_search(__graph, vis, colormap, 1);
+
+    //evaluate dijkstra on graph g with source s, predecessor_map p and distance_map d
+    //note that predecessor_map(..).distance_map(..) is a bgl_named_params<P, T, R>, so a named parameter
+//    std::vector<graph_t::vertex_descriptor> p(num_vertices( __graph ));
+//    std::vector<int> d(num_vertices( __graph ));
+//
+    std::vector<boost::default_color_type> colors(num_vertices( __graph ), boost::default_color_type{});
+    std::vector<graph_t::vertex_descriptor> _pred(num_vertices( __graph ),   __graph.null_vertex());
+    std::vector<size_t>                     _dist(num_vertices( __graph ),   -1ull);
+    auto predmap = _pred.data(); // interior properties: boost::get(boost::vertex_predecessor, g);
+    auto distmap = _dist.data(); // interior properties: boost::get(boost::vertex_distance, g);
+
+    try {
+        boost::dijkstra_shortest_paths(
+            __graph, start_node_descriptor, boost::visitor( vis ).
+                color_map( colors.data() ).
+                distance_map( distmap ).
+                predecessor_map( predmap ).
+                weight_map( boost::make_constant_property< graph_t::edge_descriptor >( 1ul ))
+        );
+        cout << "Path not found.";
+    } catch ( AirportNetwork::dij_visitor_t::done const & ) {
+        cout << "Visited=" << visited << endl;
+        auto d = distmap[ end_node_descriptor ];
+        cout << "Distance=" << d << endl;
+    }
+
 }
