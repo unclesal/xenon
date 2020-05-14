@@ -16,9 +16,5 @@ int main() {
     location.latitude=56.749406;
     location.longitude=60.797907;
     auto way = usss.get_taxi_way_for_departure(location);
-
-    // double dis1 = XPlane::distance( location, way[0] );
-    // double dis2 = XPlane::distance( location, way[ way.size() - 1 ]);
-
     return 0;
 }

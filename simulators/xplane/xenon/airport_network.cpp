@@ -258,3 +258,135 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::shortes
     }
     return path;
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                  Получить ребра - только для определенного типа, сгруппированные по их именам.                    *
+// *                   Если в качестве типа передан WAY_ANY - выдать вообще все имеющиеся ребра.                       *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+/*
+map<string, vector<AirportNetwork::edge_t>> AirportNetwork::get_edges_for( way_type_t way_type ) {
+    map< string, vector<AirportNetwork::edge_t> > result;
+    graph_t::edge_iterator i, end;
+    for (boost::tie(i, end) = edges( __graph ); i != end; ++ i) {
+        auto e_descriptor = * i;
+        auto one_edge = __graph[ e_descriptor ];
+        if ( ( way_type == WAY_ANY ) || ( one_edge.way_type == way_type ) ) {
+            result[ one_edge.name ].push_back( one_edge );
+        }
+    }
+    return result;
+}
+*/
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                  Получить все имена для дорожек данного типа ( рулежки, ВПП или любой тип )                       *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+vector< string > AirportNetwork::get_names_for( way_type_t way_type ) {
+    vector< string > result;
+    graph_t::edge_iterator i, end;
+    for (boost::tie(i, end) = edges( __graph ); i != end; ++ i) {
+        auto e_descriptor = * i;
+        auto one_edge = __graph[ e_descriptor ];
+        if ( ( way_type == WAY_ANY ) || ( one_edge.way_type == way_type ) ) {
+            bool found = false;
+            for ( auto item: result ) {
+                if ( item == one_edge.name ) {
+                    found = true;
+                    break;
+                }
+            }
+            if ( ! found ) result.push_back( one_edge.name );
+        }
+    }
+    return result;
+
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                          Получить все узлы для данной дорожки (рулежки или ВПП) по ее имени                       *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+vector< AirportNetwork::node_t > AirportNetwork::get_nodes_for( const string & edge_name ) {
+    vector< node_t > nodes;
+
+    graph_t::edge_iterator i, end;
+    for (boost::tie(i, end) = edges( __graph ); i != end; ++ i) {
+        auto e_descriptor = * i;
+        auto one_edge = __graph[ e_descriptor ];
+        if ( one_edge.name == edge_name ) {
+
+            auto src_d = source( e_descriptor, __graph );
+            auto src = __graph[ src_d ];
+
+            auto dst_d = target( e_descriptor, __graph );
+            auto dst = __graph[ dst_d ];
+
+            bool src_exists = false;
+            bool dst_exists = false;
+            for ( auto n: nodes ) {
+                if ( n.xp_id == src.xp_id ) src_exists = true;
+                if ( n.xp_id == dst.xp_id ) dst_exists = true;
+            }
+
+            if ( ! src_exists ) nodes.push_back( src );
+            if ( ! dst_exists ) nodes.push_back( dst );
+        }
+    }
+    // Сортировка массива nodes, ключом является сумма latitude + logitude.
+    sort( nodes.begin(), nodes.end(), []( node_t & a, node_t & b ) {
+        return
+            ( a.location.latitude + a.location.longitude )
+            > ( b.location.latitude + b.location.longitude );
+
+    } );
+    return nodes;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                     Вернуть ближайший к указанной локации узел из имеющейся коллекции узлов                       *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+AirportNetwork::node_t AirportNetwork::get_nearest_node(
+        const location_t & location, const vector<node_t> & nodeset
+) {
+    node_t result;
+    double min_distance = FAR_AWAY;
+    for ( auto const & n: nodeset ) {
+        double current_distance = xenon::distance( location, n.location );
+        if ( current_distance < min_distance ) {
+            result = n;
+            min_distance = current_distance;
+        }
+    }
+    return result;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                 Вернуть из представленного списка - наиболее дальний узел от указанной локации                    *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+AirportNetwork::node_t AirportNetwork::get_farest_node(
+        const location_t & location, const vector< node_t > & nodeset
+) {
+    node_t result;
+    double max_distance = 0.0;
+    for ( auto const & n: nodeset ) {
+        double current_distance = xenon::distance( location, n.location );
+        if ( current_distance > max_distance ) {
+            result = n;
+            max_distance = current_distance;
+        }
+    }
+    return result;
+}

@@ -98,6 +98,7 @@ namespace xenon {
         runway_used_t used = RUNWAY_USED_BOTH;
     };
 
+    /*
     // Характеристики самолета.
     struct aircraft_condition_t {
         // Фаза, в которой находится самолет.
@@ -142,5 +143,6 @@ namespace xenon {
             ) { return false; };
 
     };
+    */
 
 };  // namespace xenon

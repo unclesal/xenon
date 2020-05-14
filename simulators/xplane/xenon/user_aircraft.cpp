@@ -5,7 +5,7 @@
 // *********************************************************************************************************************
 
 #include "user_aircraft.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 
 using namespace xenon;
 
@@ -26,27 +26,27 @@ UserAircraft::UserAircraft() : AbstractAircraft() {
     // _yaw_dataref = nullptr;
 
     // position variables of the aircraft in the air (in the space).
-    __dr_x = XPlaneUtilities::find_data_ref("sim/flightmodel/position/local_x");
-    __dr_y = XPlaneUtilities::find_data_ref("sim/flightmodel/position/local_y");
-    __dr_z = XPlaneUtilities::find_data_ref("sim/flightmodel/position/local_z");
-    __dr_psi = XPlaneUtilities::find_data_ref("sim/flightmodel/position/psi");
-    __dr_theta = XPlaneUtilities::find_data_ref("sim/flightmodel/position/theta");
-    __dr_phi = XPlaneUtilities::find_data_ref("sim/flightmodel/position/phi");
+    __dr_x = XPlane::find_data_ref("sim/flightmodel/position/local_x");
+    __dr_y = XPlane::find_data_ref("sim/flightmodel/position/local_y");
+    __dr_z = XPlane::find_data_ref("sim/flightmodel/position/local_z");
+    __dr_psi = XPlane::find_data_ref("sim/flightmodel/position/psi");
+    __dr_theta = XPlane::find_data_ref("sim/flightmodel/position/theta");
+    __dr_phi = XPlane::find_data_ref("sim/flightmodel/position/phi");
 
     // The true magnetic course of the aircraft.
-    __dr_heading = XPlaneUtilities::find_data_ref("sim/flightmodel/position/mag_psi");
+    __dr_heading = XPlane::find_data_ref("sim/flightmodel/position/mag_psi");
 
     // VVI, vertical velocity, feet per second, float.
-    __dr_vvi = XPlaneUtilities::find_data_ref("sim/flightmodel/position/vh_ind_fpm");
+    __dr_vvi = XPlane::find_data_ref("sim/flightmodel/position/vh_ind_fpm");
 
     // Instrumental speed (relative to air)
-    __dr_ias = XPlaneUtilities::find_data_ref("sim/flightmodel/position/indicated_airspeed");
+    __dr_ias = XPlane::find_data_ref("sim/flightmodel/position/indicated_airspeed");
 
     // The local magnetic variation
-    __dr_magnetic_variation = XPlaneUtilities::find_data_ref("sim/flightmodel/position/magnetic_variation");
+    __dr_magnetic_variation = XPlane::find_data_ref("sim/flightmodel/position/magnetic_variation");
 
     // GPS / NAV1 / NAV2
-    __dr_hsi_selector = XPlaneUtilities::find_data_ref("sim/cockpit/switches/HSI_selector");
+    __dr_hsi_selector = XPlane::find_data_ref("sim/cockpit/switches/HSI_selector");
 
     /*
 
@@ -239,7 +239,7 @@ void UserAircraft::set_position( const position_t & position ) {
 //        default:
 //            char out[512];
 //            sprintf( out, "UserAircraft::set(), unhandled command %d", static_cast<int>( cmd.set_command() ) );
-//            XPlaneUtilities::log( out );
+//            XPlane::log( out );
 //    }
 //
 //}

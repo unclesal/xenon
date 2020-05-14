@@ -13,7 +13,7 @@
 
 // My own includes.
 #include "xplane_plugin.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 
 using namespace xenon;
 using namespace std;
@@ -66,7 +66,7 @@ void XPlanePlugin::disable() {
 // *********************************************************************************************************************
 
 void XPlanePlugin::__user_aircraft_was_loaded() {
-    XPlaneUtilities::log("User aircraft was (re-)loaded");
+    XPlane::log("User aircraft was (re-)loaded");
 }
 
 // *********************************************************************************************************************
@@ -108,42 +108,18 @@ void XPlanePlugin::__init_around() {
     // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
     if ( ! Airport::airports_was_readed() ) return;
 
-    /*
-    // Запрет работы плагинов Ground Traffic
-    int plugins_count = XPLMCountPlugins();
-    for ( int i=0; i<plugins_count; i++) {
-        XPLMPluginID plugin_id = XPLMGetNthPlugin( i );
-        char name[128];
-        char file_path[512];
-        char signature[256];
-        char description[512];
-        XPLMGetPluginInfo( plugin_id, name, file_path, signature, description );
-        XPlaneUtilities::log(
-            "plugin index=" + to_string(i) + ", plugin_id=" + to_string(plugin_id)
-            + ", name=" + string(name) + ", file_path=" + string(file_path)
-            + ", signature=" + string(signature) + ", description=" + string(description)
-        );
-    }
-    */
-
     // Порождаем самолетик для пробы.
-    XPlaneUtilities::log("Init one bimbo...");
+    XPlane::log("Init one bimbo...");
     auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
 
     auto usss = Airport::get_by_icao("USSS");
     auto gate = usss.get_startup_locations()["15"];
     bimbo->place_on_ground( gate );
-    bimbo->set_landing_lites(true);
 
-//    auto location = bimbo->get_location();
-//    auto endpoint = usss.get_start_location_for_departure_taxing( location );
-//    // bimbo->prepare_for_push_back_or_taxing(endpoint);
-//    auto taxi_way = usss.get_path_for_departure_taxing( endpoint.location );
-//    bimbo->place_on_ground(
-//        XPlaneUtilities::location_to_position(endpoint.location), endpoint.rotation, true
-//    );
-//    bimbo->prepare_for_taxing(taxi_way);
-//    bimbo->apply_next_condition();
+    auto where_i_am = bimbo->get_location();
+    auto way = usss.get_taxi_way_for_departure( where_i_am );
+    bimbo->prepare_for_taxing( way );
+    XPlane::log("Got " + to_string( way.size() ) + " points for taxing.");
 
     __bimbos.push_back( bimbo );
 
@@ -196,13 +172,13 @@ void xenon::XPlanePlugin::control_of_bimbo_aircrafts( float elapsed_since_last_c
 */
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                              The Bimbo (soother) aircraft was loaded into simulator.                              *
+// *                                      The AI aircraft was loaded into simulator.                                   *
 // *                                         Parameter is index of loaded aircraft.                                    *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
 void XPlanePlugin::__ai_controlled_aircraft_was_loaded( int index ) {
-    XPlaneUtilities::log( std::string("Controlled aircraft was loaded, index=") + std::to_string(index) );
+    XPlane::log( std::string("Controlled aircraft was loaded, index=") + std::to_string(index) );
 
 //    AIControlledAircraft acf(index);
 //    __ai_controlled_aircrafts[index] = acf;
@@ -243,7 +219,7 @@ void XPlanePlugin::set( CommandSet & cmd ) {
     } else {
         char out[256];
         sprintf(out, "ERROR: XPlanePlugin::set(), unhandled section %s", cmd.section().c_str() );
-        XPlaneUtilities::log( out );
+        XPlane::log( out );
 
     }
 }
@@ -298,7 +274,7 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
                     // The amount of available aircrafts has been changed in the X-Plane.
                     char out[256];
                     sprintf( out, "Airplane count changed to %d", iparam );
-                    XPlaneUtilities::log( out );
+                    XPlane::log( out );
                     return;
 
                 }; break;
@@ -317,7 +293,7 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
                     }
                     char out[256];
                     sprintf( out, "Aircraft was unloaded, param=%d", iparam );
-                    XPlaneUtilities::log( out );
+                    XPlane::log( out );
                     return;
                 }; break;
 
@@ -325,14 +301,14 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
 
                     // An airport was loaded. This message does not appear in the time of game,
                     // it sends only when user change an aicraft or an airport by hands.
-                    XPlaneUtilities::log("Airport was loaded");
+                    XPlane::log("Airport was loaded");
                     return;
 
                 }; break;
 
                 case XPLM_MSG_SCENERY_LOADED : {
                     // A scenery was loaded.
-                    XPlaneUtilities::log("Scenery was loaded");
+                    XPlane::log("Scenery was loaded");
                     return;
 
                 }; break;
@@ -352,7 +328,7 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
 
                 default: {
 #ifdef DEBUG
-                    XPlaneUtilities::log(
+                    XPlane::log(
                         std::string("XPlanePlugin::handleMessage(), unhandled message type from X-Plane ")
                         + std::to_string( messageID )
                     );
@@ -366,7 +342,7 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
         default : {
 
 #ifdef DEBUG
-            XPlaneUtilities::log(
+            XPlane::log(
                 std::string("A message from another plugin id=")
                 + std::to_string(from) + " has been received but unhandled. MessageID="
                 + std::to_string(messageID) + ", parameter=" + std::to_string( parameter )

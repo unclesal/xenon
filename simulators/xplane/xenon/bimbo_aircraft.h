@@ -18,7 +18,7 @@
 #include "structures.h"
 #include "constants.h"
 #include "abstract_aircraft.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 
 namespace xenon {
 
@@ -77,15 +77,6 @@ namespace xenon {
             // Смещение в метрах относительно координат стоянки.
             float shift_from_ramp();
 
-            // Перекрытая функция управления движением самолета.
-            // void control( float elapse_since_last_call ) override;
-
-            void add_condition( const aircraft_condition_t & condition ) {
-                _conditions.push_back( condition );
-            };
-
-            void apply_next_condition();
-
             /**
              * @short Подготовить маршрут либо к выталкиванию, либо к рулежке.
              * Самолет стоит на стоянке и ему дают некую начальную точку рулежки к ВПП для вылета.
@@ -95,9 +86,9 @@ namespace xenon {
              * курсом, тоже "где-то близко".
              * @param target
              */
-            void prepare_for_push_back_or_taxing( const location_with_angles_t & target );
+            // void prepare_for_push_back_or_taxing( const location_with_angles_t & target );
 
-            void prepare_for_taxing( const vector<location_with_angles_t> & taxi_way );
+            void prepare_for_taxing( const vector<location_t> & taxi_way );
 
         protected:
 
@@ -105,17 +96,17 @@ namespace xenon {
 
         private:
 
-            aircraft_condition_t _current_condition;
-            vector<aircraft_condition_t> _conditions;
+            // aircraft_condition_t _current_condition;
+            // vector<aircraft_condition_t> _conditions;
 
             actuator_motion_t __actuators[ XPMP2::V_COUNT ];
 
-            static aircraft_condition_t _make_condition_full_taxing_stop(const float & from_speed);
-            static aircraft_condition_t _make_condition_straight_push_back( const location_with_angles_t & target );
-            static aircraft_condition_t _make_condition_rotated_push_back( const location_with_angles_t & target );
+            // static aircraft_condition_t _make_condition_full_taxing_stop(const float & from_speed);
+            // static aircraft_condition_t _make_condition_straight_push_back( const location_with_angles_t & target );
+            // static aircraft_condition_t _make_condition_rotated_push_back( const location_with_angles_t & target );
 
-            void _prepare_for_taxing( const location_with_angles_t & target );
-            void _prepare_for_push_back( const location_with_angles_t & target );
+            // void _prepare_for_taxing( const location_with_angles_t & target );
+            // void _prepare_for_push_back( const location_with_angles_t & target );
             // void _control_check_request_lites_finished( const unsigned short int & request );
             // void _control_request_lites( const unsigned int & request, const float & elapsed_since_last_call );
             // static void _control_one_light( float & value, const float & dv );

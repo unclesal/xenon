@@ -126,8 +126,8 @@ namespace xenon {
             static string get_plugin_path() {
 #ifdef INTERNAL_XPLANE
                 // Реальный запуск, внутри плагина.
-                string system_path = XPlaneUtilities::get_system_path();
-                string separator = XPlaneUtilities::get_directory_separator();
+                string system_path = XPlane::get_system_path();
+                string separator = XPlane::get_directory_separator();
                 // Системный путь X-Plane в оригинале заканчивается - сепаратором.
                 string xenon_plugin_dir = system_path + "Resources" + separator
                     + "plugins" + separator + "xenon" + separator;

@@ -9,7 +9,7 @@
 #include "XPLMDataAccess.h"
 
 #include "Ambient.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 
 namespace xenon {
     

@@ -60,6 +60,7 @@ namespace xenon {
         ACF_DOES_NOTHING = 0,
         // Находится на стоянке.
         ACF_DOES_PARKING,
+        ACF_DOES_STARTING_ENGINES,
         // Останавливается при (после) рулежке, хорошо так прямо
         // тормозит вплоть до полной его остановки.
         ACF_DOES_TAXING_STOP,
@@ -71,7 +72,14 @@ namespace xenon {
         ACF_DOES_ROTATED_PUSH_BACK,
         // Рулежка.
         ACF_DOES_SLOW_TAXING,
-        ACF_DOES_NORMAL_TAXING
+        ACF_DOES_NORMAL_TAXING,
+        // Скорее всего - стоит на HP. Но не факт,
+        // разрешение на взлет может быть получено сразу.
+        ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
+        ACF_DOES_TAKE_OFF,
+        ACF_DOES_CLIMBING,
+        ACF_DOES_CRUISING,
+        ACF_DOES_DESCENDING
     };
 
     // Битовые константы включения или выключения света.

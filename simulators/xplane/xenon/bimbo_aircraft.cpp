@@ -8,7 +8,7 @@
 #include "XPLMScenery.h"
 #include "bimbo_aircraft.h"
 #include "constants.h"
-#include "utils.h"
+#include "utils.hpp"
 #include "structures.h"
 
 using namespace xenon;
@@ -128,7 +128,7 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     loc.longitude = ramp.longitude;
     loc.altitude = 10.0; // Просто так, чтобы что-нибудь там было.
     // Переводим геолокацию в OGL игровые координаты.
-    position_t position = XPlaneUtilities::location_to_position( loc );
+    position_t position = XPlane::location_to_position( loc );
     // Угловое положение самолета.
     rotation_t rotation;
     rotation.heading = ramp.heading;
@@ -173,10 +173,10 @@ float BimboAircraft::shift_from_ramp() {
 // *            Подготовить маршрут для выталкивания или руления на начальную точку рулежки к ВПП вылета               *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 void BimboAircraft::prepare_for_push_back_or_taxing( const location_with_angles_t & target ) {
     location_t current_location = get_location();
-    double bearing = XPlaneUtilities::bearing(current_location, target.location);
+    double bearing = XPlane::bearing(current_location, target.location);
     // Если в обзоре +- 45 градусов - то поедем. Если нет - то будем выталкиваться.
     if (( bearing <= 45.0 ) || ( bearing >= (360 - 45.0))) _prepare_for_taxing( target );
     else _prepare_for_push_back( target );
@@ -186,14 +186,16 @@ void BimboAircraft::prepare_for_push_back_or_taxing( const location_with_angles_
 //        _conditions.at(0).request_lites = REQUEST_LITES_BEACON_ON | REQUEST_LITES_NAV_ON;
 //    }
 }
-
+*/
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                        Подготовить маршрут для "штатной" рулежки с включенным двигателем.                         *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::prepare_for_taxing( const vector<location_with_angles_t> & taxi_way ) {
+void BimboAircraft::prepare_for_taxing( const vector<location_t> & taxi_way ) {
+
+    /*
     for ( const auto & point : taxi_way ) {
         aircraft_condition_t c;
         c.does = ACF_DOES_NORMAL_TAXING;
@@ -202,19 +204,19 @@ void BimboAircraft::prepare_for_taxing( const vector<location_with_angles_t> & t
         c.target_speed = TAXI_NORMAL_SPEED;
         // c.heading = point.rotation.heading;
         position_with_angles_t pwa;
-        pwa.position = XPlaneUtilities::location_to_position( point.location );
+        pwa.position = XPlane::location_to_position( point.location );
         pwa.rotation = point.rotation;
         c.target_pwa = pwa;
         c.exit = [](
             aircraft_condition_t & current_condition
         ) {
-            auto distance = XPlaneUtilities::distance_2d(
+            auto distance = XPlane::distance_2d(
                 current_condition.current_pwa.position,
                 current_condition.target_pwa.position
             );
 
             // Курс от текущего положения на целевую точку.
-            auto current_bearing = XPlaneUtilities::bearing(
+            auto current_bearing = XPlane::bearing(
                 current_condition.current_pwa.position,
                 current_condition.target_pwa.position
             );
@@ -232,7 +234,7 @@ void BimboAircraft::prepare_for_taxing( const vector<location_with_angles_t> & t
                 else current_condition.heading_shift = TAXI_HEADING_SHIFT_PER_SECOND;
             };
 
-            XPlaneUtilities::log(
+            XPlane::log(
                 "current course=" + to_string( current_heading )
                 + ", azimuth=" + to_string( current_bearing )
                 // + ", target_bearing=" + to_string( current_condition.target_pwa.rotation.heading )
@@ -257,6 +259,7 @@ void BimboAircraft::prepare_for_taxing( const vector<location_with_angles_t> & t
         };
         _conditions.push_back(c);
     }
+    */
 }
 
 // *********************************************************************************************************************
@@ -265,16 +268,16 @@ void BimboAircraft::prepare_for_taxing( const vector<location_with_angles_t> & t
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::_prepare_for_taxing( const location_with_angles_t & target ) {
-    XPlaneUtilities::log("BimboAircraft::_prepare_for_taxing: not realized.");
-}
+//void BimboAircraft::_prepare_for_taxing( const location_with_angles_t & target ) {
+//    XPlane::log("BimboAircraft::_prepare_for_taxing: not realized.");
+//}
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                       Реализация подготовки к выталкиванию на стартовую точку для вылета                          *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 void BimboAircraft::_prepare_for_push_back( const location_with_angles_t & target ) {
 
     // Первая фаза. Прямолинейное движение тем же самым курсом до тех пор, пока
@@ -292,6 +295,7 @@ void BimboAircraft::_prepare_for_push_back( const location_with_angles_t & targe
     _conditions.push_back(phase3);
 
 }
+*/
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -299,6 +303,7 @@ void BimboAircraft::_prepare_for_push_back( const location_with_angles_t & targe
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+/*
 aircraft_condition_t BimboAircraft::_make_condition_straight_push_back( const location_with_angles_t & target ) {
 
     aircraft_condition_t cond;
@@ -306,18 +311,18 @@ aircraft_condition_t BimboAircraft::_make_condition_straight_push_back( const lo
     cond.tug = - 0.005;
     cond.target_acceleration = -TAXI_ACCELERATION;
     cond.target_speed = PUSH_BACK_SPEED;
-    cond.target_pwa.position = XPlaneUtilities::location_to_position(target.location);
+    cond.target_pwa.position = XPlane::location_to_position(target.location);
     cond.target_pwa.rotation.heading = target.rotation.heading;
 
     cond.exit = []( aircraft_condition_t & current_condition ) {
         // Описатель "целевой рулежной дорожки", куда мы собрались приехать.
-        line_descriptor_t final_runway = XPlaneUtilities::line(
+        line_descriptor_t final_runway = XPlane::line(
             current_condition.target_pwa.position,
             current_condition.target_pwa.rotation.heading
         );
 
         // "Плоское" расстояние от места положения самолета до этой самой прямой линии.
-        double distance = XPlaneUtilities::distance_2d(
+        double distance = XPlane::distance_2d(
             current_condition.current_pwa.position, final_runway
         );
 
@@ -327,13 +332,14 @@ aircraft_condition_t BimboAircraft::_make_condition_straight_push_back( const lo
     return cond;
 
 }
+*/
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                      Реализация выталкивания с поворотом                                          *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 aircraft_condition_t BimboAircraft::_make_condition_rotated_push_back( const location_with_angles_t & target ) {
     aircraft_condition_t phase;
     phase.does = ACF_DOES_ROTATED_PUSH_BACK;
@@ -379,13 +385,13 @@ aircraft_condition_t BimboAircraft::_make_condition_rotated_push_back( const loc
     return phase;
 
 }
-
+*/
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                        Полная остановка при рулежке                                               *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 aircraft_condition_t BimboAircraft::_make_condition_full_taxing_stop(const float &from_speed) {
 
     aircraft_condition_t ph;
@@ -416,7 +422,7 @@ aircraft_condition_t BimboAircraft::_make_condition_full_taxing_stop(const float
 
     return ph;
 }
-
+*/
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -487,14 +493,8 @@ void BimboAircraft::_control_request_lites( const unsigned int & request, const 
 void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOLINT(bugprone-reserved-identifier)
     for ( auto i=0; i<XPMP2::V_COUNT; i++ ) {
         if ( __actuators[i].requested ) {
+
             float current_value = v[i];
-
-//            XPlaneUtilities::log(
-//                "requested " + to_string(i)
-//                + ", endpoint=" + to_string( __actuators[i].endpoint )
-//                + ", current value=" + to_string( current_value )
-//            );
-
             if (current_value != __actuators[i].endpoint) {
                 float delta = elapsed_since_last_call / __actuators[i].full_time;
                 if ( __actuators[i].endpoint < current_value ) delta = -delta;
@@ -520,6 +520,7 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, int fl_counter
 
     __update_actuators(elapsed_since_last_call);
 
+    /*
     // Подсчет полного времени выполнения данной фазы.
     _current_condition.duration += elapsed_since_last_call;
 
@@ -552,6 +553,7 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, int fl_counter
     // Обработка функции перехода на следующую фазу.
     _current_condition.current_pwa = get_position_with_angles();
     if ( _current_condition.exit(_current_condition)) apply_next_condition();
+    */
 
 }
 
@@ -568,55 +570,6 @@ void BimboAircraft::move( float meters ) {
     float dz = meters * cosf( radians );
     drawInfo.x += dx;
     drawInfo.z -= dz;
-
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *             Проверка того факта, что управление освещением из текущей фазы было полностью завершено               *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-void BimboAircraft::_control_check_request_lites_finished( const unsigned short & request ) {
-    if ( request == REQUEST_LITES_NONE ) return;
-    if ( request & REQUEST_LITES_TAXI_ON ) v[ V_CONTROLS_TAXI_LITES_ON ] = 1.0;
-    if ( request & REQUEST_LITES_TAXI_OFF ) v[ V_CONTROLS_TAXI_LITES_ON ] = 0.0;
-    if ( request & REQUEST_LITES_LANDING_ON ) v[ V_CONTROLS_LANDING_LITES_ON ] = 1.0;
-    if ( request & REQUEST_LITES_LANDING_OFF ) v[ V_CONTROLS_LANDING_LITES_ON ] = 0.0;
-    if ( request & REQUEST_LITES_BEACON_ON ) v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0;
-    if ( request & REQUEST_LITES_BEACON_OFF ) v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;
-    if ( request & REQUEST_LITES_STROBE_ON ) v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0;
-    if ( request & REQUEST_LITES_STROBE_OFF ) v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;
-    if ( request & REQUEST_LITES_NAV_ON ) v[ V_CONTROLS_NAV_LITES_ON ] = 1.0;
-    if ( request & REQUEST_LITES_NAV_OFF ) v[ V_CONTROLS_NAV_LITES_ON ] = 0.0;
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                     Применить следующее состояние из пути                                         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::apply_next_condition() {
-
-    XPlaneUtilities::log("*** APPLY NEXT ***");
-
-    // Сохранение предыдущих параметров, чтобы не было рывков.
-    float current_speed = _current_condition.speed;
-    float current_acceleration = _current_condition.acceleration;
-
-    if ( ! _conditions.empty() ) {
-        _current_condition = _conditions[0];
-
-        // Восстановление параметров из предыдущей фазы
-        // движения для обеспечения плавности.
-        _current_condition.speed = current_speed;
-        _current_condition.acceleration = current_acceleration;
-
-        // Убираем нулевую точку в "плане полета", она теперь стала текущей.
-        _conditions.erase( _conditions.begin() );
-
-    } else _current_condition = aircraft_condition_t();
 
 }
 
@@ -651,9 +604,7 @@ void BimboAircraft::set_landing_lites(bool on) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_beacon_lites(bool on) {
-    __actuators[ V_CONTROLS_BEACON_LITES_ON ].requested = true;
-    on ? __actuators[ V_CONTROLS_BEACON_LITES_ON ].endpoint = 1.0
-        : __actuators[ V_CONTROLS_BEACON_LITES_ON ].endpoint = 0.0;
+    on ? v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0 : v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;
 }
 
 // *********************************************************************************************************************
@@ -663,9 +614,7 @@ void BimboAircraft::set_beacon_lites(bool on) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_strobe_lites(bool on) {
-    __actuators[ V_CONTROLS_STROBE_LITES_ON ].requested = true;
-    on ? __actuators[ V_CONTROLS_STROBE_LITES_ON ].endpoint = 1.0
-        : __actuators[ V_CONTROLS_STROBE_LITES_ON ].endpoint = 0.0;
+    on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;
 }
 
 // *********************************************************************************************************************
@@ -675,7 +624,5 @@ void BimboAircraft::set_strobe_lites(bool on) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_nav_lites(bool on) {
-    __actuators[ V_CONTROLS_NAV_LITES_ON ].requested = true;
-    on ? __actuators[ V_CONTROLS_NAV_LITES_ON ].endpoint = 1.0
-        : __actuators[ V_CONTROLS_NAV_LITES_ON ].endpoint = 0.0;
+    on ? v[ V_CONTROLS_NAV_LITES_ON ] = 1.0 : v[ V_CONTROLS_NAV_LITES_ON ] = 0.0;
 }

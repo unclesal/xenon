@@ -6,7 +6,7 @@
 
 // My own includes
 #include "XNetworking.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 #include "settings.h"
 
 using namespace xenon;
@@ -37,7 +37,7 @@ XNetworking * XNetworking::create() {
 
 void * __receiving_thread( void * arg ) {
 
-    XPlaneUtilities::log("Receiver thread started successfully.");
+    XPlane::log("Receiver thread started successfully.");
 
     for (;;) {
         usleep(2);
@@ -75,7 +75,7 @@ XNetworking::XNetworking() {
         sprintf( __out, "Creating socket error %d. Error code=%d, message=%s",
                   __transmitter, errno, strerror( errno )
         );
-        XPlaneUtilities::log( string( __out ) );
+        XPlane::log( string( __out ) );
         return;
     };
 
@@ -88,7 +88,7 @@ XNetworking::XNetworking() {
 
 #ifdef DEBUG
     sprintf( __out, "Network transmitting socket is open now. Port=%d, multicast group=%s", NETWORK_PORT, NETWORK_MULTICAST_GROUP );
-    XPlaneUtilities::log( __out );
+    XPlane::log( __out );
 #endif
 
 }
@@ -106,7 +106,7 @@ void XNetworking::__init_receiver() {
         sprintf(__out, "Creating receiver socket error %d, code=%d, message=%s",
                   __receiver, errno, strerror( errno )
         );
-        XPlaneUtilities::log( __out );
+        XPlane::log( __out );
         return;
     }
 
@@ -114,7 +114,7 @@ void XNetworking::__init_receiver() {
 
 //     if ( setsockopt( __receiver, IPPROTO_IP, IP_MULTICAST_LOOP, &yes, sizeof(yes) ) < 0 ) {
 //         sprintf( __out, "Setting IP_MULTICAST_LOOP, error=%d, msg=%s", errno, strerror( errno ) );
-//         XPlaneUtilities::log( __out );
+//         XPlane::log( __out );
 //         __close_socket( __receiver );
 //         return;
 //     };
@@ -127,7 +127,7 @@ void XNetworking::__init_receiver() {
     yes = 1;
 
     if ( setsockopt( __receiver, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
-        XPlaneUtilities::log("Can not set REUSE_ADDR, exit.");
+        XPlane::log("Can not set REUSE_ADDR, exit.");
         __close_socket( __receiver );
         return;
     }
@@ -136,7 +136,7 @@ void XNetworking::__init_receiver() {
 
     if (setsockopt( __receiver, SOL_SOCKET, SO_REUSEPORT, (const char*) & yes, sizeof( yes )) < 0) {
         sprintf(__out, "ERROR while try to set SO_REUSEPORT %d, msg=%s", errno, strerror( errno ) );
-        XPlaneUtilities::log( __out );
+        XPlane::log( __out );
         __close_socket( __receiver );
         return;
     }
@@ -152,7 +152,7 @@ void XNetworking::__init_receiver() {
     // Связывание приемной ("серверной") сокеты.
 
     if ( bind( __receiver, ( struct sockaddr * ) & sin, sizeof( sin ) ) < 0 ) {
-        XPlaneUtilities::log("ERROR when binding receiver socket.");
+        XPlane::log("ERROR when binding receiver socket.");
         __close_socket( __receiver );
         return;
     }
@@ -163,7 +163,7 @@ void XNetworking::__init_receiver() {
     mreq.imr_multiaddr.s_addr=inet_addr( NETWORK_MULTICAST_GROUP );
     mreq.imr_interface.s_addr=htonl( INADDR_ANY );
     if ( setsockopt ( __receiver, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
-        XPlaneUtilities::log("ERROR while set multicast group for receiving socket.");
+        XPlane::log("ERROR while set multicast group for receiving socket.");
         __close_socket( __receiver );
         return;
     }
@@ -173,7 +173,7 @@ void XNetworking::__init_receiver() {
     int res = pthread_create( & __receiver__thread_id, NULL, __receiving_thread, NULL );
     if ( res < 0 ) {
         sprintf( __out, "Receiver thread start error %d. Code=%d, message=%s", res, errno, strerror( errno ) );
-        XPlaneUtilities::log( __out );
+        XPlane::log( __out );
         __close_socket( __receiver );
         return;
     };
@@ -192,7 +192,7 @@ void XNetworking::receive() {
     // имеет ошибочный дескриптор - выходим и больше сюда не возвращаемся.
     if ( __receiver < 0 ) {
         int result = 0;
-        XPlaneUtilities::log("Incorrect receiver socket, exit from thread.");
+        XPlane::log("Incorrect receiver socket, exit from thread.");
         pthread_exit( & result );
     };
 
@@ -224,16 +224,16 @@ void XNetworking::receive() {
         } catch ( JSON::exception & e ) {
 
             sprintf( __out, "XNetworking::receive() %s", e.what() );
-            XPlaneUtilities::log( __out );
+            XPlane::log( __out );
 
         } catch ( std::exception & e ) {
 
             sprintf( __out, "XNetworking::receive() std exception: %s", e.what() );
-            XPlaneUtilities::log( __out );
+            XPlane::log( __out );
 
         } catch ( ... ) {
 
-            XPlaneUtilities::log( "XNetworking::receive(), unhandled exception" );
+            XPlane::log( "XNetworking::receive(), unhandled exception" );
 
         }
     };
@@ -268,7 +268,7 @@ bool XNetworking::__prepare_socket_for_reuse( int & socket ) {
 //
 //    if ( setsockopt( socket, IPPROTO_IP, IP_MULTICAST_LOOP, &yes, sizeof(yes) ) < 0 ) {
 //        sprintf( __out, "Setting IP_MULTICAST_LOOP, error=%d, msg=%s", errno, strerror( errno ) );
-//        XPlaneUtilities::log( __out );
+//        XPlane::log( __out );
 //        return false;
 //    };
 
@@ -276,7 +276,7 @@ bool XNetworking::__prepare_socket_for_reuse( int & socket ) {
 
     if ( setsockopt( socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0 ) {
         sprintf( __out, "Try to set SO_REUSEADDR, error=%d, msg=%s.", errno, strerror( errno ) );
-        XPlaneUtilities::log( __out );
+        XPlane::log( __out );
         return false;
     }
 
@@ -286,7 +286,7 @@ bool XNetworking::__prepare_socket_for_reuse( int & socket ) {
     yes = 1;
     if (setsockopt( socket, SOL_SOCKET, SO_REUSEPORT, (const char*) & yes, sizeof( yes )) < 0 ) {
         sprintf( __out, "Try to set SO_REUSEPORT, error=%d, msg=%s.", errno, strerror( errno ) );
-        XPlaneUtilities::log( __out );
+        XPlane::log( __out );
         return false;
     }
 
@@ -319,7 +319,7 @@ void XNetworking::send_to_all( void * cmd, int len ) {
         sprintf( __out, "XNetworking::sent_to_all, error packet sending, res=%d, want=%d. Error=%d. msg=%s.",
             result, len, errno, strerror( errno )
         );
-        XPlaneUtilities::log( __out );
+        XPlane::log( __out );
 
 #endif
 
@@ -344,20 +344,20 @@ void XNetworking::send_to_all(xenon::JSONAble * command) {
         // Посмотреть, что там передается.
 
         // strcpy( __out, str.c_str() );
-        // XPlaneUtilities::log( __out );
+        // XPlane::log( __out );
 
         send_to_all( (void * )str.c_str(), (int) str.size() );
 
     } catch ( JSON::exception & e ) {
 
 #ifdef DEBUG
-        XPlaneUtilities::log( string("XNetworking::send_to_all(), JSON exception: ") + e.what() );
+        XPlane::log( string("XNetworking::send_to_all(), JSON exception: ") + e.what() );
 #endif
 
     } catch (std::exception & e) {
 
 #ifdef DEBUG
-        XPlaneUtilities::log( string("XNetworking::send_to_all(), standard exception: ") + e.what() );
+        XPlane::log( string("XNetworking::send_to_all(), standard exception: ") + e.what() );
 #endif
 
     }
@@ -374,9 +374,9 @@ void XNetworking::send_to_all(xenon::JSONAble * command) {
 XNetworking::~XNetworking() {
 
     pthread_cancel( __receiver__thread_id );
-    XPlaneUtilities::log("Wait while receiving pthread finished...");
-    pthread_join( __receiver__thread_id, NULL );
-    XPlaneUtilities::log("Receiving pthread stopped.");
+    XPlane::log("Wait while receiving pthread finished...");
+    pthread_join( __receiver__thread_id, nullptr );
+    XPlane::log("Receiving pthread stopped.");
 
     // Now closing both sockets.
     if ( __transmitter >= 0 ) __close_socket( __transmitter );

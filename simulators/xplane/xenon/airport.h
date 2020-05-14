@@ -297,54 +297,9 @@ namespace xenon {
                 string description = "";
             };
 
-            struct taxi_network_routing_node_t {
-                // Latitude of node in decimal degrees Eight decimal places supported
-                double latitude = 0.0;
-                // Longitude of node in decimal degrees Eight decimal places supported
-                double longitude = 0.0;
-                // Usage of node in network (begin or end a taxi path, or both)
-                // “dest”, “init”, “both” or “junc”
-                string usage;
-                // Node identifier (defined in 0 based sequence, ascending)
-                // Integer. Must be unique within scope of an airport.
-                // Минус 1 означает, что реально узла - нет.
-                int id = -1;
-                // Node name. Not currently used. String (max 16 characters)
-                string name = "";
-
-                location_t location() {
-                    return location_t {
-                        .latitude = latitude,
-                        .longitude = longitude
-                    };
-                };
-            };
-
             struct taxi_network_routing_edge_active_zone_t {
                 string classification;
                 string runways;
-            };
-
-            struct taxi_network_routing_edge_t {
-                // Node identifier for start of edge Integer. Must refer to valid node (row code ‘1201’)
-                int start_id = 0;
-                // Node identifier for end of edge Integer. Must refer to valid node (row code ‘1201’)
-                int end_id = 0;
-                // Edge can be used in both directions “twoway” or “oneway”
-                string directions = "";
-                // Node is on a regular taxiway. If on “runway” a clearance is needed from ATC
-                // “taxiway” or “runway”
-                string type = "";
-                // Taxiway identifier. Used to build ATC taxi clearances (eg. “.. .taxi via A, T, Q”)
-                // String. Taxiway or runway identifier (eg. “A” or “16L/34R”)
-                string name = "";
-                vector< taxi_network_routing_edge_active_zone_t > active_zones;
-            };
-
-            struct taxi_network_t {
-                vector< taxi_network_routing_node_t > nodes;
-                vector< taxi_network_routing_edge_t > edges;
-                vector< taxi_network_routing_edge_t > ground_vehicle_edges;
             };
 
             struct truck_parking_t { // 1400
@@ -444,7 +399,6 @@ namespace xenon {
             };
             Airport & operator = ( const Airport & apt ) = default;
             virtual ~Airport() = default;
-            // Airport & operator = ( const Airport & apt );
             // Получить ближайший по координатам.
             static void get_nearest( location_t & location );
             // Получить по ICAO
@@ -522,83 +476,12 @@ namespace xenon {
              */
             vector<runway_in_use_t> get_runways_in_use();
 
-            // Получить ближайший к координатам узел.
-            // taxi_network_routing_node_t get_nearest_taxi_network_node(
-            //    const location_t & location, const string & like = ""
-            // );
-            /**
-             * @short Получить ближайщий (по метрике L1) к данной локации узел из представленной коллекции.
-             * @param location Местоположение в гео-координатах, для которого выбираем ближайший узел.
-             * @param nodes Предварительно подготовленная по какому-либо признаку коллекция узлов. Например,
-             * это может быть конкретный taxiway или runway.
-             * @return
-             */
-            taxi_network_routing_node_t get_nearest_node(
-                const location_t & location, const vector<taxi_network_routing_node_t> & nodes
-            );
-
-            /**
-             * @short Получить самый дальний (по метрике L1) узел.
-             * @param location Местоположение в гео-координатах, по отношению к которому ищем наиболее удаленный узел.
-             * @return
-             */
-            taxi_network_routing_node_t get_farest_node(
-                const location_t & location, const vector<taxi_network_routing_node_t> & nodes
-            );
-
-            // Получить узел по его внутриаэропортовому идентификатору.
-            taxi_network_routing_node_t get_taxi_network_node( const int & id );
-
-            // taxi_network_routing_node_t get_taxi_network_node_by_name( const string & name );
-            // vector <taxi_network_routing_node_t> get_taxi_network_nodes_like( const string & name );
-
-            // Получить соседей узла.
-            vector< taxi_network_routing_node_t> get_neighbors(const taxi_network_routing_node_t & node );
-
-            // land_runway_t get_land_runway(const string & name );
-
-            map< string, vector< taxi_network_routing_edge_t >> get_taxiways_edges();
-            map< string, vector< taxi_network_routing_edge_t >> get_runways_edges();
-
-            /**
-             * @short Получить все ребра, в которые входит этот узел.
-             * @param node
-             * @return
-             */
-            vector<taxi_network_routing_edge_t> get_edges_for( const taxi_network_routing_node_t & node );
-
-            /**
-             * @short Вернуть все узлы, входящие в данную коллекцию edges.
-             * Гарантированно каждый узел в возвращаемом результате будет присутствовать только один раз.
-             * Дополнительно узлы в возвращаемом векторе сортируются по сумме latitude + lognitude.
-             * @return
-             */
-            vector<taxi_network_routing_node_t> get_nodes_for(const vector<taxi_network_routing_edge_t> & edges);
-
-            /**
-             * @short Получить ближайший к указанному положению узел, который принадлежит именно к рулежкам.
-             * @param location
-             * @return
-             */
-            taxi_network_routing_node_t get_nearest_taxiway_node( const location_t & location );
-
             /**
              * Получить объект ВПП для конкретного действия (взлета или посадки).
              * @param use
              * @return
              */
             land_runway_t get_runway_for( const runway_used_t & use );
-
-            /**
-             * @short Итеративный поиск следующей ближайшей точки пути.
-             * @param target
-             * @param node
-             * @return
-             */
-
-            location_with_angles_t get_next_nearest_path_item(
-                const location_t & from, const location_t & to
-            );
 
             /**
              * @short Выдать путь для рулежки к полосе, с которой производится взлет.
@@ -609,8 +492,6 @@ namespace xenon {
              */
 
             vector<location_t> get_taxi_way_for_departure( const location_t & from );
-
-            // vector<location_with_angles_t> get_path_for_departure_taxing( const location_t & location );
 
         private:
 
@@ -684,28 +565,11 @@ namespace xenon {
             // Traffic flow rules
             vector <traffic_flow_t> _traffic_flow_;
 
-            // Taxi routing network
-            // TODO: кандидат на удаление
-            taxi_network_t _taxi_network;
-
             // Положить насчитанный контейнер в аэропорт и освободить динамически созданный блок в памяти.
             void _put_node_container( node_container_t ** ptr_container );
-            // void _put_taxi_network( taxi_network_t ** ptr_taxi );
             void _put_traffic_flow( traffic_flow_t ** ptr_traffic );
             void _put_startup_location( startup_location_t ** ptr_startup_location );
             static void _put_airport( Airport ** ptr_airport );
-
-            /**
-             * @short Получить edges, сгруппированных по имени, при условии, что их тип имеет определенное значение.
-             *
-             * Получить все edges, например, для рулежных дорожек. Они будут сгруппированы по имени рулежной дорожки.
-             * Это дает возможность выбирать рулежные дорожки непосредственно из taxi route network.
-             *
-             * @param type Тип, который ищем (например runway или taxiway).
-             * @return map<имя, вектор<edges>>
-             */
-
-            map < string, vector<taxi_network_routing_edge_t> > _group_taxi_network_edges( const string & type );
 
             /**
              * @short Проверить "полноту" заполнения ВПП.

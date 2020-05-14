@@ -1,3 +1,4 @@
+
 // *********************************************************************************************************************
 // *                                Представление окружающей действительности - внутри X-Plane.                        *
 // *                                                                                                                   *
@@ -19,11 +20,11 @@ XAmbient::XAmbient()
     : Ambient()
 {
     // The temperature of ambient air.
-    __ambient_temperature_dataref = XPlaneUtilities::find_data_ref("sim/weather/temperature_ambient_c");
+    __ambient_temperature_dataref = XPlane::find_data_ref("sim/weather/temperature_ambient_c");
     
     // The altitude relative to the underlying surface of the earth, meters.
     // Value about sea level is "altitude", this is already exists in global coordinates.
-    __y_agl_dataref = XPlaneUtilities::find_data_ref("sim/flightmodel/position/y_agl");
+    __y_agl_dataref = XPlane::find_data_ref("sim/flightmodel/position/y_agl");
 
 }
 

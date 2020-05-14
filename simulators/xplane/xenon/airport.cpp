@@ -86,86 +86,11 @@ Airport::Airport() {
 
     // traffic rules flow
     _traffic_flow_ = vector< traffic_flow_t >();
-    _taxi_network = taxi_network_t();
 
     // "Осиротевшесть" аэропорта.
     _orphanded = true;
 }
 
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                               Оператор присвоения                                                 *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-Airport & Airport::operator = (const Airport & apt) {
-
-    _full_path_to_apt_dat_ = apt._full_path_to_apt_dat_;
-    _origin_ = apt._origin_;
-    _version_ = apt._version_;
-    _ap_type_ = apt._ap_type_;
-    _evalution_in_feet_ = apt._evalution_in_feet_;
-    _icao_code_ = apt._icao_code_;
-    _name_ = apt._name_;
-    _viewpoint_ = apt._viewpoint_;
-
-    // Атрибуты аэропорта.
-    _city_ = apt._city_;
-    _country_ = apt._country_;
-    _datum_lon_ = apt._datum_lon_;
-    _datum_lat_ = apt._datum_lat_;
-    _gui_label_ = apt._gui_label_;
-    _iata_code_ = apt._iata_code_;
-    _region_code_ = apt._region_code_;
-    _state_ = apt._state_;
-    _transition_alt_ = apt._transition_alt_;
-    _transition_level_ = apt._transition_level_;
-    _faa_code_ = apt._faa_code_;
-    _flatten_ = apt._flatten_;
-    _drive_on_left_ = apt._drive_on_left_;
-    _local_code_ = apt._local_code_;
-
-    // Объекты внутри аэропорта.
-    _land_runways = apt._land_runways;
-    _water_runways = apt._water_runways;
-    _helipad_runways = apt._helipad_runways;
-    _startup_locations_ = apt._startup_locations_;
-    _truck_parkings_ = apt._truck_parkings_;
-    _truck_destinations_ = apt._truck_destinations_;
-
-    // Объекты-контейнеры нодов внутри аэропорта.
-    _light_beacons_ = apt._light_beacons_;
-    _frequencies_ = apt._frequencies_;
-    _windsocks_ = apt._windsocks_;
-    _signs_ = apt._signs_;
-    _lighting_objects_ = apt._lighting_objects_;
-    _taxiways_ = apt._taxiways_;
-    _linear_features_ = apt._linear_features_;
-    _boundaries_ = apt._boundaries_;
-
-    _traffic_flow_ = apt._traffic_flow_;
-    _taxi_network = apt._taxi_network;
-
-    _orphanded = apt._orphanded;
-
-    // Копирование графа.
-    _routes = apt._routes;
-
-    return * this;
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                             Конструктор копирования                                               *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-Airport::Airport( const Airport & apt )
-        : Airport()
-{
-    * this = apt;
-}
-*/
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                              Парзим - один файл.                                                  *
@@ -311,17 +236,6 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // Имя - это вся строка до конца.
             pos = line.rfind( contents[4] );
             startup_location->name = line.substr( pos );
-
-//            if ( apt->_icao_code_ == "USSS") {
-//                XPlaneUtilities::log(
-//                    "file=" + full_path_to_apt_dat
-//                    + ", line=" + line
-//                    + ", got old ramp " + startup_location->name
-//                    + ", lat=" + to_string( startup_location->latitude)
-//                    + ", lon=" + to_string( startup_location->longitude)
-//                );
-//            }
-
             continue;
         }
 
@@ -653,22 +567,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
         if ( i_type == 1201 ) {
             // taxi routing NODE.
             if ( ! apt ) throw runtime_error("got taxi routing node but apt is emtpy, line=" + to_string( lines_count ));
-
-//            // Old style, x-plane structure.
-//            taxi_network_routing_node_t old_style_node;
-//            old_style_node.latitude = stod( contents[1] );
-//            old_style_node.longitude = stod( contents[2] );
-//            old_style_node.usage = contents[3];
-//            old_style_node.id = stoi( contents[4] );
-//            if (contents.size() >= 6 ) {
-//                pos = line.find( contents[5] );
-//                old_style_node.name = line.substr( pos );
-//            }
-//            apt->_taxi_network.nodes.push_back( old_style_node );
-
-            // using airport network
             apt->__routes.add_apt_dat_node( line, contents );
-
             continue;
         }
 
@@ -676,54 +575,13 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // Taxi routing EDGE. Segment in taxi routing network
             if ( ! apt ) throw runtime_error("got routing edge but apt is empty, line=" + to_string( lines_count ));
             apt->__routes.add_apt_dat_edge( i_type, line, contents );
-
-//            // old style, native x-plane graph.
-//            taxi_network_routing_edge_t old_style_edge;
-//            old_style_edge.start_id = stoi( contents[1] );
-//            old_style_edge.end_id = stoi( contents[2] );
-//            old_style_edge.directions = contents[3];
-//            if ( contents.size() >= 5 ) {
-//                // Он, оказывается, тоже не является обязательным.
-//                old_style_edge.type = contents[4];
-//                if ( contents.size() >= 6 ) {
-//                    pos = line.rfind( contents[ 5 ] );
-//                    old_style_edge.name = line.substr( pos );
-//                }
-//            }
-//            if ( i_type == 1202 ) apt->_taxi_network.edges.push_back( old_style_edge );
-//            else apt->_taxi_network.ground_vehicle_edges.push_back( old_style_edge );
-
             continue;
         }
 
         if ( i_type == 1204 ) {
             // Edge active zone Identifies an edge as in a runway active zone.
             if ( ! apt ) throw runtime_error("got active zone but apt is empty, line=" + to_string( lines_count ));
-
             apt->__routes.add_apt_dat_active_zone( line, contents );
-//            // old style, x-plane based.
-//            if ( apt->_taxi_network.edges.empty() ) throw runtime_error(
-//                "got active zone but edges is empty, line=" + to_string( lines_count )
-//            );
-//
-//            taxi_network_routing_edge_active_zone_t old_style_zone;
-//            old_style_zone.classification = contents[1];
-//            old_style_zone.runways = contents[2];
-//            // Ставится на последний добавленный в taxi_network edge.
-//            auto last_idx = apt->_taxi_network.edges.size() - 1;
-//            apt->_taxi_network.edges[ last_idx ].active_zones.push_back( old_style_zone );
-//            // old style, x-plane based.
-//            if ( apt->_taxi_network.edges.empty() ) throw runtime_error(
-//                "got active zone but edges is empty, line=" + to_string( lines_count )
-//            );
-//
-//            taxi_network_routing_edge_active_zone_t old_style_zone;
-//            old_style_zone.classification = contents[1];
-//            old_style_zone.runways = contents[2];
-//            // Ставится на последний добавленный в taxi_network edge.
-//            auto last_idx = apt->_taxi_network.edges.size() - 1;
-//            apt->_taxi_network.edges[ last_idx ].active_zones.push_back( old_style_zone );
-
             continue;
         }
 
@@ -747,17 +605,6 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 startup_location->name = line.substr( pos );
                 while ( startup_location->name[ 0 ] == ' ' ) startup_location->name.erase( 0, 1 );
             }
-
-//            if ( apt->_icao_code_ == "USSS") {
-//                XPlaneUtilities::log(
-//                    "file=" + full_path_to_apt_dat
-//                    + ", line=" + line
-//                    + ", got NEW ramp " + startup_location->name
-//                    + ", lat=" + to_string( startup_location->latitude)
-//                    + ", lon=" + to_string( startup_location->longitude)
-//                );
-//            }
-
             continue;
         }
 
@@ -875,10 +722,6 @@ void Airport::_put_airport(Airport **ptr_airport) {
     auto apt = * ptr_airport;
     string icao_code = apt->_icao_code_;
 
-//    if ( icao_code == "USSS" ) {
-//        cout << "USSS";
-//    }
-
     if ( Airport::_airports_.contains( apt->_icao_code_ )) {
         // Замещение старого элемента аэропорта - более новым.
         Airport old = Airport::_airports_[ apt->_icao_code_ ];
@@ -913,24 +756,22 @@ void Airport::_put_airport(Airport **ptr_airport) {
 // *********************************************************************************************************************
 
 void Airport::_check_runway_fullness() {
-    map<string, vector<taxi_network_routing_edge_t>> rwy_edges = get_runways_edges();
-    for ( auto & pair : rwy_edges ) {
-        // Имена содержат две взлетки через /
-        string together_name = pair.first;
-        vector <taxi_network_routing_edge_t> edges = pair.second;
+
+    vector<string> rwy_names = __routes.get_names_for( AirportNetwork::WAY_RUNWAY );
+    for ( auto & rwy_name : rwy_names ) {
 
         // Заполняем полностью коллекцию узлов для составной взлетки,
         // например 08L/26R. Узлы будут одни и те же, только направление
         // движения будет обратным.
-        vector <taxi_network_routing_node_t> nodes = get_nodes_for( edges );
+        vector <AirportNetwork::node_t> nodes = __routes.get_nodes_for( rwy_name );
 
         // Распарзиваем имена. Их в норме должно быть два.
-        vector<string> names = split(together_name, '/');
+        vector<string> names = split( rwy_name, '/' );
         // Все полученные "номера" (имена) ВПП должны находиться в коллекции ВПП.
         // Если их там нет, то просто ставим пока флаг. Потому что в процессе
         // данного цикла "разпознается" конец этой самой ВПП.
         string need_to_insert;
-        taxi_network_routing_node_t nearest_founded_node;
+        AirportNetwork::node_t nearest_founded_node;
         land_runway_t founded_runway;
 
         for ( const auto & runway_number : names ) {
@@ -945,7 +786,7 @@ void Airport::_check_runway_fullness() {
                     location_t location;
                     location.latitude = rwy.end_latitude;
                     location.longitude = rwy.end_longitude;
-                    nearest_founded_node = get_nearest_node(location, nodes);
+                    nearest_founded_node = __routes.get_nearest_node(location, nodes);
                     // Выход из цикла по имеющимся RWYs.
                     break;
                 }
@@ -959,19 +800,20 @@ void Airport::_check_runway_fullness() {
             }
         }
 
-        if (( ! need_to_insert.empty() ) && ( nearest_founded_node.id >= 0 )) {
+        if (( ! need_to_insert.empty() ) && ( nearest_founded_node.xp_id >= 0 )) {
             // ВПП нужно добавить. И при этом мы действительно обнаружили какой-то
             // смысловой узел, наиболее близкий к уже существующей ВПП.
             land_runway_t rwy;
             rwy.runway_number = need_to_insert;
             location_t loc;
-            loc.latitude = nearest_founded_node.latitude;
-            loc.longitude = nearest_founded_node.longitude;
-            taxi_network_routing_node_t far_away = get_farest_node(loc, nodes);
-            rwy.end_latitude = far_away.latitude;
-            rwy.end_longitude = far_away.longitude;
+            loc.latitude = nearest_founded_node.location.latitude;
+            loc.longitude = nearest_founded_node.location.longitude;
+            AirportNetwork::node_t far_away = __routes.get_farest_node( loc, nodes );
+            rwy.end_latitude = far_away.location.latitude;
+            rwy.end_longitude = far_away.location.longitude;
             _land_runways.push_back( rwy );
         }
+
     }
 }
 
@@ -1060,31 +902,6 @@ void Airport::_put_node_container( node_container_t ** ptr_container ) {
 
 void Airport::get_nearest( location_t & location ) {
 #ifdef INTERNAL_XPLANE
-    XPLMNavRef dataref = XPLMFindFirstNavAidOfType( xplm_Nav_Airport );
-    while ( dataref != XPLM_NAV_NOT_FOUND ) {
-        // Получаем данные объекта, на который ссылается dataref.
-        XPLMNavType navaid_type = xplm_Nav_Unknown;
-        float latitude = 0.0, longitude = 0.0, height = 0.0, heading = 0.0;
-        int frequency = 0;
-        char id[32];
-        char name[256];
-        char region[1];
-        XPLMGetNavAidInfo(
-            dataref,
-            &navaid_type,
-            &latitude,
-            &longitude,
-            &height,
-            &frequency,
-            &heading,
-            id,
-            name,
-            region
-        );
-        XPlaneUtilities::log( string("ID=") + string(id) + ", name=" + string(name) + ", type=" + to_string(navaid_type) );
-        // Переход на следующий элемент.
-        dataref = XPLMGetNextNavAid(dataref);
-    }
 #endif
 }
 
@@ -1174,257 +991,6 @@ xenon::Airport & Airport::get_by_icao( const string & icao_code ) {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                     Вернуть ближайший к заданной локации узел из представленной коллекции узлов                   *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-Airport::taxi_network_routing_node_t Airport::get_nearest_node(
-    const location_t & location, const vector<taxi_network_routing_node_t> & nodes
-) {
-    taxi_network_routing_node_t result;
-    double min_delta = 10005000.0;
-    for ( const auto & node : nodes ) {
-        // По метрике L1, просто абсолютная разность. Так быстрее по времени.
-        double delta = abs(location.latitude - node.latitude) + abs(location.longitude - node.longitude);
-        if ( delta < min_delta ) {
-            result = node;
-            min_delta = delta;
-        }
-    }
-    return result;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                          Получить наиболее удаленный узел                                         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-Airport::taxi_network_routing_node_t Airport::get_farest_node(
-    const location_t & location, const vector<taxi_network_routing_node_t> & nodes
-) {
-
-    taxi_network_routing_node_t result;
-    double max_delta = 0.0;
-    for ( const auto & node : nodes ) {
-        // По метрике L1, просто абсолютная разность. Так быстрее по времени.
-        double delta = abs(location.latitude - node.latitude) + abs(location.longitude - node.longitude);
-        if ( delta > max_delta ) {
-            result = node;
-            max_delta = delta;
-        }
-    }
-    return result;
-
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                 Вернуть ближайший узел taxi routing network                                       *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-Airport::taxi_network_routing_node_t Airport::get_nearest_taxi_network_node(
-    const location_t & location, const string & like
-) {
-    taxi_network_routing_node_t result;
-    double min_delta = 100500.0;
-    for ( const taxi_network_routing_node_t & node: _taxi_network.nodes ) {
-        double delta = abs(location.latitude - node.latitude) + abs(location.longitude - node.longitude);
-        if ( delta < min_delta ) {
-            int pos = 0;
-            if ( ! like.empty() ) pos = node.name.find( like );
-            if ( pos >= 0 ) {
-                result = node;
-                delta = min_delta;
-            }
-        }
-    }
-    return result;
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                              Получить узел по его внутриаэропортовому идентификатору                              *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-Airport::taxi_network_routing_node_t Airport::get_taxi_network_node( const int & id ) {
-    for ( const auto & node : _taxi_network.nodes ) {
-        if ( node.id == id ) return node;
-    }
-    return taxi_network_routing_node_t();
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                          Получить узел по его имени                                               *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-Airport::taxi_network_routing_node_t Airport::get_taxi_network_node_by_name( const string & name ) {
-    for ( const auto & node: _taxi_network.nodes ) {
-        if ( node.name == name ) return node;
-    }
-    return taxi_network_routing_node_t();
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                              Получить узлы, содержащие определенное вхождение в имя                               *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-vector<Airport::taxi_network_routing_node_t> Airport::get_taxi_network_nodes_like( const string & name ) {
-    vector<Airport::taxi_network_routing_node_t> result;
-    for ( const auto & node: _taxi_network.nodes ) {
-        int pos = node.name.find( name );
-        if ( pos >= 0 ) result.push_back( node );
-    }
-    return result;
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                    Получить узлы, имеющие данную активную зону                                    *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-vector<Airport::taxi_network_routing_edge_t> Airport::get_taxi_network_edges_with_active_zone(
-    const string &active_zone
-) {
-    vector <taxi_network_routing_edge_t> result;
-    for ( const auto & edge : __taxi_network.edges ) {
-        for ( const auto & zone : edge.active_zones ) {
-            if (
-                    ( edge.type == "runway" )
-                    && ( zone.classification == "departure" )
-                    && ( zone.runways.find(active_zone) >= 0 )
-            )   result.push_back( edge );
-        }
-    }
-    return result;
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                                  Вернуть взлетку                                                  *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-Airport::land_runway_t Airport::get_land_runway( const string & name ) {
-    for ( const auto & rwy : _land_runways ) {
-        if ( rwy.runway_number == name ) return rwy;
-    }
-    return land_runway_t();
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                             Получить соседей этого узла                                           *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-vector< Airport::taxi_network_routing_node_t> Airport::get_neighbors( const taxi_network_routing_node_t & node ) {
-    vector< Airport::taxi_network_routing_node_t > result;
-    for ( const auto & edge : _taxi_network.edges ) {
-        if ( edge.start_id == node.id ) {
-            // Добавляем узел, который является концом данного edge.
-            result.push_back( get_taxi_network_node(edge.end_id) );
-        } else if ( edge.end_id == node.id ) {
-            result.push_back( get_taxi_network_node( edge.start_id ));
-        }
-    }
-    return result;
-
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                       Вернуть отсортированную коллекцию узлов для исходной коллекции edges                        *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-vector< Airport::taxi_network_routing_node_t > Airport::get_nodes_for(
-    const vector<taxi_network_routing_edge_t> &edges
-) {
-    vector< taxi_network_routing_node_t> nodes;
-
-    // Складываем только в том случае, если узла еще нет.
-    // Небольшая встроенная процедурка на эту тему.
-    auto has = [](int node_index, const vector <taxi_network_routing_node_t> & nodes ) {
-        for ( const auto & n : nodes )
-            // true - такой узел у нас уже есть.
-            if ( n.id == node_index ) return true;
-        // false - это значит, что такого узла у нас еще нет.
-        return false;
-    };
-
-    // Цикл по полученным edges.
-    for ( const auto & edge : edges ) {
-
-        if ( ! has (edge.start_id, nodes )) {
-            auto node_start = get_taxi_network_node( edge.start_id );
-            nodes.push_back( node_start );
-        }
-        if ( ! has ( edge.end_id, nodes )) {
-            auto node_end = get_taxi_network_node( edge.end_id );
-            nodes.push_back( node_end );
-        }
-    }
-
-    // Сортировка массива nodes, ключом является сумма latitude + logitude.
-    sort( nodes.begin(), nodes.end(), []( taxi_network_routing_node_t & a, taxi_network_routing_node_t & b ) {
-        return ( a.latitude + a.longitude ) > ( b.latitude + b.longitude );
-    });
-
-    return nodes;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                 Сгруппировать все узлы по их имени, если их тип содержит определенное значение                    *
-// *                        Используется для определения runway и taxiway из taxi network route                        *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-map<string, vector<Airport::taxi_network_routing_edge_t>> Airport::_group_taxi_network_edges( const string & type ) {
-    map<string, vector<Airport::taxi_network_routing_edge_t>> result;
-    for ( const auto & edge: _taxi_network.edges ) {
-        if ( edge.type == type ) {
-            if (result.contains(edge.name)) result[edge.name].push_back(edge);
-            else {
-                vector<Airport::taxi_network_routing_edge_t> edges;
-                edges.push_back(edge);
-                result[edge.name] = edges;
-            }
-        }
-    }
-    return result;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                        Вернуть (в routing edges) все взлетки                                      *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-map<string, vector<Airport::taxi_network_routing_edge_t>> Airport::get_runways_edges() {
-    return _group_taxi_network_edges("runway");
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                      Вернуть (в route edges) все рулежки                                          *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-map< string, vector<Airport::taxi_network_routing_edge_t>> Airport::get_taxiways_edges() {
-    return _group_taxi_network_edges( "taxiway" );
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
 // *                        Вернуть используемые ВПП с указанием их функции (departure, arrival)                       *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -1440,39 +1006,6 @@ vector<runway_in_use_t> Airport::get_runways_in_use() {
     r1.used = RUNWAY_USED_DEPARTURE;
     result.push_back(r1);
     return result;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                 Получить ближайший к указанному положению узел, который принадлежит именно к рулежкам             *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-Airport::taxi_network_routing_node_t Airport::get_nearest_taxiway_node(const location_t & location) {
-
-    // Нам нужен ближайший traxiway к тому месту, где сейчас находится самолет.
-    auto twys = get_taxiways_edges();
-    double min_distance = 100500.0;
-    taxi_network_routing_node_t nearest_node;
-    vector< taxi_network_routing_node_t > nearest_taxiway;
-    string taxiway_name;
-
-    for ( const auto & twy : twys ) {
-        string name = twy.first;
-        auto edges = twy.second;
-        auto nodes = get_nodes_for(edges);
-        auto n_node = get_nearest_node(location, nodes);
-        double delta = abs(n_node.latitude - location.latitude) + abs(n_node.longitude - location.longitude);
-        if ( delta < min_distance ) {
-            min_distance = delta;
-            nearest_node = n_node;
-            nearest_taxiway = nodes;
-            taxiway_name = name;
-        }
-    }
-
-    return nearest_node;
-
 }
 
 // *********************************************************************************************************************
@@ -1498,21 +1031,6 @@ Airport::land_runway_t Airport::get_runway_for( const runway_used_t & use ) {
     }
     return result;
 
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                  Получить все ребра, в которые входит данный узел                                 *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-vector< Airport::taxi_network_routing_edge_t > Airport::get_edges_for(const taxi_network_routing_node_t &node) {
-    vector< taxi_network_routing_edge_t > result;
-    for ( const auto & edge : _taxi_network.edges ) {
-        if ( ( edge.start_id == node.id ) || ( edge.end_id == node.id ) )
-            result.push_back( edge );
-    }
-    return result;
 }
 
 // *********************************************************************************************************************
@@ -1555,64 +1073,3 @@ vector<location_t> Airport::get_taxi_way_for_departure( const location_t & from 
     return result;
 
 }
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                 Итеративный поиск следующей ближайшей точки пути для достижения конкретной локации                *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-location_with_angles_t Airport::get_next_nearest_path_item(
-    const location_t & from, const location_t & to
-) {
-    location_with_angles_t result;
-
-    // Переданная в качестве параметра точка может быть вообще случайной. Поэтому
-    // для начала нужно найти "стартовый узел", от которого будем прокладывать курс.
-    auto start_node = get_nearest_taxiway_node( from );
-
-    if ( start_node.id < 0 ) return result;
-
-    auto edges = get_edges_for( start_node );
-    for ( const auto & edge : edges ) {
-        if ( edge.type != "taxiway") return result;
-    }
-    // Соседи текущего узла.
-    auto neighbors = get_neighbors(start_node);
-    // Ближайший из них к ВПП.
-    auto nearest = get_nearest_node(to, neighbors);
-    float heading = ( float ) XPlane::bearing(from, nearest.location());
-
-    result.location = nearest.location();
-    result.rotation.heading = heading;
-    return result;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                Просчитать координаты точек и курсы в этих точках - для руления с целью вылета                     *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-vector<location_with_angles_t> Airport::get_path_for_departure_taxing( const location_t & location ) {
-    vector< location_with_angles_t > way;
-    // ВПП для вылета.
-    auto runway = get_runway_for(RUNWAY_USED_DEPARTURE);
-    location_t runway_location = {
-        .latitude = runway.end_latitude,
-        .longitude = runway.end_longitude,
-        .altitude = 10.0
-    };
-
-    auto one_path_step = get_next_nearest_path_item( location, runway_location );
-
-    while ( ( one_path_step.location.latitude != 0.0 )
-        && ( one_path_step.location.longitude != 0.0 )
-    ) {
-        way.push_back( one_path_step );
-        one_path_step = get_next_nearest_path_item( one_path_step.location, runway_location );
-    }
-
-    return way;
-}
-*/

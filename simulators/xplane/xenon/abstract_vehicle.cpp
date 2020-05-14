@@ -5,7 +5,7 @@
 // *********************************************************************************************************************
 
 #include "abstract_vehicle.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 
 using namespace xenon;
 
@@ -26,7 +26,7 @@ AbstractVehicle::AbstractVehicle() {
 
 location_t AbstractVehicle::get_location() {
     position_t position = get_position();
-    return XPlaneUtilities::position_to_location(position);
+    return XPlane::position_to_location(position);
 }
 
 // *********************************************************************************************************************
@@ -36,6 +36,6 @@ location_t AbstractVehicle::get_location() {
 // *********************************************************************************************************************
 
 void AbstractVehicle::set_location( const location_t & location ) {
-    position_t position = XPlaneUtilities::location_to_position( location );
+    position_t position = XPlane::location_to_position( location );
     set_position( position );
 }

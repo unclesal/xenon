@@ -10,7 +10,7 @@
 #include <string>
 
 // My own includes.
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 #include "CommandSet.h"
 #include "abstract_vehicle.h"
 

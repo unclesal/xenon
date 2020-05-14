@@ -22,7 +22,7 @@
 
 // My own includes
 #include "xplane_plugin.h"
-#include "xplane_utilities.h"
+#include "xplane.hpp"
 #include "ivao/whazzup_reader_thread.h"
 
 // Temporary solution for program's settings storage.
@@ -39,7 +39,7 @@ xenon::XPlanePlugin * _plugin;
 pthread_t   _whazzup_reader_thread;
 // Был ли корректно создан поток чтения состояния IVAO?
 unsigned char _whazzup_gave_birth_to = 0;
-const char * plugin_name = "Xenon";
+const char * plugin_name = "xenon";
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -51,7 +51,7 @@ PLUGIN_API int XPluginStart( char * outName, char * outSig, char * outDesc ) {
 
     setlocale(LC_ALL, "C");
 
-    xenon::XPlaneUtilities::log("Plugin start.");
+    xenon::XPlane::log("Plugin start.");
     // Return plugin's description to X-Plane.
 
     strcpy(outName, plugin_name);
@@ -70,23 +70,23 @@ PLUGIN_API int XPluginStart( char * outName, char * outSig, char * outDesc ) {
     } else {
         // При создании потока возникли ошибки.
         string message = string("IVAO thread create result=") + to_string(result);
-        xenon::XPlaneUtilities::log(message);
+        xenon::XPlane::log(message);
 
     };
 #endif
 
 
 #ifdef DEBUG
-    xenon::XPlaneUtilities::log( "The Xenon plugin starded successfully in ** DEBUG ** mode." );
+    xenon::XPlane::log( "The Xenon plugin starded successfully in ** DEBUG ** mode." );
 #endif
 
     // Чтение и парзинг файлов аэропортов.
     // Происходит в отдельном потоке.
-    XPlaneUtilities::log("Init airports...");
+    XPlane::log("Init airports...");
     // auto func = []() {
         Airport::set_has_been_parsed( nullptr );
         Airport::read_all();
-        XPlaneUtilities::log("Init airports done, " + to_string(Airport::count()) + " airports");
+        XPlane::log("Init airports done, " + to_string(Airport::count()) + " airports");
     // };
     // std::thread apt_reader( func );
     // apt_reader.detach();
@@ -104,7 +104,7 @@ PLUGIN_API int XPluginStart( char * outName, char * outSig, char * outDesc ) {
 
 PLUGIN_API void	XPluginStop(void) {
 
-    xenon::XPlaneUtilities::log("Plugin stop.");
+    xenon::XPlane::log("Plugin stop.");
 
 	// The destroying a plugin variable.
 
@@ -116,9 +116,9 @@ PLUGIN_API void	XPluginStop(void) {
 		}
 
 	} catch (std::exception & e ) {
-		xenon::XPlaneUtilities::log( std::string("xenon_plugin::XPluginStop(): ") + e.what() );
+		xenon::XPlane::log( std::string("xenon_plugin::XPluginStop(): ") + e.what() );
 	} catch ( ... ) {
-		xenon::XPlaneUtilities::log( "xenon_plugin::XPluginStop(): unhandled exception ... :-( ..." );
+		xenon::XPlane::log( "xenon_plugin::XPluginStop(): unhandled exception ... :-( ..." );
 	}
 
 	// Остановка потока чтения состояния IVAO.
@@ -370,8 +370,8 @@ float cb_observing_user_aircraft(
 PLUGIN_API int XPluginEnable(void)  {
 
     // Инициализация XPMP2.
-    string separator = XPlaneUtilities::get_directory_separator();
-    string plugin_path = XPlaneUtilities::get_plugin_path();
+    string separator = XPlane::get_directory_separator();
+    string plugin_path = XPlane::get_plugin_path();
     string resource_path = plugin_path + separator + "Resources";
 
     // Register callback procedures. This made in enable/disable, not in start/stop
@@ -395,7 +395,7 @@ PLUGIN_API int XPluginEnable(void)  {
                                            cb_xpmp2_configuration,   // configuration callback function
                                            "C172");                   // default ICAO type
     if (res[0]) {
-        XPlaneUtilities::log(
+        XPlane::log(
                 string("Initialization of XPMP2 failed: ") + string(res)
                 + ", resource_path=" + resource_path
         );
@@ -405,7 +405,7 @@ PLUGIN_API int XPluginEnable(void)  {
     // Load our CSL models
     res = XPMPLoadCSLPackage(resource_path.c_str());     // CSL folder root path
     if ( res[0] ) {
-        XPlaneUtilities::log("Error: could not initialize CSL package: " + string(res));
+        XPlane::log("Error: could not initialize CSL package: " + string(res));
     }
 
     // Now we also try to get control of AI planes. That's optional, though,
@@ -413,12 +413,12 @@ PLUGIN_API int XPluginEnable(void)  {
     // could have control already
     res = XPMPMultiplayerEnable();
     if (res[0]) {
-        XPlaneUtilities::log(string("Could not enable AI planes: ") + string(res));
+        XPlane::log(string("Could not enable AI planes: ") + string(res));
     }
 
     // Должно быть - в самом конце процедуры, т.к. инициализирует внутреннюю конфигурацию плагина.
     if ( _plugin ) _plugin->enable();
-    XPlaneUtilities::log("Plugin ENABLED.");
+    XPlane::log("Plugin ENABLED.");
 
     return 1;
 
@@ -449,7 +449,7 @@ PLUGIN_API void XPluginDisable(void) {
     // XPLMUnregisterFlightLoopCallback( cb__observing_ambient, NULL );
     // XPLMUnregisterFlightLoopCallback( cb_observing_bimbo_aircrafts, nullptr );
 
-    XPlaneUtilities::log("Plugin DISABLED.");
+    XPlane::log("Plugin DISABLED.");
 
 }
 
@@ -460,7 +460,7 @@ PLUGIN_API void XPluginDisable(void) {
 // *********************************************************************************************************************
 
 void whazzup_reloaded() {
-    XPlaneUtilities::log("Whazzup file was reloaded.");
+    XPlane::log("Whazzup file was reloaded.");
 }
 
 // *********************************************************************************************************************

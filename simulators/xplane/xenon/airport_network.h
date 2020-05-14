@@ -138,7 +138,8 @@ namespace xenon {
             graph_t::vertex_descriptor get_node_by_xp_id( const int & xp_id );
 
             graph_t::vertex_descriptor get_nearest_node( const location_t & from, const way_type_t way_type );
-            // edge_t get_nearest_node( const location_t & from, const vector<graph_t::vertex_descriptor> & input_set );
+            node_t get_nearest_node( const location_t & location, const vector <node_t> & nodeset );
+            node_t get_farest_node( const location_t & location, const vector< node_t > & nodeset );
 
             // @todo наверняка здесь может быть правильнее.
             vector<edge_t> get_edges_for( const graph_t::vertex_descriptor & node_descriptor );
@@ -146,6 +147,11 @@ namespace xenon {
             std::deque< graph_t::vertex_descriptor > shortest_path(
                 const graph_t::vertex_descriptor & start_node_descriptor, const location_t & to_location
             );
+            // Получить вектором все имена для данного типа (рулежных дорожек или взлеток).
+            vector< string > get_names_for( way_type_t way_type );
+
+            // Получить все узлы, входящие в данную рулежную дорожку или взлетку - по ее имени.
+            vector< node_t > get_nodes_for( const string & edge_name );
 
         private:
 
