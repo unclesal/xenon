@@ -50,8 +50,9 @@ add_library(xenon MODULE
         ../../../common/jsonable.cpp
         ../../../common/utils.cpp
         # Управление. Пока что в этом же директории, на потом надо будет перенести в common.
-        control/aircraft_abstract_does.cpp
+        control/aircraft_abstract_action.cpp
         control/aircraft_abstract_state.cpp        
+        control/aircraft_does_nothing.cpp
         control/aircraft_does_push_back.cpp
         control/aircraft_does_slow_taxing.cpp
         control/aircraft_state_graph.cpp

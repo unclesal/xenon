@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <string>
 #include <boost/graph/adjacency_list.hpp>
 
 #include "structures.h"
@@ -25,7 +26,7 @@ namespace xenon {
         };
 
         // Действия (ребра графа).
-        enum aircraft_does_t {
+        enum aircraft_actions_t {
             ACF_DOES_NOTHING = 0,
             // Выталкивается.
             ACF_DOES_PUSH_BACK,
@@ -55,14 +56,16 @@ namespace xenon {
             // получим циклическую ссылку инклудников.
             void * ptr_state_class = nullptr;
             bool current_state = false;
+            std::string name;
         };
 
         // Ребро графа - действие для перехода в другое состояние.
         struct edge_t {
-            aircraft_does_t does = ACF_DOES_NOTHING;
+            aircraft_actions_t action = ACF_DOES_NOTHING;
             // Указатель на класс действия.
             void * ptr_does_class = nullptr;
-            bool current_does = false;
+            bool current_action = false;
+            std::string name;
         };
 
         // Описание собственно графа.

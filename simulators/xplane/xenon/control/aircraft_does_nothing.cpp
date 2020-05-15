@@ -1,40 +1,40 @@
 // *********************************************************************************************************************
-// *                    "Медленное перемещение" - при заруливании на стоянку, либо при выруливании из нее              *
+// *                                                   Ничегонеделание                                                 *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 may 2020 at 14:18 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 may 2020 at 18:26 *
 // *********************************************************************************************************************
-
-#include "aircraft_does_slow_taxing.h"
+#include "aircraft_does_nothing.h"
 
 using namespace xenon;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                                    Конструктор                                                    *
+// *                                                    Конструктор.                                                   *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AircraftDoesSlowTaxing::AircraftDoesSlowTaxing ( 
-    AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d  
-) : AircraftAbstractAction( ptr_acf, edge_d )
+AircraftDoesNothing::AircraftDoesNothing(
+    AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
+) : AircraftAbstractAction( ptr_acf, edge_d ) 
 {
 }
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                        Процедура старта данного действия                                          *
+// *                                         Перекрытая функция старта действия                                        *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesSlowTaxing::_internal_start() {
+void AircraftDoesNothing::_internal_start() {
 };
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                             Один шаг данного действия                                             *
+// *                                   Перекрытая функция "внутреннего шага" действия                                  *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesSlowTaxing::_internal_step ( float elapsed_since_last_time ) {
-}
+void AircraftDoesNothing::_internal_step( float elapsed_since_last_time ) {
+    
+};
 

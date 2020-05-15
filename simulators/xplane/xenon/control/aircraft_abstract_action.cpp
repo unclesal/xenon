@@ -4,7 +4,7 @@
 // * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 may 2020 at 14:04 *
 // *********************************************************************************************************************
 
-#include "aircraft_abstract_does.h"
+#include "aircraft_abstract_action.h"
 
 using namespace xenon;
 
@@ -14,7 +14,7 @@ using namespace xenon;
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AircraftAbstractDoes::AircraftAbstractDoes (
+AircraftAbstractAction::AircraftAbstractAction (
     AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
 ) {
     _edge_d = edge_d;
@@ -31,7 +31,7 @@ AircraftAbstractDoes::AircraftAbstractDoes (
 // *                                                                                                                  *
 // ********************************************************************************************************************
 
-void AircraftAbstractDoes::start() {
+void AircraftAbstractAction::__start() {
     
     if ( ! __started ) {
         _internal_start();
@@ -47,7 +47,7 @@ void AircraftAbstractDoes::start() {
 // *                                                                                                                  *
 // ********************************************************************************************************************
 
-void AircraftAbstractDoes::step( float elapsed_since_last_time ) {
+void AircraftAbstractAction::__step( float elapsed_since_last_time ) {
     
     if (( __started ) && ( ! __finished )) {
         _internal_step( elapsed_since_last_time );
@@ -62,7 +62,7 @@ void AircraftAbstractDoes::step( float elapsed_since_last_time ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftAbstractDoes::_finish() {
+void AircraftAbstractAction::_finish() {
     __finished = true;
     if ( _ptr_acf ) _ptr_acf->does_finished( this );
 }

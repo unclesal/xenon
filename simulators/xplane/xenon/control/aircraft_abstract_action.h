@@ -10,18 +10,17 @@
 
 namespace xenon {
     
-    class AircraftAbstractDoes {
+    class AircraftAbstractAction {
+        
+        friend class AircraftStateGraph;
         
         public:
             
-            AircraftAbstractDoes (
+            AircraftAbstractAction (
                 AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
             );
-            virtual ~AircraftAbstractDoes() = default;
-            
-            void start();
-            void step( float elapsed_since_last_time );
-            
+            virtual ~AircraftAbstractAction() = default;
+                                    
             bool is_started() {
                 return __started;
             };
@@ -50,6 +49,10 @@ namespace xenon {
              */
 
             double __total_duration;
+            
+            void __start();
+            void __step( float elapsed_since_last_time );
+
             
     }; // class AircraftAbstractDoes
 

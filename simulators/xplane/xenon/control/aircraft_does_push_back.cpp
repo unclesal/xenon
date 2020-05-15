@@ -16,7 +16,7 @@ using namespace xenon;
 
 AircraftDoesPushBack::AircraftDoesPushBack(
     AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
-) : AircraftAbstractDoes( ptr_acf, edge_d )
+) : AircraftAbstractAction( ptr_acf, edge_d )
 {
 }
 

@@ -543,9 +543,10 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::UpdatePosition(float elapsed_since_last_call, int fl_counter) {
+void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {
 
     __update_actuators(elapsed_since_last_call);
+    __graph->update( elapsed_since_last_call );
 
     /*
     // Подсчет полного времени выполнения данной фазы.
