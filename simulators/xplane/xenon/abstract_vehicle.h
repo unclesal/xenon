@@ -21,7 +21,8 @@ namespace xenon {
 
             virtual location_t get_location();
             virtual void set_location( const location_t & location );
-            virtual void set_rotation( const rotation_t & rotation ) {};
+            virtual rotation_t get_rotation() = 0;
+            virtual void set_rotation( const rotation_t & rotation ) {};            
 
             virtual void observe() {};
             // virtual void control( float elapse_since_last_call ) {};

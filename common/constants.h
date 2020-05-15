@@ -55,32 +55,6 @@ namespace xenon {
 //        PB_TAIL_TO_RIGHT
 //    };
 
-    // Состояния "конечного автомата", в которых может находиться самолет.
-    enum aircraft_does_t {
-        ACF_DOES_NOTHING = 0,
-        // Находится на стоянке.
-        ACF_DOES_PARKING,
-        ACF_DOES_STARTING_ENGINES,
-        // Останавливается при (после) рулежке, хорошо так прямо
-        // тормозит вплоть до полной его остановки.
-        ACF_DOES_TAXING_STOP,
-        // Выталкивается - чисто хвостом вперед, не меняя своего курса.
-        // Скорость выталкивания постоянна.
-        ACF_DOES_STRAIGHT_PUSH_BACK,
-        // Выталкивается - с поворотом, с изменением курса.
-        // И скорость, и угловое вращение - постоянны.
-        ACF_DOES_ROTATED_PUSH_BACK,
-        // Рулежка.
-        ACF_DOES_SLOW_TAXING,
-        ACF_DOES_NORMAL_TAXING,
-        // Скорее всего - стоит на HP. Но не факт,
-        // разрешение на взлет может быть получено сразу.
-        ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
-        ACF_DOES_TAKE_OFF,
-        ACF_DOES_CLIMBING,
-        ACF_DOES_CRUISING,
-        ACF_DOES_DESCENDING
-    };
 
     // Битовые константы включения или выключения света.
 

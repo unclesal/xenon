@@ -30,15 +30,7 @@ namespace xenon {
             // AbstractAircraft(const AbstractAircraft & aacf);
             virtual ~AbstractAircraft() override = default;
             
-            /**
-             * @short Common observing for any aircrafts, both user's and fake.
-             */
-            
-//            virtual void observe() override;
-//            virtual void to_json(JSON & json) override;
-//            virtual void from_json( JSON & json ) override;
-//            virtual void set( CommandSet & cmd );
-
+            virtual void does_finished( void * action ) = 0;
 
 
         protected:

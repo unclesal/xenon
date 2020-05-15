@@ -17,6 +17,7 @@
 // My own includes
 #include "structures.h"
 #include "constants.h"
+#include "aircraft_state_graph.h"
 #include "abstract_aircraft.h"
 #include "xplane.hpp"
 
@@ -52,6 +53,7 @@ namespace xenon {
             position_t get_position() override;
             position_with_angles_t get_position_with_angles();
             void set_position( const position_t & position ) override;
+            rotation_t get_rotation() override;
             void set_rotation( const rotation_t & rotation ) override;
 
             // Перекрытая функция XPMP2::Aircraft
@@ -89,6 +91,11 @@ namespace xenon {
             // void prepare_for_push_back_or_taxing( const location_with_angles_t & target );
 
             void prepare_for_taxing( const vector<location_t> & taxi_way );
+            
+            /**
+             * @short Текущее действие было завершено.
+             */
+            void does_finished( void * action ) override;
 
         protected:
 
@@ -112,6 +119,9 @@ namespace xenon {
             // static void _control_one_light( float & value, const float & dv );
 
             void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
+            
+            // Граф состояний самолета.
+            AircraftStateGraph * __graph;
 
     };  // class BimboAircraft
 

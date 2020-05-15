@@ -92,6 +92,7 @@ void AirportNetwork::add_apt_dat_edge(int i_type, const string &line, const vect
     // Прямая дуга будет в любом случае.
     auto direct_arc = add_edge( node_start, node_end, __graph );
     __last_added_direct_edge = direct_arc.first;
+    // Это - нужно. Потому что на первом этапе мы получили - только дескриптор.
     __graph[ __last_added_direct_edge ] = edge;
 
     // Возможно, что есть и обратная дуга тоже.
@@ -210,10 +211,33 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::shortes
 ) {
 
     std::deque< graph_t::vertex_descriptor > path;
-
     auto end_node_descriptor = get_nearest_node( to_location, WAY_ANY );
-    size_t visited;
-    AirportNetwork::dij_visitor_t vis( end_node_descriptor, visited );
+    size_t visited = 0;
+    
+    // Перекрытый класс Дейкстра-обхода графа (dijkstra visitor)
+
+    struct dij_visitor_t : boost::default_dijkstra_visitor {
+            using base = boost::default_dijkstra_visitor;
+            struct done{};
+
+            dij_visitor_t(AirportNetwork::graph_t::vertex_descriptor vd, size_t & visited)
+                : destination(vd), visited(visited) {}
+
+            void finish_vertex(AirportNetwork::graph_t::vertex_descriptor v, graph_t const & g) {
+                ++visited;
+
+                if (v == destination)
+                    throw done{};
+
+                base::finish_vertex(v, g);
+            }
+
+        private:
+            AirportNetwork::graph_t::vertex_descriptor destination;
+            size_t & visited;
+    };
+    
+    dij_visitor_t vis( end_node_descriptor, visited );
 
     auto null_vertex = xenon::AirportNetwork::graph_t::null_vertex();
     std::vector<boost::default_color_type>  colors(num_vertices( __graph ), boost::default_color_type{});
@@ -238,8 +262,9 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::shortes
                 predecessor_map( predmap ).
                 weight_map( custom_distance )
         );
+        XPlane::log("AirportNetwork::shortest_path: path not found.");
 
-    } catch ( AirportNetwork::dij_visitor_t::done const & ) {
+    } catch ( dij_visitor_t::done const & ) {
 
         auto distance = distmap[ end_node_descriptor ];
         if ( distance != FAR_AWAY ) {

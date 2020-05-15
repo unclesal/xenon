@@ -7,6 +7,7 @@
 #include <string>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+
 #include <boost/property_map/property_map.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
@@ -16,12 +17,6 @@
 using namespace std;
 
 namespace xenon {
-
-//    point1.set<0>(1.0); 2
-//    point1.set<1>(2.0);
-//
-//    double x = point1.get<0>(); 3
-//    double y = point1.get<1>();
 
     class AirportNetwork {
 
@@ -99,29 +94,6 @@ namespace xenon {
                 boost::directedS,
                 node_t, edge_t
             > graph_t;
-
-            // Перекрытый класс Дейкстра-обхода графа (dijkstra visitor)
-
-            struct dij_visitor_t : boost::default_dijkstra_visitor {
-                    using base = boost::default_dijkstra_visitor;
-                    struct done{};
-
-                    dij_visitor_t(AirportNetwork::graph_t::vertex_descriptor vd, size_t & visited)
-                        : destination(vd), visited(visited) {}
-
-                    void finish_vertex(AirportNetwork::graph_t::vertex_descriptor v, graph_t const & g) {
-                        ++visited;
-
-                        if (v == destination)
-                            throw done{};
-
-                        base::finish_vertex(v, g);
-                    }
-
-                private:
-                    AirportNetwork::graph_t::vertex_descriptor destination;
-                    size_t & visited;
-            };
 
             AirportNetwork();
             AirportNetwork & operator = ( const AirportNetwork & anet ) = default;

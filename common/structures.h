@@ -56,7 +56,20 @@ namespace xenon {
         rotation_t rotation;
     };
 
-    struct location_with_angles_t {
+    // Типы точек маршрута.
+    enum waypoint_type_t {
+        WAYPOINT_UNKNOWN = 0,
+        WAYPOINT_PARKING,
+        WAYPOINT_TAXING,
+        WAYPOINT_SID,
+        WAYPOINT_CRUISING,
+        WAYPOINT_VECTORING,
+        WAYPOINT_STAR
+    };
+    
+    // Одна точка маршрута.
+    struct waypoint_t {
+        waypoint_type_t type = WAYPOINT_UNKNOWN;
         location_t location;
         rotation_t rotation;
     };

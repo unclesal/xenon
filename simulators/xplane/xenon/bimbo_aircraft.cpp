@@ -36,8 +36,19 @@ BimboAircraft::BimboAircraft(
     }
     // Времена полной отработки механизмов.
     __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = TIME_FOR_GEAR_MOTION;
+    
+    __graph = new AircraftStateGraph( this );
 
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                            Действие было завершено, переход в следующее состояние                                 *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::does_finished( void * action ) {
+};
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -137,7 +148,30 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
 
     // Сдвиг относительно начала стоянки
     move( shift_from_ramp() );
+    
+    // В графе состояний отмечаем, что мы встали на стоянку.
+    waypoint_t wp;    
+    wp.location = get_location();
+    wp.rotation = get_rotation();
+    wp.type = WAYPOINT_PARKING;
+    __graph->place_on_parking( wp );
 
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                        Вернуть угловое положение самолета                                         *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+rotation_t BimboAircraft::get_rotation() {    
+    // У "имитационного" самолета нет разницы между
+    // истинными и магнитным курсом, выдаем один к одному.
+    rotation_t rotation;
+    rotation.pitch = drawInfo.pitch;
+    rotation.heading = drawInfo.heading;    
+    rotation.roll = drawInfo.roll;
+    return rotation;    
 }
 
 // *********************************************************************************************************************
@@ -431,16 +465,9 @@ aircraft_condition_t BimboAircraft::_make_condition_full_taxing_stop(const float
 // *********************************************************************************************************************
 
 position_with_angles_t BimboAircraft::get_position_with_angles() {
-
     position_with_angles_t pos;
-
-    pos.position.x = drawInfo.x;
-    pos.position.y = drawInfo.y;
-    pos.position.z = drawInfo.z;
-    pos.rotation.heading = drawInfo.heading;
-    pos.rotation.pitch = drawInfo.pitch;
-    pos.rotation.roll = drawInfo.roll;
-
+    pos.position = get_position();
+    pos.rotation = get_rotation();
     return pos;
 }
 
@@ -580,9 +607,7 @@ void BimboAircraft::move( float meters ) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_taxi_lites(bool on) {
-    __actuators[V_CONTROLS_TAXI_LITES_ON].requested = true;
-    on ? __actuators[V_CONTROLS_TAXI_LITES_ON].endpoint = 1.0
-        : __actuators[V_CONTROLS_TAXI_LITES_ON].endpoint = 0.0;
+    on ? v[ V_CONTROLS_TAXI_LITES_ON ] = 1.0 : v[ V_CONTROLS_TAXI_LITES_ON ] = 0.0;
 }
 
 // *********************************************************************************************************************
@@ -592,9 +617,7 @@ void BimboAircraft::set_taxi_lites(bool on) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_landing_lites(bool on) {
-    __actuators[ V_CONTROLS_LANDING_LITES_ON ].requested = true;
-    on ? __actuators[ V_CONTROLS_LANDING_LITES_ON ].endpoint = 1.0
-        : __actuators[ V_CONTROLS_LANDING_LITES_ON ].endpoint = 0.0;
+    on ? v[ V_CONTROLS_LANDING_LITES_ON ] = 1.0 : v[ V_CONTROLS_LANDING_LITES_ON ] = 0.0;
 }
 
 // *********************************************************************************************************************
@@ -603,8 +626,8 @@ void BimboAircraft::set_landing_lites(bool on) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::set_beacon_lites(bool on) {
-    on ? v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0 : v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;
+void BimboAircraft::set_beacon_lites(bool on) {    
+    on ? v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0 : v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;    
 }
 
 // *********************************************************************************************************************
@@ -613,8 +636,8 @@ void BimboAircraft::set_beacon_lites(bool on) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::set_strobe_lites(bool on) {
-    on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;
+void BimboAircraft::set_strobe_lites(bool on) {    
+    on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;    
 }
 
 // *********************************************************************************************************************

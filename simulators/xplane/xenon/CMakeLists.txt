@@ -7,6 +7,26 @@ set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_BUILD_TYPE MATCHES "Release")
 
+set(DISTRIB_DIR_EXISTS FALSE)
+if (EXISTS "$ENV{DISTRIB_DIR}")
+     set(DISTRIB_DIR_EXISTS TRUE)
+endif()
+
+# DISTRIB_DIR - это то место, куда складываем саму сгенерированную библиотеку.
+# Поэтому если его нет, то это - фатально, выдаем ошибку.
+
+if (NOT ${DISTRIB_DIR_EXISTS})
+    message(FATAL_ERROR "Environment variable DISTRIB_DIR was not exported. Or directory \"$ENV{DISTRIB_DIR}\" does not exists.")
+endif()
+
+# PLUGIN_DIR - это для make install. Если его нет, то 
+# это не фатально, просто не будем делать install-секцию.
+
+set(PLUGIN_DIR_EXISTS FALSE)
+if (EXISTS "$ENV{PLUGIN_DIR}")
+    set(PLUGIN_DIR_EXISTS TRUE)
+endif()
+
 add_compile_options(-O3 -fPIC)
 
 # Enable all X-Plane SDK APIs up to the newest version.
@@ -24,12 +44,21 @@ add_definitions(-DAPL=$<BOOL:${APPLE}> -DIBM=$<BOOL:${WIN32}> -DLIN=$<AND:$<BOOL
 #                                              Source Files
 ########################################################################################################################
 add_library(xenon MODULE
-        # xenon sources
         ../../../common/network/Ambient.cpp
         ../../../common/network/CommandSet.cpp
         ../../../common/network/CommandAutopilotState.cpp
         ../../../common/jsonable.cpp
         ../../../common/utils.cpp
+        # Управление. Пока что в этом же директории, на потом надо будет перенести в common.
+        control/aircraft_abstract_does.cpp
+        control/aircraft_abstract_state.cpp        
+        control/aircraft_does_push_back.cpp
+        control/aircraft_does_slow_taxing.cpp
+        control/aircraft_state_graph.cpp
+        control/aircraft_state_parking.cpp
+        control/aircraft_state_on_hp.cpp
+        control/aircraft_state_ready_for_taxing.cpp
+        # Основной каталог.
         abstract_aircraft.cpp
         abstract_vehicle.cpp
         airport.cpp
@@ -50,6 +79,8 @@ set_property(TARGET xenon PROPERTY CXX_STANDARD_REQUIRED 20)
 set_property(TARGET xenon PROPERTY CXX_STANDARD 20)
 
 target_include_directories(xenon PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        control
         3dparty/libXPMP2/include
         ../XPSDK301/CHeaders/XPLM
         ../../../common
@@ -60,15 +91,19 @@ target_include_directories(xenon PUBLIC
 
 target_link_libraries(xenon ${CMAKE_SOURCE_DIR}/3dparty/libXPMP2/libXPMP2.a )
 
-message("plugin dir is: " "$ENV{PLUGIN_DIR}")
-
-set_target_properties(xenon PROPERTIES LIBRARY_OUTPUT_DIRECTORY "$ENV{PLUGIN_DIR}")
+set_target_properties(xenon PROPERTIES LIBRARY_OUTPUT_DIRECTORY "$ENV{DISTRIB_DIR}")
 set_target_properties(xenon
     PROPERTIES
     PREFIX ""
     OUTPUT_NAME "lin"
     SUFFIX ".xpl"
 )
+
+# install-секция
+if (${PLUGIN_DIR_EXISTS})
+    message("-- Install section will be generated for $ENV{PLUGIN_DIR}")
+    install(TARGETS xenon DESTINATION "$ENV{PLUGIN_DIR}")
+endif()
 
 ## Копирование файлов из XPMP2
 #set(XPMP2_ROOT_DIR $ENV{XPMP2_ROOT_DIR})

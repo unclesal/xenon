@@ -28,6 +28,7 @@ using namespace xenon;
 // Статические найденные аэропорты.
 map<string, Airport> Airport::_airports_;
 bool Airport::_airports_was_readed_ = false;
+
 // Обработчик события чтения нового аэропорта.
 void ( * Airport::_has_been_parsed_ )( string & icao_code ) = nullptr;
 // Фейковый аэропорт.

@@ -27,8 +27,9 @@ namespace xenon {
                         
             void observe() override;
 
-            virtual position_t get_position() override;
-            virtual void set_position( const position_t & position ) override;
+            position_t get_position() override;
+            void set_position( const position_t & position ) override;
+            rotation_t get_rotation() override;
 
             // Перекрытые функции вызова преобразований в json и обратно.
             // virtual void to_json( JSON & json ) override;
@@ -36,6 +37,9 @@ namespace xenon {
             
             // Установка чего-нибудь в пользовательском самолете.
             // virtual void set( CommandSet & cmd ) override;
+            
+            void does_finished( void * action ) override {
+            };
             
         protected:
             
