@@ -119,10 +119,10 @@ void XPlanePlugin::__init_around() {
     auto where_i_am = bimbo->get_location();
     
     auto way = usss.get_taxi_way_for_departure( where_i_am );
-    bimbo->prepare_for_taxing( way );
-    XPlane::log("Got " + to_string( way.size() ) + " points for taxing.");
+    bimbo->prepare_for_take_off( way );
 
     __bimbos.push_back( bimbo );
+    bimbo->do_next_step();
 
     // Инициализировали. Больше этого делать - не будем.
     __around_inited = true;

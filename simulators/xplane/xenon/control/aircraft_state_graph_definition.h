@@ -14,39 +14,7 @@
 namespace xenon {
     
     namespace aircraft_state_graph {
-        
-        // Состояния (узлы графа).
-        enum aircraft_state_t {
-            ACF_STATE_UNKNOWN = 0,
-            ACF_STATE_PARKING,
-            ACF_STATE_READY_FOR_TAXING,
-            // Находится на исполнительном старте.
-            ACF_STATE_HP,
-            ACF_STATE_READY_FOR_TAKEOF
-        };
-
-        // Действия (ребра графа).
-        enum aircraft_actions_t {
-            ACF_DOES_NOTHING = 0,
-            // Выталкивается.
-            ACF_DOES_PUSH_BACK,
-            // Рулежка.
-            ACF_DOES_SLOW_TAXING,
-            ACF_DOES_NORMAL_TAXING,
-            // Останавливается при (после) рулежке, хорошо так прямо
-            // тормозит вплоть до полной его остановки.
-            ACF_DOES_TAXING_STOP,
-
-            // Скорее всего - стоит на HP. Но не факт,
-            // разрешение на взлет может быть получено сразу.
-            ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
-            ACF_DOES_TAKE_OFF,
-            ACF_DOES_CLIMBING,
-            ACF_DOES_CRUISING,
-            ACF_DOES_DESCENDING
-        };
-
-        
+                
         // Узел графа - состояние самолета.
         struct node_t {
             // Описание состояния

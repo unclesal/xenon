@@ -175,31 +175,10 @@ namespace xenon {
 #endif
             }
 
-            /**
-             * @short Курс (азимут) от точки на точку.
-             */
-
-            static double bearing(const location_t & location_from, const location_t & location_to ) {
-                double teta1 = degrees_to_radians( location_from.latitude ); // lat
-                double teta2 = degrees_to_radians( location_to.latitude ); // lat2
-                double delta1 = degrees_to_radians( location_to.latitude - location_from.latitude ); // lat2-lat
-                double delta2 = degrees_to_radians( location_to.longitude - location_from.longitude ); // lon2-lon
-
-                //==================Heading Formula Calculation================//
-
-                double y = sin(delta2) * cos(teta2);
-                double x = cos(teta1)*sin(teta2) - sin(teta1)*cos(teta2)*cos(delta2);
-                double brng = atan2(y,x);
-                brng = radians_to_degrees(brng);// radians to degrees
-                normalize_degrees( brng );
-                // brng = ( ((int)brng + 360) % 360 );
-                return brng;
-            }
-
             static double bearing( const position_t & position_from, const position_t & position_to ) {
                 auto location_from = position_to_location( position_from );
                 auto location_to = position_to_location( position_to );
-                return bearing( location_from, location_to );
+                return xenon::bearing( location_from, location_to );
             }
 
             /**

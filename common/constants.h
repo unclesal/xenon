@@ -35,7 +35,6 @@ namespace xenon {
     // Время подъема/опускания стоек шасси.
     constexpr float TIME_FOR_GEAR_MOTION        = 10.0;
 
-
     /**
      * @short Использование ВПП.
      */
@@ -44,18 +43,52 @@ namespace xenon {
         RUNWAY_USED_DEPARTURE,
         RUNWAY_USED_ARRIVAL
     };
+    
+    // Типы точек маршрута.
+    enum waypoint_type_t {
+        WAYPOINT_UNKNOWN = 0,
+        WAYPOINT_PARKING,
+        WAYPOINT_TAXING,
+        WAYPOINT_RUNWAY,
+        WAYPOINT_SID,
+        WAYPOINT_CRUISING,
+        WAYPOINT_VECTORING,
+        WAYPOINT_STAR
+    };
+    
+    // Состояния (узлы графа состояний самолета).
+    enum aircraft_state_t {
+        ACF_STATE_UNKNOWN = 0,
+        ACF_STATE_PARKING,
+        // Полная остановка (после push back, но возможно
+        // и не только). И готов продолжать рулежку.
+        ACF_STATE_READY_FOR_TAXING,
+        // Находится на предварительном старте.
+        ACF_STATE_HP,
+        // Вышел на исполнительный старт, готов к взлету.
+        ACF_STATE_READY_FOR_TAKE_OFF,        
+    };
 
-//    /**
-//     * @short Направление движения хвоста при выталкивании.
-//     */
-//
-//    enum push_back_tail_direction_t {
-//        PB_TAIL_STRAIGHT = 0,
-//        PB_TAIL_TO_LEFT,
-//        PB_TAIL_TO_RIGHT
-//    };
+    // Действия (ребра графа состояний самолета).
+    enum aircraft_actions_t {
+        ACF_DOES_NOTHING = 0,
+        // Выталкивается.
+        ACF_DOES_PUSH_BACK,
+        // Рулежка.
+        ACF_DOES_SLOW_TAXING,
+        ACF_DOES_NORMAL_TAXING,
+        // Останавливается при (после) рулежке, хорошо так прямо
+        // тормозит вплоть до полной его остановки.
+        ACF_DOES_TAXING_STOP,
 
+        // Скорее всего - стоит на HP. Но не факт,
+        // разрешение на взлет может быть получено сразу.
+        ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
+        ACF_DOES_TAKE_OFF,
+        ACF_DOES_CLIMBING,
+        ACF_DOES_CRUISING,
+        ACF_DOES_DESCENDING
+    };
 
-    // Битовые константы включения или выключения света.
 
 }; // namespace xenon

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <string>
+#include <deque>
 
 // X-Plane includes
 #include "XPLMScenery.h"
@@ -88,14 +89,29 @@ namespace xenon {
              * курсом, тоже "где-то близко".
              * @param target
              */
-            // void prepare_for_push_back_or_taxing( const location_with_angles_t & target );
+            // void prepare_for_push_back_or_taxing( const waypoint_t & target );
 
-            void prepare_for_taxing( const vector<location_t> & taxi_way );
+            // void prepare_for_taxing( const vector<location_t> & taxi_way );
             
             /**
              * @short Текущее действие было завершено.
              */
             void does_finished( void * action ) override;
+            
+            /**
+             * @short Подготовить маршрут к взлету.
+             * От аэропорта был получен путь руления к ВПП и сама рабочая ВПП.
+             * Определяем действия (ребра графа) и складываем эти точки в план полета.
+             */
+
+            void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
+            
+            /**
+             * @short Следующий шаг по полетному плану.
+             * В зависимости от состояния и полетного плана, выбираем
+             * следующее действие, которое запускаем (стартуем).
+             */
+            void do_next_step();
 
         protected:
 
@@ -122,6 +138,8 @@ namespace xenon {
             
             // Граф состояний самолета.
             AircraftStateGraph * __graph;
+            
+            deque<waypoint_t> __flight_plan;
 
     };  // class BimboAircraft
 

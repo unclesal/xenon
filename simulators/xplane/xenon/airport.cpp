@@ -779,7 +779,8 @@ void Airport::_check_runway_fullness() {
 
             bool found = false;
 
-            for ( const auto & rwy : _land_runways ) {
+            for ( int i=0; i< _land_runways.size(); i++ ) {
+                land_runway_t & rwy = _land_runways.at( i );
                 if ( rwy.runway_number == runway_number ) {
                     // Взлетка - существует.
                     found = true;
@@ -787,7 +788,18 @@ void Airport::_check_runway_fullness() {
                     location_t location;
                     location.latitude = rwy.end_latitude;
                     location.longitude = rwy.end_longitude;
+                    // Этот узел мы запомним, он будет "обратным" для добавляемой 
+                    // ВПП, если такое добавление будет производиться.
                     nearest_founded_node = __routes.get_nearest_node(location, nodes);
+                    
+                    // Локация найденного ближайшего узла. Записываем ее, она 
+                    // потом понадобиться для работы со взлетками.
+                    rwy.nearest_end_location = nearest_founded_node.location;
+                    
+                    // Нам для взлеток нужны оба, и ближний конец, и дальний.
+                    auto farest_runway_node = __routes.get_farest_node( location, nodes );
+                    rwy.farest_end_location = farest_runway_node.location;
+                    
                     // Выход из цикла по имеющимся RWYs.
                     break;
                 }
@@ -812,6 +824,11 @@ void Airport::_check_runway_fullness() {
             AirportNetwork::node_t far_away = __routes.get_farest_node( loc, nodes );
             rwy.end_latitude = far_away.location.latitude;
             rwy.end_longitude = far_away.location.longitude;
+            
+            // Запоминаем координаты узлов для обоих торцов, и ближний, и дальний. Здесь они меняются местами.
+            rwy.nearest_end_location = far_away.location;
+            rwy.farest_end_location = nearest_founded_node.location;
+            
             _land_runways.push_back( rwy );
         }
 
@@ -1040,9 +1057,9 @@ Airport::land_runway_t Airport::get_runway_for( const runway_used_t & use ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-vector<location_t> Airport::get_taxi_way_for_departure( const location_t & from ) {
+deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from ) {
 
-    vector<location_t> result;
+    deque<waypoint_t> result;
 
     // ВПП в использовании для взлета.
     land_runway_t departure_rwy = get_runway_for( RUNWAY_USED_DEPARTURE );
@@ -1065,11 +1082,36 @@ vector<location_t> Airport::get_taxi_way_for_departure( const location_t & from 
     }
 
     // Кратчайший путь от найденного узла до взлетки.
-    auto path = __routes.shortest_path( nearest_node_descriptor, departure_rwy.location() );
+    auto path = __routes.get_shortest_path( nearest_node_descriptor, departure_rwy.location() );
     for ( auto nd: path ) {
         auto node_itself = __routes.graph()[nd];
-        result.push_back( node_itself.location );
+        waypoint_t wp;
+        wp.type = WAYPOINT_TAXING;
+        wp.location = node_itself.location;
+        result.push_back( wp );
     }
+    
+    // Последний узел найденного пути - это уже сама взлетка.
+    result[ result.size() - 1 ].type = WAYPOINT_RUNWAY;
+    
+    // Самолет ничего не знает о геометрии аэропорта. Поэтому
+    // ему нужно дать еще и сам взлет, т.е. "дальный торец" ВПП,
+    // по отношению к которому будет осущестляться разбег.
+    waypoint_t take_off_wp;
+    take_off_wp.type = WAYPOINT_RUNWAY;
+    take_off_wp.location = departure_rwy.farest_end_location;
+    result.push_back( take_off_wp );
+    
+    // Теперь проходимся поочередно по элементам,
+    // выставляя курс на следующую точку и расстояние до нее.
+    for ( int i=0; i<result.size() - 1; i++ ) {
+        location_t l_current = result.at( i ).location;
+        location_t l_next = result.at( i + 1 ).location; 
+        double d = xenon::distance( l_current, l_next );
+        double bearing = xenon::bearing( l_current, l_next );
+        result.at(i).distance_to_next_wp = d;
+        result.at(i).rotation.heading = bearing;
+    }        
 
     return result;
 

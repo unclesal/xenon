@@ -227,9 +227,10 @@ void BimboAircraft::prepare_for_push_back_or_taxing( const location_with_angles_
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+/*
 void BimboAircraft::prepare_for_taxing( const vector<location_t> & taxi_way ) {
 
-    /*
+    
     for ( const auto & point : taxi_way ) {
         aircraft_condition_t c;
         c.does = ACF_DOES_NORMAL_TAXING;
@@ -292,8 +293,63 @@ void BimboAircraft::prepare_for_taxing( const vector<location_t> & taxi_way ) {
 
         };
         _conditions.push_back(c);
+    }    
+}
+*/
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                               Подготовка самолета к выруливанию на взлет и взлету                                 *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
+    
+    // В полетный план они будут вставляться в самое начало, потому что
+    // полетный план может быть уже заполнен. Например, SIDом или вообще
+    // полным путем. Соответственно, добавление начинается с конца полученного
+    // вектора. Чтобы не извращаться - проще его реверсировать на входе.
+    
+    deque< waypoint_t > tw = taxi_way;
+    std::reverse( tw.begin(), tw.end() );
+    
+    // Две начальных точки - должна быть взлетка.
+    for ( int i=0; i<2; i++ ) {
+        if ( tw.at( 0 ).type != WAYPOINT_RUNWAY ) {
+            XPlane::log("ERROR: latest waypoints for take off is not runway!");
+            return;
+        }
+    };
+    
+    // Самая последняя точка - дальний конец ВПП.
+    
+    waypoint_t wp = tw.front(); tw.pop_front();
+    wp.action_to_achieve = ACF_DOES_TAKE_OFF;
+    __flight_plan.push_front( wp );
+    
+    // Дальше все точки, кроме самой первой - это рулежка. В том числе и саму ВПП
+    // (вторая с конца точка полученного пути) мы достигаем - тоже выруливанием.
+    
+    for ( int i=0; i<tw.size() - 1; i++ ) {
+        wp = tw.front(); tw.pop_front();
+        wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
+        __flight_plan.push_front( wp );
     }
-    */
+    
+    // Осталась одна точка. До нее можно добраться либо выруливанием,
+    // либо выталкиванием. Зависит от того, где она находится от нас,
+    // спереди или сзади и можно ли до нее доехать самостоятельно.
+    
+    wp = tw.front(); tw.pop_front();
+    location_t current_location = get_location();
+    double azimuth = xenon::bearing( current_location, wp.location );
+    if ( ( azimuth <= 60.0 ) || ( azimuth >= 300.0 ) )
+        // Это "выруливание", потому что точка у нас перед носом.
+        wp.action_to_achieve = ACF_DOES_SLOW_TAXING;
+    else wp.action_to_achieve = ACF_DOES_PUSH_BACK;
+    __flight_plan.push_front( wp );
+    
+    XPlane::log("Total FP size=" + to_string( __flight_plan.size() ));
 }
 
 // *********************************************************************************************************************

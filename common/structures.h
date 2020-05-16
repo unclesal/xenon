@@ -55,23 +55,21 @@ namespace xenon {
         position_t position;
         rotation_t rotation;
     };
-
-    // Типы точек маршрута.
-    enum waypoint_type_t {
-        WAYPOINT_UNKNOWN = 0,
-        WAYPOINT_PARKING,
-        WAYPOINT_TAXING,
-        WAYPOINT_SID,
-        WAYPOINT_CRUISING,
-        WAYPOINT_VECTORING,
-        WAYPOINT_STAR
-    };
     
     // Одна точка маршрута.
     struct waypoint_t {
-        waypoint_type_t type = WAYPOINT_UNKNOWN;
+        xenon::waypoint_type_t type = WAYPOINT_UNKNOWN;
+        // Положение в пространстве данной точки.
         location_t location;
+        // Здесь угловое положение самолета - это то, в каком положении он должен оказаться
+        // в данной точке. Чтобы ее достигнуть - будут какие-то другие угловые положения, 
+        // которые самолет выбирает самостоятельно.
         rotation_t rotation;
+        // Дистанция (в метрах) до следующей точки.
+        // У последней точки маршрута она равна нулю.
+        double distance_to_next_wp = 0.0;
+        // Действие для достижения этой точки плана полета.
+        xenon::aircraft_actions_t action_to_achieve = ACF_DOES_NOTHING;
     };
 
     /**

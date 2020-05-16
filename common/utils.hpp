@@ -39,7 +39,7 @@ namespace xenon {
         double degrees = radians * 180.0 / PI;
         normalize_degrees( degrees );
         return degrees;
-    }
+    };
 
     /**
      * @short Перевод из градусов в радианы.
@@ -49,7 +49,7 @@ namespace xenon {
 
     inline double degrees_to_radians( const double & degrees ) {
         return degrees * PI / 180.0;
-    }
+    };
 
     /**
      * @short Полная дистанция в сферических координатах.
@@ -60,6 +60,27 @@ namespace xenon {
         auto boost_to = boost_location_t( to.latitude, to.longitude, to.altitude );
         double distance = boost::geometry::distance( boost_from, boost_to, geoid_distance_t());
         return distance;
-    }
+    };
+    
+    /**
+     * @short Курс (азимут) от точки на точку.
+     */
 
-}
+    static inline double bearing(const location_t & location_from, const location_t & location_to ) {
+        double teta1 = degrees_to_radians( location_from.latitude ); // lat
+        double teta2 = degrees_to_radians( location_to.latitude ); // lat2
+        double delta1 = degrees_to_radians( location_to.latitude - location_from.latitude ); // lat2-lat
+        double delta2 = degrees_to_radians( location_to.longitude - location_from.longitude ); // lon2-lon
+
+        //==================Heading Formula Calculation================//
+
+        double y = sin(delta2) * cos(teta2);
+        double x = cos(teta1)*sin(teta2) - sin(teta1)*cos(teta2)*cos(delta2);
+        double brng = atan2(y,x);
+        brng = radians_to_degrees(brng);// radians to degrees
+        normalize_degrees( brng );
+        return brng;
+    };
+
+
+}; // namespace xenon

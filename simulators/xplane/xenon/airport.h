@@ -8,11 +8,13 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <deque>
 
 #include <lemon/list_graph.h>
 
 #include "structures.h"
 #include "xplane.hpp"
+#include "utils.hpp"
 #include "airport_network.h"
 
 using namespace std;
@@ -81,12 +83,23 @@ namespace xenon {
                 // Runway number (eg. “31R”, “02”). Leading zeros are required.
                 // Two to three characters. Valid suffixes: “L”, “R” or “C” (or blank)
                 string runway_number = "";
+                
+                // Здесь маленько путаница. В X-Plane это всегда "конец ВПП".
+                // Хотя по смыслу имеется в виду как раз "начало", т.е.
+                // ближайший торец. А нам еще нужен и противоположный конец ВПП тоже.
+                
                 // Latitude of runway end (on runway centerline) in decimal degrees
                 // Eight decimal places supported
                 double end_latitude = 0.0;
                 // Longitude of runway end (on runway centerline) in decimal degrees
                 // Eight decimal places supported
                 double end_longitude = 0.0;
+                
+                location_t nearest_end_location;
+                // Это как раз противоположный конец и есть, т.е. дальний,
+                // если мы садимся на эту взлетку.
+                location_t farest_end_location;
+                
                 // Length of displaced threshold in metres (this is included in implied runway length)
                 // A displaced threshold will always be inside (between) the two runway ends
                 //Two decimal places (metres). Default is 0.00
@@ -491,7 +504,7 @@ namespace xenon {
              * самолет.
              */
 
-            vector<location_t> get_taxi_way_for_departure( const location_t & from );
+            deque< waypoint_t > get_taxi_way_for_departure( const location_t & from );
 
         private:
 

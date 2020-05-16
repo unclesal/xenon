@@ -205,7 +205,7 @@ AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::shortest_path(
+std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::get_shortest_path(
     const graph_t::vertex_descriptor & start_node_descriptor,
     const location_t & to_location
 ) {
@@ -268,7 +268,7 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::shortes
 
         auto distance = distmap[ end_node_descriptor ];
         if ( distance != FAR_AWAY ) {
-
+            // Какая-то дистанция там есть - значит, нашли путь.
             for ( graph_t::vertex_descriptor current = end_node_descriptor;
                   current != xenon::AirportNetwork::graph_t::null_vertex()
                   && predmap[ current ] != current

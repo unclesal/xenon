@@ -116,7 +116,7 @@ namespace xenon {
             // @todo наверняка здесь может быть правильнее.
             vector<edge_t> get_edges_for( const graph_t::vertex_descriptor & node_descriptor );
 
-            std::deque< graph_t::vertex_descriptor > shortest_path(
+            std::deque< graph_t::vertex_descriptor > get_shortest_path(
                 const graph_t::vertex_descriptor & start_node_descriptor, const location_t & to_location
             );
             // Получить вектором все имена для данного типа (рулежных дорожек или взлеток).
