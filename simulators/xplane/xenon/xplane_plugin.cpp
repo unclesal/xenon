@@ -122,7 +122,7 @@ void XPlanePlugin::__init_around() {
     bimbo->prepare_for_take_off( way );
 
     __bimbos.push_back( bimbo );
-    bimbo->do_next_step();
+    bimbo->start_fp_action();
 
     // Инициализировали. Больше этого делать - не будем.
     __around_inited = true;

@@ -29,7 +29,7 @@ namespace xenon {
 
         // Ребро графа - действие для перехода в другое состояние.
         struct edge_t {
-            aircraft_actions_t action = ACF_DOES_NOTHING;
+            aircraft_action_t action = ACF_DOES_NOTHING;
             // Указатель на класс действия.
             void * ptr_does_class = nullptr;
             bool current_action = false;

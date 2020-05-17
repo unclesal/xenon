@@ -86,7 +86,7 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
 
     edge_t e_push_back;
     e_push_back.action = ACF_DOES_PUSH_BACK;
-    e_push_back.name = "Taxing";
+    e_push_back.name = "Push back";
     added_edge = boost::add_edge( state_parking_d, state_ready_for_taxing_d, __graph );
     auto ptr_push_back = new AircraftDoesPushBack( __ptr_acf, added_edge.first );
     e_push_back.ptr_does_class = ptr_push_back;
@@ -138,11 +138,14 @@ void AircraftStateGraph::clear_actions_activity() {
 // *********************************************************************************************************************
 
 void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::vertex_descriptor & nd ) {
+    
+    clear_states_activity();
+    
     try {
         __graph[ nd ].current_state = true;
         __current_state = ( AircraftAbstractState * ) __graph[ nd ].ptr_state_class;    
     } catch ( const std::range_error & re ) {
-        XPlane::log("AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
+        XPlane::log("ERROR: AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
     }
 };
 
@@ -153,14 +156,22 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
 // *********************************************************************************************************************
 
 void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t::edge_descriptor & ed ) {
+    
+    clear_actions_activity();
+    
     try {
+
+#ifdef DEBUG        
+        XPlane::log("AircraftStateGraph::set_active_action " + __graph[ ed ].name );
+#endif        
         __graph[ ed ].current_action = true;
         __current_action = (AircraftAbstractAction * ) __graph[ ed ].ptr_does_class;
         // Это единственное место, где должен вызываться старт. Поэтому сам старт сделан приватным.
         if ( __current_action ) __current_action->__start();        
     } catch ( const std::range_error & re ) {
-        XPlane::log("AircraftStateGraph::set_active_action() called with invalid edge descriptor." );
+        XPlane::log("ERROR: AircraftStateGraph::set_active_action() called with invalid edge descriptor." );
     }
+
 };
 
 // *********************************************************************************************************************
@@ -171,20 +182,6 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
 
 void AircraftStateGraph::place_on_parking( const waypoint_t & wp ) {
         
-    clear_states_activity();
-    clear_actions_activity();
-    
-    // Находим узел "на стоянке" и делаем его текущим.
-    graph_t::vertex_descriptor node_d = aircraft_state_graph::graph_t::null_vertex();
-    graph_t::vertex_iterator vi, vi_end, next;
-    for ( tie(vi, vi_end) = vertices( __graph ); vi != vi_end; ++vi) {
-        node_d = * vi;
-        if ( __graph[ node_d ].state == ACF_STATE_PARKING ) {
-            set_active_state( node_d );
-            break;
-        }
-    }
-    
 // ------------ in_edges --------------
 //     boost::graph_traits<Graph>::vertex_iterator i, end;
 //     boost::graph_traits<Graph>::in_edge_iterator ei, edge_end;
@@ -196,20 +193,18 @@ void AircraftStateGraph::place_on_parking( const waypoint_t & wp ) {
 //         cout << endl;
 //     }
 // ------------------------------------
+
+    clear_states_activity();
+    clear_actions_activity();
     
+    // Находим узел "на стоянке" и делаем его текущим.
+    aircraft_state_graph::graph_t::vertex_descriptor node_d = get_node_for( ACF_STATE_PARKING );
+            
     // Стоим на стоянке - ничего не делаем. Если нашли неправильный node_t, то здесь будет исключение индекса массива.
     try {
-        aircraft_state_graph::graph_t::out_edge_iterator ei, ei_end;
-        for (boost::tie(ei, ei_end) = out_edges( node_d, __graph); ei != ei_end; ++ei) {
-            auto source = boost::source ( *ei, __graph );
-            auto target = boost::target ( *ei, __graph );
-            if ( ( source == target ) && ( __graph[ * ei ].action == ACF_DOES_NOTHING ) ) {
-                // Выходит из состояния парковки, входит в него же и при
-                // этом ничего не делает. Ура. Нашли то, что нам надо.
-                set_active_action( * ei );
-                break;
-            }
-        }                
+        set_active_state( node_d );
+        auto action = get_action_for( node_d, node_d, ACF_DOES_NOTHING );
+        set_active_action( action );
     } catch ( const std::range_error & re ) {
         XPlane::log("AircraftStateGraph::place_on_parking, incorrect node_d was found");
         return;
@@ -225,4 +220,106 @@ void AircraftStateGraph::place_on_parking( const waypoint_t & wp ) {
 
 void AircraftStateGraph::update( float elapsed_since_last_call ) {
     if ( __current_action ) __current_action->__step( elapsed_since_last_call );
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                             Действительно ли граф находится в данном текущем состоянии ?                          *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+bool AircraftStateGraph::current_state_is( const xenon::aircraft_state_t & state ) {
+    if ( ! __current_state ) return false;
+    auto node = __graph[ __current_state->nd() ];
+    try {
+        return node.current_state == state;
+    } catch ( const std::range_error & e ) {
+    }
+    return false;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                Получить дескриптор узла для указанного состояния.                                 *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+aircraft_state_graph::graph_t::vertex_descriptor AircraftStateGraph::get_node_for( const aircraft_state_t & state ) {
+    
+    aircraft_state_graph::graph_t::vertex_descriptor node_d = aircraft_state_graph::graph_t::null_vertex();
+    aircraft_state_graph::graph_t::vertex_iterator vi, vi_end, next;
+    for ( tie(vi, vi_end) = vertices( __graph ); vi != vi_end; ++vi) {
+        node_d = * vi;
+        if ( __graph[ node_d ].state == state ) {
+            return node_d;
+        }
+    }
+    return node_d;
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                           Получить указанное действие - из дескрипторов состояний                                 *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_for(
+    const aircraft_state_graph::graph_t::vertex_descriptor & v_from,
+    const aircraft_state_graph::graph_t::vertex_descriptor & v_to,
+    const aircraft_action_t & action 
+) {
+    
+    aircraft_state_graph::graph_t::out_edge_iterator ei, ei_end;
+    for (boost::tie(ei, ei_end) = boost::out_edges( v_from, __graph); ei != ei_end; ++ei) {
+        auto target = boost::target ( * ei, __graph );
+        if ( ( target == v_to ) && ( __graph[ * ei ].action == action ) ) {
+            return * ei;
+            break;
+        }
+    }                
+    return aircraft_state_graph::graph_t::edge_descriptor();
+
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                             Получить указанное действие - из типов состояний                                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_for( 
+    const aircraft_state_t & from_state, 
+    const aircraft_state_t & to_state, 
+    const aircraft_action_t & action 
+) {
+    auto node_d_from = get_node_for( from_state );
+    auto node_d_to = get_node_for( to_state );
+    return get_action_for( node_d_from, node_d_to, action );    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *               Вернуть действие, исходящее из данного текущего состояния и имеющее определенный тип                *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_outgoing_from_current_state(
+    const aircraft_action_t & action 
+) {
+    
+    aircraft_state_graph::graph_t::edge_descriptor fake;
+    if ( ! __current_state ) return fake;
+    aircraft_state_graph::graph_t::vertex_descriptor current_state_d = __current_state->nd();
+    
+    aircraft_state_graph::graph_t::out_edge_iterator ei, ei_end;
+    for (boost::tie(ei, ei_end) = boost::out_edges( current_state_d, __graph); ei != ei_end; ++ei) {
+        auto target = boost::target ( * ei, __graph );
+        if ( __graph[ * ei ].action == action ) {
+            return * ei;
+            break;
+        }
+    }                
+    return fake;
+
 }

@@ -66,11 +66,17 @@ namespace xenon {
         // Находится на предварительном старте.
         ACF_STATE_HP,
         // Вышел на исполнительный старт, готов к взлету.
-        ACF_STATE_READY_FOR_TAKE_OFF,        
+        // Между предварительным и исполнительным идет руление,
+        // хотя по сути это называется line up.
+        ACF_STATE_READY_FOR_TAKE_OFF,
+        // Достигнута V1, рубеж, принятие решения о взлете.
+        ACF_STATE_V1_REACHED,
+        // Взлет произведен
+        ACF_STATE_AIRBORNED
     };
 
     // Действия (ребра графа состояний самолета).
-    enum aircraft_actions_t {
+    enum aircraft_action_t {
         ACF_DOES_NOTHING = 0,
         // Выталкивается.
         ACF_DOES_PUSH_BACK,

@@ -33,10 +33,21 @@ namespace xenon {
             
             aircraft_state_graph::graph_t::edge_descriptor _edge_d;
             AbstractAircraft * _ptr_acf;
+            /**
+             * @short "Рывок", производная от ускорения.
+             */
+            double _tug;
+            double _acceleration;
+            double _target_acceleration;
+            double _speed;
+            double _target_speed;
+            
             
             virtual void _internal_step( float elapsed_since_last_time ) = 0;
             virtual void _internal_start() = 0;
             
+            waypoint_t & _get_front_wp();
+            void _front_wp_reached();
             void _finish();
             
         private:
@@ -49,9 +60,12 @@ namespace xenon {
              */
 
             double __total_duration;
+            double __total_distance;
             
             void __start();
-            void __step( float elapsed_since_last_time );
+            void __step( float elapsed_since_last_call );
+            void __control_of_speed( float elapsed_since_last_call );
+            void __move_straight( float elapsed_since_last_call );
 
             
     }; // class AircraftAbstractDoes

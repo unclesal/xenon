@@ -43,11 +43,32 @@ BimboAircraft::BimboAircraft(
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                       Статруем предварительно подготовленное действие из полетного плана                          *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::start_fp_action() {
+    XPlane::log("Start fp action...");
+    if ( _flight_plan.empty() ) {
+        XPlane::log("ERROR: BimboAircraft::start_fp_action called, but flight plan is empty");
+    };
+    
+    // Проверки на индексы здесь не выполняется, т.к. она сделана
+    // внутри процедуры установки текущего действия графа.
+    auto next_wp = _flight_plan.at(0);    
+    aircraft_state_graph::graph_t::edge_descriptor 
+        action = __graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
+    __graph->set_active_action( action );
+    
+};
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                            Действие было завершено, переход в следующее состояние                                 *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::does_finished( void * action ) {
+void BimboAircraft::_action_finished( void * action ) {
 };
 
 // *********************************************************************************************************************
@@ -305,6 +326,12 @@ void BimboAircraft::prepare_for_taxing( const vector<location_t> & taxi_way ) {
 
 void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     
+    // Если самолет не на стоянке, то это ошибка.
+    if ( ! __graph->current_state_is( ACF_STATE_PARKING ) ) {
+        XPlane::log("ERROR: BimboAircraft::prepare_for_take_off, but aircraft is not parked.");
+        return;
+    }
+    
     // В полетный план они будут вставляться в самое начало, потому что
     // полетный план может быть уже заполнен. Например, SIDом или вообще
     // полным путем. Соответственно, добавление начинается с конца полученного
@@ -321,19 +348,19 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
         }
     };
     
-    // Самая последняя точка - дальний конец ВПП.
+    // Самая первая (в инвертированном плане) точка - дальний конец ВПП.
     
     waypoint_t wp = tw.front(); tw.pop_front();
     wp.action_to_achieve = ACF_DOES_TAKE_OFF;
-    __flight_plan.push_front( wp );
+    _flight_plan.push_front( wp );
     
     // Дальше все точки, кроме самой первой - это рулежка. В том числе и саму ВПП
-    // (вторая с конца точка полученного пути) мы достигаем - тоже выруливанием.
+    // (вторая с конца точка полученного пути) мы достигаем - тоже выруливанием.    
     
     for ( int i=0; i<tw.size() - 1; i++ ) {
         wp = tw.front(); tw.pop_front();
         wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
-        __flight_plan.push_front( wp );
+        _flight_plan.push_front( wp );
     }
     
     // Осталась одна точка. До нее можно добраться либо выруливанием,
@@ -347,9 +374,8 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
         // Это "выруливание", потому что точка у нас перед носом.
         wp.action_to_achieve = ACF_DOES_SLOW_TAXING;
     else wp.action_to_achieve = ACF_DOES_PUSH_BACK;
-    __flight_plan.push_front( wp );
+    _flight_plan.push_front( wp );
     
-    XPlane::log("Total FP size=" + to_string( __flight_plan.size() ));
 }
 
 // *********************************************************************************************************************

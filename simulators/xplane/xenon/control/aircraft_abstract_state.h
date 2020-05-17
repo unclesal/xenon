@@ -17,6 +17,10 @@ namespace xenon {
             AircraftAbstractState( AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd );
             virtual ~AircraftAbstractState() = default;
             
+            aircraft_state_graph::graph_t::vertex_descriptor nd() {
+                return _node_d;
+            }
+            
         protected:
             
             aircraft_state_graph::graph_t::vertex_descriptor _node_d;

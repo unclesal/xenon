@@ -13,6 +13,11 @@ namespace xenon {
         
         public:
             
+            enum phase_t {
+                PHASE_STRAIGHT = 0,
+                PHASE_TURN
+            };
+            
             AircraftDoesPushBack(
                 AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
             );
@@ -22,6 +27,10 @@ namespace xenon {
             
             void _internal_step( float elapsed_since_last_time ) override;
             void _internal_start() override;
+    
+        private:
+            
+            phase_t __current_phase;
         
     }; // class AircraftDoesPushBack
     

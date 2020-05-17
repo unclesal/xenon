@@ -36,12 +36,12 @@ namespace xenon {
             // virtual void from_json( JSON & json ) override;
             
             // Установка чего-нибудь в пользовательском самолете.
-            // virtual void set( CommandSet & cmd ) override;
-            
-            void does_finished( void * action ) override {
-            };
+            // virtual void set( CommandSet & cmd ) override;                        
             
         protected:
+            
+            void _action_finished( void * action ) override {
+            };
             
         private:
             /**

@@ -37,6 +37,33 @@ namespace xenon {
             void set_active_action( const aircraft_state_graph::graph_t::edge_descriptor & ed );
             
             void update( float elapsed_since_last_call );
+            
+            bool current_state_is( const aircraft_state_t & state );
+            
+            aircraft_state_graph::graph_t::vertex_descriptor get_node_for( const aircraft_state_t & state );
+            
+            /**
+             * @short Получить действие по заданным состояниям и определителю действия.
+             * @param from_state состояние из которого
+             * @param to_state состояние, в которое 
+             * @param action сам определитель действия.
+             */
+            aircraft_state_graph::graph_t::edge_descriptor get_action_for( 
+                const aircraft_state_t & from_state, 
+                const aircraft_state_t & to_state, 
+                const aircraft_action_t & action 
+            );
+            
+            aircraft_state_graph::graph_t::edge_descriptor get_action_for(
+                const aircraft_state_graph::graph_t::vertex_descriptor & v_from,
+                const aircraft_state_graph::graph_t::vertex_descriptor & v_to,
+                const aircraft_action_t & action 
+            );
+            
+            /**
+             * @short Вернуть действие, исходящее из данного текущего состояния и имеющее определенный тип.
+             */
+            aircraft_state_graph::graph_t::edge_descriptor get_action_outgoing_from_current_state( const aircraft_action_t & action );
                         
         private:
             // Граф состояний и переходов между ними (действий).

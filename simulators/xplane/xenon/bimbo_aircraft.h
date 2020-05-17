@@ -61,11 +61,11 @@ namespace xenon {
             void UpdatePosition(float elapsed_since_last_call, int fl_counter) override ;
 
             // Освещение вкл-выкл
-            void set_taxi_lites(bool on);
-            void set_landing_lites(bool on);
-            void set_beacon_lites(bool on);
-            void set_strobe_lites(bool on);
-            void set_nav_lites(bool on);
+            void set_taxi_lites(bool on) override;
+            void set_landing_lites(bool on) override;
+            void set_beacon_lites(bool on) override;
+            void set_strobe_lites(bool on) override;
+            void set_nav_lites(bool on) override;
 
             // Расположить самолет на данной стоянке.
             void place_on_ground( const startup_location_t & ramp );
@@ -75,7 +75,7 @@ namespace xenon {
 
             // Переместить самолет на определенное количество
             // метров согласно его курсу (heading)
-            void move( float meters );
+            void move( float meters ) override;
 
             // Смещение в метрах относительно координат стоянки.
             float shift_from_ramp();
@@ -92,12 +92,7 @@ namespace xenon {
             // void prepare_for_push_back_or_taxing( const waypoint_t & target );
 
             // void prepare_for_taxing( const vector<location_t> & taxi_way );
-            
-            /**
-             * @short Текущее действие было завершено.
-             */
-            void does_finished( void * action ) override;
-            
+                        
             /**
              * @short Подготовить маршрут к взлету.
              * От аэропорта был получен путь руления к ВПП и сама рабочая ВПП.
@@ -108,14 +103,20 @@ namespace xenon {
             
             /**
              * @short Следующий шаг по полетному плану.
-             * В зависимости от состояния и полетного плана, выбираем
-             * следующее действие, которое запускаем (стартуем).
+             * Действие не выбирается, оно уже выбрано и записано в полетном плане.
              */
-            void do_next_step();
+            void start_fp_action();
 
         protected:
 
             void _on_ground_correction();
+            
+            /**
+             * @short Текущее действие было завершено.
+             */
+            void _action_finished( void * action ) override;
+
+
 
         private:
 
@@ -139,8 +140,7 @@ namespace xenon {
             // Граф состояний самолета.
             AircraftStateGraph * __graph;
             
-            deque<waypoint_t> __flight_plan;
-
+            
     };  // class BimboAircraft
 
 }; // namespace xenon
