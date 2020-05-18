@@ -1108,10 +1108,14 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
         location_t l_current = result.at( i ).location;
         location_t l_next = result.at( i + 1 ).location; 
         double d = xenon::distance( l_current, l_next );
+        // Здесь точки идут в "правильном порядке", не реверсированы.
         double bearing = xenon::bearing( l_current, l_next );
         result.at(i).distance_to_next_wp = d;
-        result.at(i).rotation.heading = bearing;
-    }        
+        result.at(i).outgoing_heading = bearing;        
+        result.at( i + 1 ).incomming_heading = bearing;
+    }
+    
+    // Обратный проход, с конца, 
 
     return result;
 

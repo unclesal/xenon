@@ -46,6 +46,23 @@ namespace xenon {
             node_t, edge_t
         > graph_t;
 
+        // Параметры действия, чтобы их можно было передавать следующему 
+        // выбранному действию от предыдущего (для обеспечения плавности).
+        
+        struct action_parameters_t {            
+            // "Рывок", производная от ускорения.
+            double tug = 0.0;
+            double acceleration = 0.0;
+            double target_acceleration = 0.0;
+            double speed = 0.0;
+            double target_speed = 0.0;
+            
+            // Угловые величины.
+            double heading_acceleration = 0.0;
+            double target_heading = 0.0;
+        };
+
+
     }; // namespace state_graph
     
 }; // namespace xenon

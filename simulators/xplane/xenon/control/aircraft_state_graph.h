@@ -18,6 +18,7 @@
 #include "aircraft_does_nothing.h"
 #include "aircraft_does_slow_taxing.h"
 #include "aircraft_does_push_back.h"
+#include "aircraft_does_taxing.h"
 
 namespace xenon {
 
@@ -28,7 +29,7 @@ namespace xenon {
             AircraftStateGraph( AbstractAircraft * ptr_acf );
             ~AircraftStateGraph() = default;
                         
-            void place_on_parking( const waypoint_t & wp );
+            void place_on_parking();
             
             void clear_states_activity();
             void clear_actions_activity();
@@ -39,8 +40,10 @@ namespace xenon {
             void update( float elapsed_since_last_call );
             
             bool current_state_is( const aircraft_state_t & state );
+            bool current_action_is( const aircraft_action_t & action );
             
             aircraft_state_graph::graph_t::vertex_descriptor get_node_for( const aircraft_state_t & state );
+            aircraft_state_graph::node_t get_node_for( AircraftAbstractState * ptr_state );
             
             /**
              * @short Получить действие по заданным состояниям и определителю действия.
@@ -64,6 +67,18 @@ namespace xenon {
              * @short Вернуть действие, исходящее из данного текущего состояния и имеющее определенный тип.
              */
             aircraft_state_graph::graph_t::edge_descriptor get_action_outgoing_from_current_state( const aircraft_action_t & action );
+            
+            void action_finished( AircraftAbstractAction * ptr_action );
+            
+            aircraft_state_graph::edge_t get_edge_for( AircraftAbstractAction * action );
+            
+            AircraftAbstractState * get_current_state() {
+                return __current_state;
+            };
+            
+            AircraftAbstractAction * get_current_action() {
+                return __current_action;
+            };
                         
         private:
             // Граф состояний и переходов между ними (действий).
@@ -76,6 +91,8 @@ namespace xenon {
             
             AircraftAbstractState * __current_state;
             AircraftAbstractAction * __current_action;
+            
+            aircraft_state_graph::action_parameters_t __previous_action_params;
             
     };
 

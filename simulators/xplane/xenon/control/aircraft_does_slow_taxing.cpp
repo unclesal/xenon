@@ -27,6 +27,7 @@ AircraftDoesSlowTaxing::AircraftDoesSlowTaxing (
 // *********************************************************************************************************************
 
 void AircraftDoesSlowTaxing::_internal_start() {
+    _acf_will_on_ground( true );
 };
 
 // *********************************************************************************************************************
@@ -35,6 +36,6 @@ void AircraftDoesSlowTaxing::_internal_start() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesSlowTaxing::_internal_step ( float elapsed_since_last_time ) {
+void AircraftDoesSlowTaxing::_internal_step ( const float & elapsed_since_last_time ) {
 }
 

@@ -38,28 +38,74 @@ BimboAircraft::BimboAircraft(
     __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = TIME_FOR_GEAR_MOTION;
     
     __graph = new AircraftStateGraph( this );
+    __taxing_prepared = false;
 
 }
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                       Статруем предварительно подготовленное действие из полетного плана                          *
+// *                        Старт действия, предусмотренного следующей точкой полетного плана                          *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::start_fp_action() {
-    XPlane::log("Start fp action...");
+void BimboAircraft::__start_fp0_action() {
+    
     if ( _flight_plan.empty() ) {
-        XPlane::log("ERROR: BimboAircraft::start_fp_action called, but flight plan is empty");
+        XPlane::log("ERROR: BimboAircraft::__start_fp0_action called, but flight plan is empty");
     };
     
     // Проверки на индексы здесь не выполняется, т.к. она сделана
     // внутри процедуры установки текущего действия графа.
+    
     auto next_wp = _flight_plan.at(0);    
     aircraft_state_graph::graph_t::edge_descriptor 
         action = __graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
     __graph->set_active_action( action );
+
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                            Выбор следующего действия                                              *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::choose_next_action() {  
     
+    string current_state_name = "Unknown state";
+    auto current_state = __graph->get_current_state();
+    if ( current_state ) {
+        auto node = __graph->get_node_for( current_state );
+        current_state_name = node.name;
+    }
+    XPlane::log("choose_next_action(), state=" + current_state_name + ", fp size=" + to_string( _flight_plan.size() ) );
+    
+    if (
+        ( __graph->current_state_is( ACF_STATE_PARKING )) 
+        && ( __graph->current_action_is( ACF_DOES_NOTHING ))
+        && ( __taxing_prepared )
+        && ( ! _flight_plan.empty() )
+    ) {
+        // На парковке и "ничего не делает", и при этом рулежка уже
+        // подготовлена - поехали по полетному плану.
+        __start_fp0_action();
+        return;
+    }
+    
+    XPlane::log("Is it ready for taxing? " + to_string( __graph->current_state_is( ACF_STATE_READY_FOR_TAXING )));
+    XPlane::log("Is taxi prepared? " + to_string( __taxing_prepared ) );
+    
+    if (
+        ( __graph->current_state_is( ACF_STATE_READY_FOR_TAXING ) )
+        && ( __taxing_prepared )
+    ) {
+        // Если готов к рулению - пока что поехали. 
+        // TODO: всякая фигня типа заведения двигателей, разрешения на руление и др.
+        __start_fp0_action();
+        return;
+    }        
+    
+    XPlane::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
 
 // *********************************************************************************************************************
@@ -69,6 +115,13 @@ void BimboAircraft::start_fp_action() {
 // *********************************************************************************************************************
 
 void BimboAircraft::_action_finished( void * action ) {
+    
+    AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
+    aircraft_state_graph::edge_t edge = __graph->get_edge_for( ptr_abstract_action );
+    XPlane::log("Action " + edge.name + " finished");
+    __graph->action_finished( ptr_abstract_action );
+    choose_next_action();
+    
 };
 
 // *********************************************************************************************************************
@@ -171,11 +224,7 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     move( shift_from_ramp() );
     
     // В графе состояний отмечаем, что мы встали на стоянку.
-    waypoint_t wp;    
-    wp.location = get_location();
-    wp.rotation = get_rotation();
-    wp.type = WAYPOINT_PARKING;
-    __graph->place_on_parking( wp );
+    __graph->place_on_parking();
 
 }
 
@@ -375,6 +424,8 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
         wp.action_to_achieve = ACF_DOES_SLOW_TAXING;
     else wp.action_to_achieve = ACF_DOES_PUSH_BACK;
     _flight_plan.push_front( wp );
+    
+    __taxing_prepared = true;
     
 }
 

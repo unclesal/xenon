@@ -41,6 +41,8 @@ namespace xenon {
             virtual void set_nav_lites(bool on) {};
             
             virtual void move( float meters ) {};
+            
+            virtual void set_will_on_ground( bool on_ground ) {};
 
         protected:
             

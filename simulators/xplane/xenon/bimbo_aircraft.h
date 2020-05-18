@@ -66,6 +66,10 @@ namespace xenon {
             void set_beacon_lites(bool on) override;
             void set_strobe_lites(bool on) override;
             void set_nav_lites(bool on) override;
+            
+            void set_will_on_ground( bool on_ground ) override {
+                bClampToGround = on_ground;
+            };
 
             // Расположить самолет на данной стоянке.
             void place_on_ground( const startup_location_t & ramp );
@@ -101,11 +105,7 @@ namespace xenon {
 
             void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
             
-            /**
-             * @short Следующий шаг по полетному плану.
-             * Действие не выбирается, оно уже выбрано и записано в полетном плане.
-             */
-            void start_fp_action();
+            void choose_next_action();
 
         protected:
 
@@ -124,6 +124,11 @@ namespace xenon {
             // vector<aircraft_condition_t> _conditions;
 
             actuator_motion_t __actuators[ XPMP2::V_COUNT ];
+            
+            // Граф состояний самолета.
+            AircraftStateGraph * __graph;
+            
+            bool __taxing_prepared;
 
             // static aircraft_condition_t _make_condition_full_taxing_stop(const float & from_speed);
             // static aircraft_condition_t _make_condition_straight_push_back( const location_with_angles_t & target );
@@ -137,8 +142,9 @@ namespace xenon {
 
             void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
             
-            // Граф состояний самолета.
-            AircraftStateGraph * __graph;
+            void __start_fp0_action();
+            
+            
             
             
     };  // class BimboAircraft

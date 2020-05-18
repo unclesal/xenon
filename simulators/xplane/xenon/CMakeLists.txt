@@ -55,6 +55,7 @@ add_library(xenon MODULE
         control/aircraft_does_nothing.cpp
         control/aircraft_does_push_back.cpp
         control/aircraft_does_slow_taxing.cpp
+        control/aircraft_does_taxing.cpp
         control/aircraft_state_graph.cpp
         control/aircraft_state_parking.cpp
         control/aircraft_state_on_hp.cpp

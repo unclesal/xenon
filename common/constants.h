@@ -12,25 +12,30 @@ namespace xenon {
 
     // Скорость выталкивания, метров в секунду.
     // Отрицательная, потому как выталкивается-то - назад.
-    const float PUSH_BACK_SPEED = -0.8;
+    const float PUSH_BACK_SPEED = -1.0;
 
     // Скорость при "медленной и аккуратной" рулежке, например, при заходе на стоянку.
     const float TAXI_SLOW_SPEED = 2.77778; // 10 км/ч
 
     // Скорость при "нормальной" рулежке.
-    const float TAXI_NORMAL_SPEED = 5.55556; // 20 км/x
+    const float TAXI_NORMAL_SPEED = 11.111; // 40 км/x
 
     // Изменение курса самолета за секунду при рулении (скорость углового вращения).
-    const float TAXI_HEADING_SHIFT_PER_SECOND = 2.0;
+    const float TAXI_HEADING_SHIFT_PER_SECOND = 1.6;
 
     // Радиус поворота при рулении. Точнее, это расстояние по прямой
     // до целевой рулежной дорожки, когда начинается поворот.
     // Конкретно "радиус" будет формироваться - скоростью движения
     // самолета + скоростью углового вращения.
-    const float TAXI_TURN_RADIUS = 22.0;
+    const float TAXI_TURN_RADIUS = 9.5;
 
     // Ускорение при старте руления или остановке.
-    const float TAXI_ACCELERATION = 0.03;
+    const float TAXI_SLOW_ACCELERATION = 0.05;
+    const float TAXI_NORMAL_ACCELERATION = 1.0;
+    
+    // "Рывок" (производная от ускорения) при рулении или остановке.
+    const float TAXI_SLOW_TUG = 0.01;
+    const float TAXI_NORMAL_TUG = 0.1;
 
     // Время подъема/опускания стоек шасси.
     constexpr float TIME_FOR_GEAR_MOTION        = 10.0;
