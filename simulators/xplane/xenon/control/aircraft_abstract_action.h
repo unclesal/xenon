@@ -112,6 +112,9 @@ namespace xenon {
                 return __previous_distance_to_front_wp;
             };
             
+            double _calculate_distance_to_turn();
+            float _calculate_distance_to_runway();
+            
         private:
             
             bool __started;

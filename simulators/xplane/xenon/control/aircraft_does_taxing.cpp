@@ -43,35 +43,41 @@ void AircraftDoesTaxing::_internal_start() {
 
 void AircraftDoesTaxing::__choose_speed() {
     auto front_wp = _get_front_wp();
-    auto distance = _calculate_distance_to_wp( front_wp );
-    if (( distance > 100.0 ) && ( _params.target_speed != TAXI_NORMAL_SPEED )) {
+    
+    if ( front_wp.type == WAYPOINT_RUNWAY ) {
+        if ( _params.target_speed != TAXI_SLOW_SPEED ) {
+            _params.acceleration = 0.0;
+            _params.tug = TAXI_SLOW_TUG;
+            _params.target_acceleration = TAXI_SLOW_ACCELERATION;
+        }
+        return;
+    };
+    
+    auto distance_to_turn = _calculate_distance_to_turn();    
+    if (( distance_to_turn > 150.0 ) && ( _params.target_speed != TAXI_NORMAL_SPEED )) {
         
-        XPlane::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance ) + ", target=" + to_string(_params.target_speed));
+        XPlane::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_params.target_speed));
         _params.tug = TAXI_NORMAL_TUG;
+        _params.acceleration = 0.0;
         _params.target_acceleration = TAXI_NORMAL_ACCELERATION;
         _params.target_speed = TAXI_NORMAL_SPEED;
         
-    } else if ( distance <= 100.0 ) {
+    } else if ( distance_to_turn <= 150.0 ) {
         
-        // Если расстояние меньше скольки-то - то тут одно
-        // из двух. Либо едем медленно, либо и вовсе тормозим.
-        // Надо тормозить или нет, определяется разницей в курсах.
-        auto delta = front_wp.incomming_heading - front_wp.outgoing_heading;
-        normalize_degrees( delta );
-        double dt = 45.0;
-        bool need_breaking = ( ( delta < 360.0-dt ) && ( delta > dt ) );
-        if (( _params.speed > TAXI_SLOW_SPEED ) && ( need_breaking )) {
-            XPlane::log("Breaking...");
-            // Скорость - высокая. Тормозим. Причем с таким расчетом, чтобы
-            // к указанной точке выйти на TAXI_SLOW_SPEED
-            _params.tug = 0.0;
+        if ( ( _params.speed > TAXI_SLOW_SPEED ) && ( _params.target_speed != TAXI_SLOW_SPEED ) ) {
+            
+            // Скорость - высокая. Тормозим. 
+            _params.tug = -0.25;
+            _params.target_acceleration = -5.0;
+            _params.acceleration = 0.0; // target_accel;
             _params.target_speed = TAXI_SLOW_SPEED;
-            _params.target_acceleration = ( _params.target_speed - _params.speed ) / distance;
             
         } else if ( _params.speed < TAXI_SLOW_SPEED ) {
+            
             XPlane::log("Speed up to taxi slow speed.");
             // Текущая скорость низкая, можно подразогнаться до TAXI_SLOW_SPEED
             _params.tug = TAXI_SLOW_TUG;
+            _params.acceleration = 0.0;
             _params.target_acceleration = TAXI_SLOW_ACCELERATION;
             _params.target_speed = TAXI_SLOW_SPEED;
         }
@@ -86,30 +92,57 @@ void AircraftDoesTaxing::__choose_speed() {
 
 void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_time ) {
     
-    __choose_speed();
-    
-    auto wp = _get_front_wp();
-    double distance = _calculate_distance_to_wp( wp );
-    
-    if ( _params.speed > 1.0 ) {
-
-        // Если есть хоть какая-то скорость, то можно попытаться подстраивать курс.
-        auto bearing = xenon::bearing( _get_acf_location(), wp.location );
-        auto heading = _get_acf_rotation().heading;
-        auto delta = bearing - heading;
+    // Если в FP нет ВПП, то будет ровно 0. И здесь намеренно берется
+    // не первая точка из полетного плана, т.к. между RWY и нами 
+    // могут быть еще точки руления, которые будут проигнорированы.
+    auto distance_to_rwy = _calculate_distance_to_runway();
+    if (( distance_to_rwy > 0.0 ) && ( distance_to_rwy <= 100.0 ) ) {
         
-        // XPlane::log("Bearing=" + to_string( bearing ) + ", heading =" + to_string( heading ) + ", delta=" + to_string( delta ) );
-                
-        _params.target_heading = bearing;
-        double heading_acceleration_delta = delta / _params.speed;
-        delta < 0 ? _params.heading_acceleration = - heading_acceleration_delta : _params.heading_acceleration = heading_acceleration_delta;
-    };
+        // подходим к HP.
+        
+        // Проверка на "целевую скорость" - чтобы войти в режим торможения только один раз.
+        // Дальше будет меняться ускорение и его обнулять здесь будет уже нельзя.
+
+        if ( _params.target_speed != 0.0 ) {
+            XPlane::log("Stopping before HP");
+            _params.tug = -0.1;
+            _params.target_acceleration = -1.0;
+            _params.acceleration = 0.0;
+            _params.target_speed = 0.0;
+            _params.heading_acceleration = 0.0;
+        }
+        
+        if ( abs(_params.speed) <= 0.2 ) {
+            XPlane::log("Full stop on HP. Distance=" + to_string(distance_to_rwy));
+            _params.speed = 0.0;
+            _params.tug = 0.0;
+            _params.acceleration = 0.0;
+            _params.target_acceleration = 0.0;
+            _params.heading_acceleration = 0.0;
+            // Действие было полностью выполнено, выходим.
+            auto wp = _get_front_wp();
+            while ( wp.type == WAYPOINT_TAXING ) {
+                _front_wp_reached();
+                wp = _get_front_wp();
+            }
+            _finish();
+            return;            
+        }
+
+    } else __choose_speed();
     
-    // XPlane::log("distance=" + to_string(distance) + ", recedes=" + to_string( _front_wp_recedes()));
+    auto wp = _get_front_wp();        
+    auto bearing = xenon::bearing( _get_acf_location(), wp.location );
+    auto heading = _get_acf_rotation().heading;
+    auto delta = bearing - heading;        
+    _params.target_heading = bearing;
+    _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
     
-    if ( distance < TAXI_TURN_RADIUS ) { // || ( _front_wp_recedes() ) ) {
-        XPlane::log("waypoint reached.");
+    double distance = _calculate_distance_to_wp( wp );    
+
+    if ( ( distance < 30.0 ) && ( wp.type == WAYPOINT_TAXING ) ) { // || ( _front_wp_recedes() ) ) {
         _front_wp_reached();
-    }    
+        return;
+    }
     
 }

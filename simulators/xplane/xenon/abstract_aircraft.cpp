@@ -20,7 +20,6 @@ AbstractAircraft::AbstractAircraft()
 {
     
     // Set all dataref pointers to zero value.
-
 }
 
 // *********************************************************************************************************************

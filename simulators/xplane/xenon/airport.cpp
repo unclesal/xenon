@@ -1098,7 +1098,8 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     // ему нужно дать еще и сам взлет, т.е. "дальный торец" ВПП,
     // по отношению к которому будет осущестляться разбег.
     waypoint_t take_off_wp;
-    take_off_wp.type = WAYPOINT_RUNWAY;
+    // Последняя точка должна быть RUNWAY, иначе маршрут посчитается ошибочным.
+    take_off_wp.type = WAYPOINT_RUNWAY; 
     take_off_wp.location = departure_rwy.farest_end_location;
     result.push_back( take_off_wp );
     

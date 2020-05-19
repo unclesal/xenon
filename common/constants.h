@@ -15,19 +15,20 @@ namespace xenon {
     const float PUSH_BACK_SPEED = -1.0;
 
     // Скорость при "медленной и аккуратной" рулежке, например, при заходе на стоянку.
-    const float TAXI_SLOW_SPEED = 2.77778; // 10 км/ч
+    // const float TAXI_SLOW_SPEED = 1.9444; // 7 км/ч
+    const float TAXI_SLOW_SPEED = 5.55556; // 20 км/ч
 
     // Скорость при "нормальной" рулежке.
     const float TAXI_NORMAL_SPEED = 11.111; // 40 км/x
 
     // Изменение курса самолета за секунду при рулении (скорость углового вращения).
-    const float TAXI_HEADING_SHIFT_PER_SECOND = 1.6;
+    const float TAXI_HEADING_SHIFT_PER_SECOND = 1.8;
 
     // Радиус поворота при рулении. Точнее, это расстояние по прямой
     // до целевой рулежной дорожки, когда начинается поворот.
     // Конкретно "радиус" будет формироваться - скоростью движения
     // самолета + скоростью углового вращения.
-    const float TAXI_TURN_RADIUS = 9.5;
+    const float TAXI_TURN_RADIUS = 15.0;
 
     // Ускорение при старте руления или остановке.
     const float TAXI_SLOW_ACCELERATION = 0.05;
@@ -95,6 +96,9 @@ namespace xenon {
         // Скорее всего - стоит на HP. Но не факт,
         // разрешение на взлет может быть получено сразу.
         ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
+        // Выходит на взлетку.
+        ACF_DOES_LINING_UP,
+
         ACF_DOES_TAKE_OFF,
         ACF_DOES_CLIMBING,
         ACF_DOES_CRUISING,

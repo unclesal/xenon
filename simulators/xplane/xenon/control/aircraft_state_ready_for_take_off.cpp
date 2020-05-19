@@ -1,22 +1,21 @@
 // *********************************************************************************************************************
-// *                                           Состояние "на предварительном старте"                                   *
+// *                                                  Состояние "готов к взлету"                                       *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 19 may 2020 at 19:52 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 19 may 2020 at 20:24 *
 // *********************************************************************************************************************
 
-#include "aircraft_state_on_hp.h"
+#include "aircraft_state_ready_for_take_off.h"
 
 using namespace xenon;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                                      Конструктор                                                  *
+// *                                                        Конструктор                                                *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AircraftStateOnHP::AircraftStateOnHP(
-    AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd
+AircraftStateReadyForTakeOff::AircraftStateReadyForTakeOff(
+    xenon::AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd
 ) : AircraftAbstractState( ptr_acf, nd )
 {
 }
-

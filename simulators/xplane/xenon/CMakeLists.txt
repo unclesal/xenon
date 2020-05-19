@@ -51,7 +51,8 @@ add_library(xenon MODULE
         ../../../common/utils.cpp
         # Управление. Пока что в этом же директории, на потом надо будет перенести в common.
         control/aircraft_abstract_action.cpp
-        control/aircraft_abstract_state.cpp        
+        control/aircraft_abstract_state.cpp 
+        control/aircraft_does_lining_up.cpp
         control/aircraft_does_nothing.cpp
         control/aircraft_does_push_back.cpp
         control/aircraft_does_slow_taxing.cpp
@@ -59,6 +60,7 @@ add_library(xenon MODULE
         control/aircraft_state_graph.cpp
         control/aircraft_state_parking.cpp
         control/aircraft_state_on_hp.cpp
+        control/aircraft_state_ready_for_take_off.cpp
         control/aircraft_state_ready_for_taxing.cpp
         # Основной каталог.
         abstract_aircraft.cpp

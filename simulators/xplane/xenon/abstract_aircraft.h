@@ -47,9 +47,12 @@ namespace xenon {
         protected:
             
             deque<waypoint_t> _flight_plan;
-            virtual void _action_finished( void * action ) = 0;
+            bool _placed_on_ground;
+            
+            virtual void _action_finished( void * action ) = 0;            
 
         private:
+                        
                         
             
     }; // class AbstractAircraft

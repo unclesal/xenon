@@ -115,30 +115,44 @@ void AircraftAbstractAction::__move_straight( const float & elapsed_since_last_c
 // ********************************************************************************************************************
 
 void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_last_call ) {
+    
     auto rotation = _ptr_acf->get_rotation();
-    double delta = abs( rotation.heading - _params.target_heading );
-    normalize_degrees(delta);
-    if ( delta >= 0.25 ) {
+    
+    if ( ( _params.heading_acceleration != 0.0 ) && ( abs( _params.speed ) >= 0.8 ) ) {    
         
-        rotation.heading += _params.heading_acceleration * elapsed_since_last_call;
+        double heading = rotation.heading;
+
+// Не надо его выключать, пусть подруливает вообще постоянно.        
+//         double dh = heading - _params.target_heading;
+//         normalize_degrees( dh );
+//         if ( abs(dh) < 0.25 ) {
+//             _params.heading_acceleration = 0.0;
+//             return;
+//         };
         
-        // Конечное положение курса.
+        heading += _params.heading_acceleration * elapsed_since_last_call;
+        normalize_degrees( heading );
+        rotation.heading = heading;
         
-        if ( _params.heading_acceleration < 0.0 ) {
-            // Отрицательное приращение, курс может уйти - ниже, чем целевой.
-            if ( rotation.heading < _params.target_heading ) {
-                rotation.heading = _params.target_heading;
-                _params.heading_acceleration = 0.0;
-            }
-        } else {
-            // Положительное приращение. Курс если уйдет, то будет больше, чем целевой.
-            if ( rotation.heading > _params.target_heading ) {
-                rotation.heading = _params.target_heading;
-                _params.heading_acceleration = 0.0;
-            }
-        }
+//         Конечное положение курса.
+//         
+//         if ( _params.heading_acceleration < 0.0 ) {
+//             Отрицательное приращение, курс может уйти - ниже, чем целевой.
+//             if ( rotation.heading < _params.target_heading ) {
+//                 rotation.heading = _params.target_heading;
+//                 _params.heading_acceleration = 0.0;
+//             }
+//         } else {
+//             Положительное приращение. Курс если уйдет, то будет больше, чем целевой.
+//             if ( rotation.heading > _params.target_heading ) {
+//                 rotation.heading = _params.target_heading;
+//                 _params.heading_acceleration = 0.0;
+//             }
+//         }
+
+        _ptr_acf->set_rotation( rotation );
     }
-    _ptr_acf->set_rotation( rotation );
+    
 }
 
 // ********************************************************************************************************************
@@ -171,6 +185,42 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
     
 }
 
+// ********************************************************************************************************************
+// *                                                                                                                  *
+// *                            Посчитать расстояние до "достаточно крутого поворота"                                 *
+// *                                                                                                                  *
+// ********************************************************************************************************************
+
+double AircraftAbstractAction::_calculate_distance_to_turn() {
+    
+    auto location = _get_acf_location();
+    for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
+        auto wp = _ptr_acf->_flight_plan.at(i);
+        double change = wp.incomming_heading - wp.outgoing_heading;
+        if ( change >= 20.0 ) {
+            return xenon::distance(location, wp.location);
+        }
+    }
+    return 0.0;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                               Посчитать расстояние до точки, которая принадлежит ВПП                              *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+float AircraftAbstractAction::_calculate_distance_to_runway() {
+    auto location = _get_acf_location();
+    for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
+        auto wp = _ptr_acf->_flight_plan.at(i);
+        if ( wp.type == WAYPOINT_RUNWAY ) {
+            return (float) xenon::distance( location, wp.location );
+        }
+    };
+    return 0.0;
+}
+
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                       Окончание выполнения данного действия                                       *
@@ -179,5 +229,5 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
 
 void AircraftAbstractAction::_finish() {
     __finished = true;
-    if ( _ptr_acf ) _ptr_acf->_action_finished( this );
+    _ptr_acf->_action_finished( this );
 }

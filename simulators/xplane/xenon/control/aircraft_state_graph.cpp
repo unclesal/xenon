@@ -26,32 +26,17 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // ------------------------------------------------------------------------
 
     // Состояние "на парковке".
-    node_t state_parking;
-    state_parking.state = ACF_STATE_PARKING;
-    state_parking.name = "Parking";
-    auto state_parking_d = boost::add_vertex( state_parking, __graph );    
-    AircraftStateParking * ptr_state_parking = new AircraftStateParking( __ptr_acf, state_parking_d );
-    state_parking.ptr_state_class = ptr_state_parking;
-    __states.push_back( ptr_state_parking );
-    __graph[ state_parking_d ] = state_parking;
-    
-
+    auto state_parking_d = __create_state< AircraftStateParking > (ACF_STATE_PARKING,  "Parking");            
     // Состояние "готов к рулежке".
-    node_t state_ready_for_taxing;
-    state_ready_for_taxing.state = ACF_STATE_READY_FOR_TAXING;
-    state_ready_for_taxing.name = "Ready for taxing";
-    auto state_ready_for_taxing_d = boost::add_vertex( state_ready_for_taxing, __graph );
-    AircraftStateReadyForTaxing * ptr_state_ready_for_taxing = new AircraftStateReadyForTaxing( 
-        __ptr_acf, state_ready_for_taxing_d 
+    auto state_ready_for_taxing_d = __create_state< AircraftStateReadyForTaxing > ( 
+        ACF_STATE_READY_FOR_TAXING, "Ready for taxing" 
     );
-    state_ready_for_taxing.ptr_state_class = ptr_state_ready_for_taxing;
-    __states.push_back( ptr_state_ready_for_taxing );
-    __graph[ state_ready_for_taxing_d ] = state_ready_for_taxing;
-
     // Состояние "предварительный старт".
-    node_t state_on_hp;
-    state_on_hp.state = ACF_STATE_HP;
-    auto state_on_hp_d = boost::add_vertex( state_on_hp, __graph );
+    auto state_on_hp_d = __create_state< AircraftStateOnHP >( ACF_STATE_HP, "On HP" );
+    // Состояние "готов к взлету"
+    auto state_ready_for_take_off_d = __create_state< AircraftStateReadyForTakeOff >(
+        ACF_STATE_READY_FOR_TAKE_OFF, "Ready for take off"
+    );
     
 
     // ------------------------------------------------------------------------
@@ -60,50 +45,34 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     
     // На парковке можно находиться бесконечно и ничего не делать. Это неправильно,
     // т.к. может привести к "зависанию" самолета. Но пока я ничего лучшего не придумал.
-    edge_t e_does_nothing_on_parking;
-    e_does_nothing_on_parking.action = ACF_DOES_NOTHING;
-    e_does_nothing_on_parking.name = "Nothing to do";
-    auto added_edge = boost::add_edge( state_parking_d, state_parking_d, __graph );
-    auto ptr_does_nothing_on_parking = new AircraftDoesNothing( __ptr_acf, added_edge.first );
-    e_does_nothing_on_parking.ptr_does_class = ptr_does_nothing_on_parking;
-    __graph[ added_edge.first ] = e_does_nothing_on_parking;
-    __actions.push_back( ptr_does_nothing_on_parking );
+    auto does_nothing_on_parking_d = __create_action< AircraftDoesNothing >( 
+        ACF_DOES_NOTHING, "Nothing to do", state_parking_d, state_parking_d
+    );
 
     // Из состояния "на парковке" можно перейти в состояние "готов к
     // рулежке" посредством либо выталкивания, либо собственного руления.
     // Зависит от того, где по курсу расположена начальная точка руления.
     // TODO: тут надо еще иметь промежуточное состояние на разрешение этого дела.
 
-    edge_t e_slow_taxing_to_start_point;
-    e_slow_taxing_to_start_point.action = ACF_DOES_SLOW_TAXING;
-    e_slow_taxing_to_start_point.name = "Taxing (slowly)";
-    added_edge = boost::add_edge( state_parking_d, state_ready_for_taxing_d, __graph );    
-    auto ptr_slow_taxing_to_start_point = new AircraftDoesSlowTaxing( __ptr_acf, added_edge.first );
-    e_slow_taxing_to_start_point.ptr_does_class = ptr_slow_taxing_to_start_point;
-    __graph[ added_edge.first ] = e_slow_taxing_to_start_point;
-    __actions.push_back( ptr_slow_taxing_to_start_point );
-    
-
-    edge_t e_push_back;
-    e_push_back.action = ACF_DOES_PUSH_BACK;
-    e_push_back.name = "Push back";
-    added_edge = boost::add_edge( state_parking_d, state_ready_for_taxing_d, __graph );
-    auto ptr_push_back = new AircraftDoesPushBack( __ptr_acf, added_edge.first );
-    e_push_back.ptr_does_class = ptr_push_back;
-    __graph[ added_edge.first ] = e_push_back;
-    __actions.push_back( ptr_push_back );
+    auto does_slow_taxing_to_start_point_d = __create_action< AircraftDoesSlowTaxing > (
+        ACF_DOES_SLOW_TAXING, "Taxing (slowly)", state_parking_d, state_ready_for_taxing_d
+    );
+    auto does_push_back_d = __create_action< AircraftDoesPushBack >(
+        ACF_DOES_PUSH_BACK, "Push back", state_parking_d, state_ready_for_taxing_d
+    );
 
     // Из состояния "готов к рулению" в состояние "на
     // предварительном старте" можно перейти рулением.
 
-    edge_t e_taxing_to_hp;
-    e_taxing_to_hp.action = ACF_DOES_NORMAL_TAXING;
-    e_taxing_to_hp.name = "Taxing (normal)";
-    added_edge = boost::add_edge( state_ready_for_taxing_d, state_on_hp_d, __graph );
-    auto ptr_taxing_to_hp = new AircraftDoesTaxing( __ptr_acf, added_edge.first );
-    e_taxing_to_hp.ptr_does_class = ptr_taxing_to_hp;
-    __graph[ added_edge.first ] = e_taxing_to_hp;
-    __actions.push_back( ptr_taxing_to_hp );
+    auto does_taxing_to_hp_d = __create_action< AircraftDoesTaxing >(
+        ACF_DOES_NORMAL_TAXING, "Taxing (normal)", state_ready_for_taxing_d, state_on_hp_d
+    );
+    
+    // Из состояния "на предварительном старте" можно перейти в состояние
+    // "готов к взлету" - выравниванием (lining up)
+    auto does_lining_up_d = __create_action< AircraftDoesLiningUp > (
+        ACF_DOES_LINING_UP, "Lining up", state_on_hp_d, state_ready_for_take_off_d
+    );
     
 }
 

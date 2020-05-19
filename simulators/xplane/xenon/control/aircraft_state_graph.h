@@ -13,8 +13,11 @@
 #include "aircraft_abstract_state.h"
 
 #include "aircraft_state_parking.h"
+#include "aircraft_state_ready_for_take_off.h"
 #include "aircraft_state_ready_for_taxing.h"
+#include "aircraft_state_on_hp.h"
 
+#include "aircraft_does_lining_up.h"
 #include "aircraft_does_nothing.h"
 #include "aircraft_does_slow_taxing.h"
 #include "aircraft_does_push_back.h"
@@ -81,6 +84,7 @@ namespace xenon {
             };
                         
         private:
+            
             // Граф состояний и переходов между ними (действий).
             aircraft_state_graph::graph_t __graph;
             // Классы состояний. Порождаются один раз и сидят в коллекции.
@@ -93,6 +97,44 @@ namespace xenon {
             AircraftAbstractAction * __current_action;
             
             aircraft_state_graph::action_parameters_t __previous_action_params;
+            
+            // Добавить узел графа (состояние) и класс реализации этого состояния.
+            template < class T >
+            aircraft_state_graph::graph_t::vertex_descriptor __create_state(
+                const aircraft_state_t & state, std::string name
+            ) {
+                // Сам "узел", он же "vertex".
+                aircraft_state_graph::node_t node;
+                node.state = state;
+                node.name = name;
+                // Его дескриптор.
+                auto vd = boost::add_vertex( node, __graph );
+                // Класс состояния
+                AircraftAbstractState * ptr_class = new T( __ptr_acf, vd );
+                node.ptr_state_class = ptr_class;
+                __states.push_back( ptr_class );
+                __graph[ vd ] = node;
+                // Возвращаем - дескриптор созданного узла.
+                return vd;
+            };
+            
+            // Добавить дугу графа (действие) и класс реализации этого действия.
+            template < class T >
+            aircraft_state_graph::graph_t::edge_descriptor __create_action(
+                const aircraft_action_t & action, std::string name,
+                aircraft_state_graph::graph_t::vertex_descriptor v_from,
+                aircraft_state_graph::graph_t::vertex_descriptor v_to
+            ) {
+                aircraft_state_graph::edge_t edge;
+                edge.action = action;
+                edge.name = name;
+                auto added_edge = boost::add_edge( v_from, v_to, __graph );
+                AircraftAbstractAction * ptr_class = new T( __ptr_acf, added_edge.first );
+                edge.ptr_does_class = ptr_class;
+                __graph[ added_edge.first ] = edge;
+                __actions.push_back( ptr_class );
+                return added_edge.first;
+            };
             
     };
 

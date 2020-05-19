@@ -103,7 +103,12 @@ void BimboAircraft::choose_next_action() {
         // TODO: всякая фигня типа заведения двигателей, разрешения на руление и др.
         __start_fp0_action();
         return;
-    }        
+    } 
+    
+    if ( __graph->current_state_is( ACF_STATE_HP ) ) {
+        __start_fp0_action();
+        return;
+    }
     
     XPlane::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
@@ -253,7 +258,7 @@ rotation_t BimboAircraft::get_rotation() {
 void BimboAircraft::_on_ground_correction() {
 
     if ( acIcaoType == "B738" ) {
-        drawInfo.y += 0.3;
+        drawInfo.y += 0.5;
         drawInfo.pitch = -1.8;
     }
 }
@@ -680,6 +685,15 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused
 
     __update_actuators(elapsed_since_last_call);
     __graph->update( elapsed_since_last_call );
+    
+    
+     if ( bClampToGround ) {
+//         auto position = get_position();
+//         auto rotation = get_rotation();
+//         place_on_ground( position, rotation );
+         ClampToGround();
+     }
+    
 
     /*
     // Подсчет полного времени выполнения данной фазы.
