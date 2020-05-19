@@ -1100,7 +1100,7 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     waypoint_t take_off_wp;
     // Последняя точка должна быть RUNWAY, иначе маршрут посчитается ошибочным.
     take_off_wp.type = WAYPOINT_RUNWAY; 
-    take_off_wp.location = departure_rwy.farest_end_location;
+    take_off_wp.location = departure_rwy.farest_end_location;    
     result.push_back( take_off_wp );
     
     // Теперь проходимся поочередно по элементам,

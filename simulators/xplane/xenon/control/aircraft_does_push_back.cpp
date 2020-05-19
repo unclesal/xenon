@@ -100,7 +100,6 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
     double threshold = 0.8;
     
     if ( (delta >= 360 - threshold ) || ( delta <= threshold ) ) {
-        XPlane::log("Switch to phase STOP. Current speed=" + to_string( _params.speed ) );
         
         _params.target_heading = _ptr_acf->get_rotation().heading;
         _params.heading_acceleration = 0.0;

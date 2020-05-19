@@ -130,7 +130,9 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
 
 void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t::edge_descriptor & ed ) {
     
+    XPlane::log("In graph::set_active_action");
     clear_actions_activity();
+    XPlane::log("clear actions activity done");
     
     try {
 
@@ -145,7 +147,7 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
         if ( __current_action ) __current_action->__start();
 
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: AircraftStateGraph::set_active_action() called with invalid edge descriptor." );
+        XPlane::log("ERROR: AircraftStateGraph::set_active_action() called with invalid edge descriptor.");
     }
 
 };
@@ -308,19 +310,28 @@ aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_fo
 aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_outgoing_from_current_state(
     const aircraft_action_t & action 
 ) {
-    
     aircraft_state_graph::graph_t::edge_descriptor fake;
-    if ( ! __current_state ) return fake;
-    aircraft_state_graph::graph_t::vertex_descriptor current_state_d = __current_state->node_d();
     
-    aircraft_state_graph::graph_t::out_edge_iterator ei, ei_end;
-    for (boost::tie(ei, ei_end) = boost::out_edges( current_state_d, __graph); ei != ei_end; ++ei) {
-        auto target = boost::target ( * ei, __graph );
-        if ( __graph[ * ei ].action == action ) {
-            return * ei;
-            break;
-        }
-    }                
+    try {
+        
+        if ( ! __current_state ) return fake;
+        aircraft_state_graph::graph_t::vertex_descriptor current_state_d = __current_state->node_d();
+        
+        aircraft_state_graph::graph_t::out_edge_iterator ei, ei_end;
+        for (boost::tie(ei, ei_end) = boost::out_edges( current_state_d, __graph); ei != ei_end; ++ei) {
+            
+            // auto target = boost::target ( * ei, __graph );
+            
+            if ( __graph[ * ei ].action == action ) {
+                return * ei;
+                break;
+            }
+        }    
+    } catch ( const std::range_error & re ) {
+        XPlane::log("ERROR: get_action_outgoing_from_current_state, " + string( re.what() ) );
+    };
+    
+    XPlane::log("ERROR: no outgoing action was found from current state with type=" + to_string( action ));
     return fake;
 
 }

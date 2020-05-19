@@ -58,9 +58,24 @@ void BimboAircraft::__start_fp0_action() {
     // внутри процедуры установки текущего действия графа.
     
     auto next_wp = _flight_plan.at(0);    
-    aircraft_state_graph::graph_t::edge_descriptor 
-        action = __graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
-    __graph->set_active_action( action );
+    aircraft_state_graph::graph_t::edge_descriptor fake;
+    try {
+        aircraft_state_graph::graph_t::edge_descriptor action 
+            = __graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
+            
+        if ( action == fake ) {
+            XPlane::log("ERROR: __start_fp0_action got fake edge descriptor");
+            return;
+        }
+        __graph->set_active_action( action );
+
+    } catch ( const std::range_error & re ) {
+        XPlane::log(
+            "ERROR: __start_fp0_action, invalid descriptor for action type " 
+            + to_string( next_wp.action_to_achieve ) 
+            + ", message=" + string( re.what() )
+        );
+    }
 
 }
 
@@ -91,10 +106,7 @@ void BimboAircraft::choose_next_action() {
         __start_fp0_action();
         return;
     }
-    
-    XPlane::log("Is it ready for taxing? " + to_string( __graph->current_state_is( ACF_STATE_READY_FOR_TAXING )));
-    XPlane::log("Is taxi prepared? " + to_string( __taxing_prepared ) );
-    
+        
     if (
         ( __graph->current_state_is( ACF_STATE_READY_FOR_TAXING ) )
         && ( __taxing_prepared )
@@ -106,6 +118,7 @@ void BimboAircraft::choose_next_action() {
     } 
     
     if ( __graph->current_state_is( ACF_STATE_HP ) ) {
+        XPlane::log("Current state is ACF_STATE_HP, take action from FP");
         __start_fp0_action();
         return;
     }
@@ -407,9 +420,14 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     waypoint_t wp = tw.front(); tw.pop_front();
     wp.action_to_achieve = ACF_DOES_TAKE_OFF;
     _flight_plan.push_front( wp );
+        
+    // Вторая точка - это ближний конец ВПП. На нее выходим из состояния HP
+    // выравниванием ( lining up )
+    wp = tw.front(); tw.pop_front();
+    wp.action_to_achieve = ACF_DOES_LINING_UP;
+    _flight_plan.push_front( wp );
     
-    // Дальше все точки, кроме самой первой - это рулежка. В том числе и саму ВПП
-    // (вторая с конца точка полученного пути) мы достигаем - тоже выруливанием.    
+    // Дальше все точки - это рулежка.
     
     for ( int i=0; i<tw.size() - 1; i++ ) {
         wp = tw.front(); tw.pop_front();
@@ -682,54 +700,8 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 // *********************************************************************************************************************
 
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {
-
     __update_actuators(elapsed_since_last_call);
-    __graph->update( elapsed_since_last_call );
-    
-    
-     if ( bClampToGround ) {
-//         auto position = get_position();
-//         auto rotation = get_rotation();
-//         place_on_ground( position, rotation );
-         ClampToGround();
-     }
-    
-
-    /*
-    // Подсчет полного времени выполнения данной фазы.
-    _current_condition.duration += elapsed_since_last_call;
-
-    // Рывок. Если он есть и ускорение еще не достигло целевого значения - то наращиваем ускорение.
-    if (
-            ( _current_condition.tug != 0.0 ) && (
-                ( abs(_current_condition.acceleration) < abs(_current_condition.target_acceleration) )
-            )
-    ) _current_condition.acceleration += _current_condition.tug * elapsed_since_last_call;
-
-    // Ускорение. Если оно есть скорость еще не достигла целевого значения - то наращиваем скорость.
-    if (
-            ( _current_condition.acceleration != 0.0 ) && (
-                ( abs(_current_condition.speed) < abs(_current_condition.target_speed) )
-            )
-    ) _current_condition.speed += _current_condition.acceleration * elapsed_since_last_call;
-
-    // Дистанция, на которую надо подвинуть модельку.
-    float distance_in_meters = _current_condition.speed * elapsed_since_last_call;
-    move( distance_in_meters );
-    _current_condition.distance += abs(distance_in_meters);
-
-    // Курс (угловое положение модели)
-    if ( _current_condition.heading_shift != 0.0 ) {
-        double next_heading = drawInfo.heading + _current_condition.heading_shift * elapsed_since_last_call;
-        normalize_degrees( next_heading );
-        drawInfo.heading = ( float ) next_heading;
-    }
-
-    // Обработка функции перехода на следующую фазу.
-    _current_condition.current_pwa = get_position_with_angles();
-    if ( _current_condition.exit(_current_condition)) apply_next_condition();
-    */
-
+    __graph->update( elapsed_since_last_call );        
 }
 
 // *********************************************************************************************************************

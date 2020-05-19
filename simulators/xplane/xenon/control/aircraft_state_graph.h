@@ -66,15 +66,25 @@ namespace xenon {
                 const aircraft_action_t & action 
             );
             
+            aircraft_state_graph::edge_t get_edge_for( AircraftAbstractAction * action );
+            inline aircraft_state_graph::edge_t get_edge_for( const aircraft_state_graph::graph_t::edge_descriptor & ed ) {
+                try {
+                    aircraft_state_graph::edge_t edge = __graph[ ed ];
+                    return edge;
+                } catch ( const std::range_error & re ) {
+                    XPlane::log("ERROR: AircraftStateGraph::get_edge_for( edge_descriptor & ), invalid descriptor");
+                    return aircraft_state_graph::edge_t();
+                };
+            };
+
+            
             /**
              * @short Вернуть действие, исходящее из данного текущего состояния и имеющее определенный тип.
              */
             aircraft_state_graph::graph_t::edge_descriptor get_action_outgoing_from_current_state( const aircraft_action_t & action );
             
             void action_finished( AircraftAbstractAction * ptr_action );
-            
-            aircraft_state_graph::edge_t get_edge_for( AircraftAbstractAction * action );
-            
+                        
             AircraftAbstractState * get_current_state() {
                 return __current_state;
             };
