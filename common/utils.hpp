@@ -50,6 +50,19 @@ namespace xenon {
     inline double degrees_to_radians( const double & degrees ) {
         return degrees * PI / 180.0;
     };
+    
+    inline double meters_per_second_to_knodes_per_hour( const double & mps ) {
+        return 3600.0 * mps / (double) M_per_NM;
+    };
+    
+    inline double meters_per_seconds_to_feet_per_min( const double mps ) {
+        // 1 фут в минуту = 0.00507999983744 метра в секунду.
+        return mps / 0.00507999983744;
+    };
+    
+    inline double feet_per_min_to_meters_per_second( const double fpm ) {
+        return fpm * 0.00507999983744;
+    };
 
     /**
      * @short Полная дистанция в сферических координатах.

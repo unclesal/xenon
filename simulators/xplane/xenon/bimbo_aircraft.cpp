@@ -39,6 +39,9 @@ BimboAircraft::BimboAircraft(
     
     __graph = new AircraftStateGraph( this );
     __taxing_prepared = false;
+    
+    // Коррекция параметров для данного самолета.
+    __acf_parameters_correction();
 
 }
 
@@ -118,10 +121,14 @@ void BimboAircraft::choose_next_action() {
     } 
     
     if ( __graph->current_state_is( ACF_STATE_HP ) ) {
-        XPlane::log("Current state is ACF_STATE_HP, take action from FP");
         __start_fp0_action();
         return;
     }
+    
+    if ( __graph->current_state_is( ACF_STATE_READY_FOR_TAKE_OFF ) ) {
+        __start_fp0_action();
+        return;
+    };
     
     XPlane::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
@@ -271,9 +278,27 @@ rotation_t BimboAircraft::get_rotation() {
 void BimboAircraft::_on_ground_correction() {
 
     if ( acIcaoType == "B738" ) {
-        drawInfo.y += 0.5;
+        drawInfo.y += 1.5; // 0.5;
         drawInfo.pitch = -1.8;
     }
+
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                 Коррекция параметров в зависимости от типа самолета                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::__acf_parameters_correction() {
+    
+    if ( acIcaoType == "B738" ) {
+        _params.v1 = 100.0;
+        _params.v2 = 120.0;
+        _params.cruise_speed = 300.0;
+        _params.vertical_climb_speed = 1900.0;
+        _params.vertical_descend_speed = 1400.0;
+    } else XPlane::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
 }
 
 // *********************************************************************************************************************
@@ -289,101 +314,6 @@ float BimboAircraft::shift_from_ramp() {
     }
     return -5.0;
 }
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *            Подготовить маршрут для выталкивания или руления на начальную точку рулежки к ВПП вылета               *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-void BimboAircraft::prepare_for_push_back_or_taxing( const location_with_angles_t & target ) {
-    location_t current_location = get_location();
-    double bearing = XPlane::bearing(current_location, target.location);
-    // Если в обзоре +- 45 градусов - то поедем. Если нет - то будем выталкиваться.
-    if (( bearing <= 45.0 ) || ( bearing >= (360 - 45.0))) _prepare_for_taxing( target );
-    else _prepare_for_push_back( target );
-    // В первой фазе, вне зависимости от того, поедем мы вперед
-    // или назад, нужно предусмотреть включение огней.
-//    if ( ! _conditions.empty() ) {
-//        _conditions.at(0).request_lites = REQUEST_LITES_BEACON_ON | REQUEST_LITES_NAV_ON;
-//    }
-}
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                        Подготовить маршрут для "штатной" рулежки с включенным двигателем.                         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-/*
-void BimboAircraft::prepare_for_taxing( const vector<location_t> & taxi_way ) {
-
-    
-    for ( const auto & point : taxi_way ) {
-        aircraft_condition_t c;
-        c.does = ACF_DOES_NORMAL_TAXING;
-        c.tug = 0.2;
-        c.target_acceleration = (float) 1.0;
-        c.target_speed = TAXI_NORMAL_SPEED;
-        // c.heading = point.rotation.heading;
-        position_with_angles_t pwa;
-        pwa.position = XPlane::location_to_position( point.location );
-        pwa.rotation = point.rotation;
-        c.target_pwa = pwa;
-        c.exit = [](
-            aircraft_condition_t & current_condition
-        ) {
-            auto distance = XPlane::distance_2d(
-                current_condition.current_pwa.position,
-                current_condition.target_pwa.position
-            );
-
-            // Курс от текущего положения на целевую точку.
-            auto current_bearing = XPlane::bearing(
-                current_condition.current_pwa.position,
-                current_condition.target_pwa.position
-            );
-
-            // Текущий курс.
-            auto current_heading = current_condition.current_pwa.rotation.heading;
-
-            // Разность между текущим и желаемым курсом
-            auto delta_bearing = current_bearing - current_heading;
-
-            current_condition.heading_shift = 0.0;
-
-            if ( abs(delta_bearing) >= 1.0 ) {
-                if ( delta_bearing < 0 ) current_condition.heading_shift = -TAXI_HEADING_SHIFT_PER_SECOND;
-                else current_condition.heading_shift = TAXI_HEADING_SHIFT_PER_SECOND;
-            };
-
-            XPlane::log(
-                "current course=" + to_string( current_heading )
-                + ", azimuth=" + to_string( current_bearing )
-                // + ", target_bearing=" + to_string( current_condition.target_pwa.rotation.heading )
-                + ", delta=" + to_string(delta_bearing)
-                + ", heading shift=" + to_string(current_condition.heading_shift)
-            );
-
-
-            if (
-                ( current_condition.previous_position_distance_to_target != 0.0 )
-                && ( current_condition.previous_position_distance_to_target < distance )
-            ) {
-                // Мы начали удаляться от планируемой точки. Дистанция сейчас больше,
-                // чем она была в прошлый раз. Выходим.
-                return true;
-            }
-
-            if ( distance <= 5.0 ) return true;
-            current_condition.previous_position_distance_to_target = distance;
-            return false;
-
-        };
-        _conditions.push_back(c);
-    }    
-}
-*/
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -419,6 +349,7 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     
     waypoint_t wp = tw.front(); tw.pop_front();
     wp.action_to_achieve = ACF_DOES_TAKE_OFF;
+    wp.location.altitude = 150.0;
     _flight_plan.push_front( wp );
         
     // Вторая точка - это ближний конец ВПП. На нее выходим из состояния HP
@@ -449,7 +380,7 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     _flight_plan.push_front( wp );
     
     __taxing_prepared = true;
-    
+        
 }
 
 // *********************************************************************************************************************
@@ -796,9 +727,8 @@ void BimboAircraft::test__place_on_hp() {
         && ( wp.action_to_achieve != ACF_DOES_LINING_UP ) 
         && ( ! _flight_plan.empty()) 
     ) {
-        XPlane::log("pop type=" + to_string( wp.type ) + ", action= " + to_string( wp.action_to_achieve ) );
         _flight_plan.pop_front();
-        if ( ! _flight_plan.empty() ) wp = _flight_plan.at( 0 );
+        if ( ! _flight_plan.empty() ) wp = _flight_plan.at( 0 ); 
     }
     
     if ( wp.action_to_achieve != ACF_DOES_LINING_UP ) {
@@ -812,4 +742,46 @@ void BimboAircraft::test__place_on_hp() {
     __start_fp0_action();
     
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *        С целью тестирования - расположить самолет в конечной точке ВПП, где он должен быть уже взлетевшим         *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::test__place_on_rwy_end() {
+    
+    int i = 0;
+    for ( i=0; i<_flight_plan.size(); i++ ) {
+        auto wp = _flight_plan.at(i);
+        if ( 
+            ( wp.type == WAYPOINT_RUNWAY ) 
+            && ( wp.action_to_achieve == ACF_DOES_TAKE_OFF ) 
+        ) {
+            XPlane::log("Found WP at index " + to_string(i));
+            break;
+        }
+    }
+    
+    if ( i >= _flight_plan.size() ) {
+        XPlane::log("ERROR: end point of RWY can not does not exists in FP");
+        return;
+    };
+    
+    for ( int k=0; k<i; k++ ) _flight_plan.pop_front();    
+    auto wp = _flight_plan.front();
+    if ( ( wp.type != WAYPOINT_RUNWAY ) || ( wp.action_to_achieve != ACF_DOES_TAKE_OFF ) ) {
+        XPlane::log("ERROR: waypoint for end runway was not found");
+        return;
+    }
+    
+    auto position = XPlane::location_to_position( wp.location );
+    position.y = 170.0 + 200.0;
+    rotation_t rotation;
+    rotation.heading = wp.incomming_heading;
+    set_will_on_ground( false );
+    place_on_ground( position, rotation, false );    
+    
+}
+
 

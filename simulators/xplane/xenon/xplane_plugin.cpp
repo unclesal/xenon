@@ -111,17 +111,33 @@ void XPlanePlugin::__init_around() {
     // Порождаем самолетик для пробы.
     XPlane::log("Init one bimbo...");
     auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
+    bimbo->label = "Boeing 737-800";
+    bimbo->colLabel[0] = 1.0f;  // R
+    bimbo->colLabel[1] = 1.0f;  // G
+    bimbo->colLabel[2] = 0.0f;  // B
+        
+//     Radar
+//     
+//     acRadar.code = 7654;
+//     acRadar.mode = xpmpTransponderMode_ModeC;
 
     auto usss = Airport::get_by_icao("USSS");
     auto gate = usss.get_startup_locations()["15"];
     
+    bimbo->set_will_on_ground( true );
     bimbo->place_on_ground( gate );
     auto where_i_am = bimbo->get_location();
     
     auto way = usss.get_taxi_way_for_departure( where_i_am );
     bimbo->prepare_for_take_off( way );
     
+    // auto rotation = bimbo->get_rotation();
+    // rotation.pitch = 10;
+    // bimbo->set_rotation( rotation );
+    
     bimbo->test__place_on_hp();
+    
+    // bimbo->test__place_on_rwy_end();
 
     __bimbos.push_back( bimbo );
     

@@ -38,6 +38,13 @@ void AircraftDoesLiningUp::_internal_start() {
     // Причем поехали пока что прямо, как стоим.
     _params.heading_acceleration = 0.0;
     
+    _ptr_acf->set_taxi_lites( false );
+    // Включим - перед взлетом.
+    _ptr_acf->set_landing_lites( false );
+    _ptr_acf->set_beacon_lites( true );
+    _ptr_acf->set_strobe_lites( true );
+    _ptr_acf->set_nav_lites( true );
+    
 }
 
 // *********************************************************************************************************************
@@ -47,29 +54,27 @@ void AircraftDoesLiningUp::_internal_start() {
 // *********************************************************************************************************************
 
 void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_time ) {
-    // Подруливание на точку осуществляем - сразу же, в "прямолинейной" фазе.
-    auto wp = _get_front_wp();        
-    auto bearing = xenon::bearing( _get_acf_location(), wp.location );
-    auto heading = _get_acf_rotation().heading;
-    auto delta = bearing - heading;        
-    _params.target_heading = bearing;
-    _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
     
+    // Подруливание на точку осуществляем - сразу же, в "прямолинейной" фазе.
+    _head_steering( elapsed_since_last_time, 25.0 );
+
+    auto wp = _get_front_wp();
     double distance = _calculate_distance_to_wp( wp );        
     if ( distance < 8.0 ) {
         __phase = PHASE_ROTATION;
         // Убираем ближнюю точку ВПП, мы ее достигли.
         _front_wp_reached();
-        XPlane::log("go to rotaion");
+        
+        // Чуть начинаем подтормаживать.
+        _params.acceleration = 0.0;
+        _params.tug = -0.2;
+        _params.target_acceleration = -2.0;
+        _params.target_speed = 2.0;
         
         // И здесь же устанавливаем параметры изменения курса и торможения.
         // Это уже будет - дальняя точка рулежки.
-        wp = _get_front_wp();
-        bearing = xenon::bearing( _get_acf_location(), wp.location );
-        heading = _get_acf_rotation().heading;
-        delta = bearing - heading;        
-        _params.target_heading = bearing;
-        _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
+        
+        _head_steering( elapsed_since_last_time, 25.0 );                
                 
     }
 }
@@ -88,7 +93,6 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_tim
     auto delta = bearing - heading; 
     
     if ( ( abs(delta) < 5.0 ) && ( _params.target_speed != 0.0 ) ) {
-        XPlane::log("Breaking, line_up does finish");
         // Тормозим.
         _params.acceleration = 0.0;
         _params.tug = -0.2;
@@ -97,14 +101,10 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_tim
 
     } else {
         // Все еще выполняем поворот.
-        _params.target_heading = bearing;
-        _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
+        _head_steering( elapsed_since_last_time, 25.0 );
     };
     
-    // XPlane::log("Phase rotation, speed=" + to_string( _params.speed ) + ", delta=" + to_string( delta ) );
-        
     if ( _params.speed <= 0.2 ) {
-        XPlane::log("Line up ended.");
         _params.speed = 0.0;
         _params.target_speed = 0.0;
         _params.tug = 0.0;

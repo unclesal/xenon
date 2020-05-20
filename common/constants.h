@@ -7,6 +7,13 @@
 namespace xenon {
 
     const double PI = 3.1415926535897932384626433832795028841971693993751;
+    
+    /// Convert feet to meters, e.g. for altitude calculations
+    const float M_per_FT   = 0.3048;   // meter per 1 foot
+    
+    /// Convert nautical miles to meters
+    const float M_per_NM      = 1852.0;
+    
     // Сильно большая константа, используется, когда ищем минимум.
     const double FAR_AWAY = (double) size_t(-1);
 
@@ -75,8 +82,6 @@ namespace xenon {
         // Между предварительным и исполнительным идет руление,
         // хотя по сути это называется line up.
         ACF_STATE_READY_FOR_TAKE_OFF,
-        // Достигнута V1, рубеж, принятие решения о взлете.
-        ACF_STATE_V1_REACHED,
         // Взлет произведен
         ACF_STATE_AIRBORNED
     };
@@ -98,11 +103,11 @@ namespace xenon {
         ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
         // Выходит на взлетку.
         ACF_DOES_LINING_UP,
-
+        // Взлет.
         ACF_DOES_TAKE_OFF,
-        ACF_DOES_CLIMBING,
-        ACF_DOES_CRUISING,
-        ACF_DOES_DESCENDING
+        
+        ACF_DOES_FLYING,
+        ACF_DOES_LANDING
     };
 
 

@@ -19,7 +19,6 @@ AbstractAircraft::AbstractAircraft()
     : AbstractVehicle()
 {
     
-    // Set all dataref pointers to zero value.
 }
 
 // *********************************************************************************************************************

@@ -60,7 +60,7 @@ void AircraftAbstractAction::__start() {
 // *                                                                                                                  *
 // ********************************************************************************************************************
 
-void AircraftAbstractAction::__control_of_speed( const float & elapsed_since_last_call ) {
+void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_last_call ) {
     
     if ( _params.tug != 0.0 ) {
         if ( abs( _params.acceleration ) != abs( _params.target_acceleration )) {
@@ -89,6 +89,27 @@ void AircraftAbstractAction::__control_of_speed( const float & elapsed_since_las
         }        
     }
     
+    // После вычисления скорости происходит ее запоминание в морских миль в час
+    _params.speed_kph = meters_per_second_to_knodes_per_hour( _params.speed ); 
+    
+    // Вертикальная скорость и достижение ею целевого показателя.
+    bool changed = false; // Оно здесь не нужно, но нужно в параметрах - ок.
+    
+    __control_of_one_value( 
+            elapsed_since_last_call, _params.vertical_acceleration, 
+            _params.target_vertical_speed, _params.vertical_speed, 
+            changed         
+    );
+    
+    if ( _params.vertical_speed != 0.0 ) {
+        auto position = _ptr_acf->get_position();
+        position.y += _params.vertical_speed * elapsed_since_last_call;
+        _ptr_acf->set_position( position );
+    }
+    
+    // После вычисления вертикальной скорости запоминаем значение в футах в минуту.
+    _params.vertical_speed_fpm = meters_per_seconds_to_feet_per_min( _params.vertical_speed );
+    
 }
 
 // ********************************************************************************************************************
@@ -110,47 +131,75 @@ void AircraftAbstractAction::__move_straight( const float & elapsed_since_last_c
 
 // ********************************************************************************************************************
 // *                                                                                                                  *
+// *                                 Управление одной величиной с учетом конечной точки                               *
+// *                                                                                                                  *
+// ********************************************************************************************************************
+
+void AircraftAbstractAction::__control_of_one_value( 
+    const float & elapsed_since_last_call, float & acceleration, const float & endpoint, float & controlled_value, bool & changed
+) {
+    float av = acceleration * elapsed_since_last_call;
+    if ( av != 0.0 ) {
+        controlled_value += av;
+        changed = true;
+        if ( acceleration < 0 ) {
+            // Ускорение - отрицательное, значение может стать - меньше заданного.
+            if ( controlled_value <= endpoint ) {
+                controlled_value = endpoint;
+                acceleration = 0.0;
+            }
+        } else if ( _params.pitch_acceleration > 0 ) {
+            // Ускорение - положительное, значение может стать - больше заданного.
+            if ( controlled_value >= endpoint ) {
+                controlled_value = endpoint;
+                acceleration = 0.0;
+            };
+        }
+    }
+}
+
+// ********************************************************************************************************************
+// *                                                                                                                  *
 // *                                       Управление угловым положением самолета                                     *
 // *                                                                                                                  *
 // ********************************************************************************************************************
 
 void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_last_call ) {
-    
-    auto rotation = _ptr_acf->get_rotation();
-    
-    if ( ( _params.heading_acceleration != 0.0 ) && ( abs( _params.speed ) >= 0.8 ) ) {    
+                
+    // Углы подравниваем только в том случае, если есть хоть какая-то скорость.
+    // Чтобы избежать вращения самолета на месте.
+    if ( abs( _params.speed ) >= 0.8 ) {
         
-        double heading = rotation.heading;
-
-// Не надо его выключать, пусть подруливает вообще постоянно.        
-//         double dh = heading - _params.target_heading;
-//         normalize_degrees( dh );
-//         if ( abs(dh) < 0.25 ) {
-//             _params.heading_acceleration = 0.0;
-//             return;
-//         };
+        auto rotation = _ptr_acf->get_rotation();
+        bool changed = false;
         
-        heading += _params.heading_acceleration * elapsed_since_last_call;
-        normalize_degrees( heading );
-        rotation.heading = heading;
+        // У абстрактного действия нет контроля за конечной точкой положения по курсу.
+        // Это позволяет внутри реального действия осуществлять автоматическое подруливание.
         
-//         Конечное положение курса.
-//         
-//         if ( _params.heading_acceleration < 0.0 ) {
-//             Отрицательное приращение, курс может уйти - ниже, чем целевой.
-//             if ( rotation.heading < _params.target_heading ) {
-//                 rotation.heading = _params.target_heading;
-//                 _params.heading_acceleration = 0.0;
-//             }
-//         } else {
-//             Положительное приращение. Курс если уйдет, то будет больше, чем целевой.
-//             if ( rotation.heading > _params.target_heading ) {
-//                 rotation.heading = _params.target_heading;
-//                 _params.heading_acceleration = 0.0;
-//             }
-//         }
-
-        _ptr_acf->set_rotation( rotation );
+        if ( _params.heading_acceleration != 0.0 ) {                
+            double heading = rotation.heading;
+            heading += _params.heading_acceleration * elapsed_since_last_call;
+            normalize_degrees( heading );
+            rotation.heading = heading;
+            changed = true;            
+        }
+        
+        // Остальные две в нормализации не нуждаются. Но зато у них есть
+        // контроль конечных точек. С таким расчетом, чтобы один раз поставить
+        // ускорение - и больше не проверять его, самолет сам со временем
+        // встанет в нужное угловое положение.
+        __control_of_one_value( 
+                elapsed_since_last_call, _params.pitch_acceleration, 
+                _params.target_pitch, rotation.pitch, 
+                changed 
+        );
+        __control_of_one_value( 
+                elapsed_since_last_call, _params.roll_acceleration, 
+                _params.target_roll, rotation.roll, 
+                changed 
+        );
+                
+        if ( changed ) _ptr_acf->set_rotation( rotation );
     }
     
 }
@@ -167,7 +216,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
         
         
         // Управление скоростью - одно для всех фаз (действий).
-        __control_of_speed( elapsed_since_last_call );
+        __control_of_speeds( elapsed_since_last_call );
         // Управление угловым положением самолета.
         __control_of_angles( elapsed_since_last_call );
         
@@ -230,4 +279,27 @@ float AircraftAbstractAction::_calculate_distance_to_runway() {
 void AircraftAbstractAction::_finish() {
     __finished = true;
     _ptr_acf->_action_finished( this );
+}
+
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                Подруливание на первую точку полетного плана по курсу.                             *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, double kp ) {
+
+    if ( _ptr_acf->_flight_plan.empty() ) {
+        XPlane::log("ERROR: AircraftAbstractAction::_head_steering, but FP is empty");
+        return;
+    };
+    
+    auto wp = _get_front_wp();
+    auto bearing = xenon::bearing( _get_acf_location(), wp.location );
+    auto heading = _get_acf_rotation().heading;
+    auto delta = bearing - heading;        
+    _params.target_heading = bearing;
+    _params.heading_acceleration = kp * delta * elapsed_since_last_call;
+
 }

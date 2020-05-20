@@ -70,6 +70,8 @@ namespace xenon {
             void set_will_on_ground( bool on_ground ) override {
                 bClampToGround = on_ground;
             };
+            
+            bool will_on_ground() override { return bClampToGround; };
 
             // Расположить самолет на данной стоянке.
             void place_on_ground( const startup_location_t & ramp );
@@ -108,6 +110,7 @@ namespace xenon {
             void choose_next_action();
             
             void test__place_on_hp();
+            void test__place_on_rwy_end();
 
         protected:
 
@@ -132,19 +135,11 @@ namespace xenon {
             
             bool __taxing_prepared;
 
-            // static aircraft_condition_t _make_condition_full_taxing_stop(const float & from_speed);
-            // static aircraft_condition_t _make_condition_straight_push_back( const location_with_angles_t & target );
-            // static aircraft_condition_t _make_condition_rotated_push_back( const location_with_angles_t & target );
-
-            // void _prepare_for_taxing( const location_with_angles_t & target );
-            // void _prepare_for_push_back( const location_with_angles_t & target );
-            // void _control_check_request_lites_finished( const unsigned short int & request );
-            // void _control_request_lites( const unsigned int & request, const float & elapsed_since_last_call );
-            // static void _control_one_light( float & value, const float & dv );
-
+            void __acf_parameters_correction();
+            
             void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
             
-            void __start_fp0_action();                        
+            void __start_fp0_action();                 
             
             
             

@@ -7,6 +7,7 @@
 
 #include "aircraft_state_graph_definition.h"
 #include "abstract_aircraft.h"
+#include "xplane.hpp"
 
 namespace xenon {
     
@@ -33,11 +34,11 @@ namespace xenon {
                 return _edge_d;
             };
             
-            inline aircraft_state_graph::action_parameters_t get_parameters() {
+            inline action_parameters_t get_parameters() {
                 return _params;
             };
             
-            inline void set_parameters( const aircraft_state_graph::action_parameters_t & params ) {
+            inline void set_parameters( const action_parameters_t & params ) {
                 _params = params;
             };
             
@@ -47,7 +48,7 @@ namespace xenon {
             aircraft_state_graph::graph_t::edge_descriptor _edge_d;
             AbstractAircraft * _ptr_acf;
             
-            aircraft_state_graph::action_parameters_t _params;
+            action_parameters_t _params;
             
             
             virtual void _internal_step( const float & elapsed_since_last_time ) = 0;
@@ -79,8 +80,17 @@ namespace xenon {
                 return _ptr_acf->get_location();                
             };
             
+            inline position_t _get_acf_position() {
+                auto location = _get_acf_location();
+                return XPlane::location_to_position(location);
+            };
+            
             inline rotation_t _get_acf_rotation() {
                 return _ptr_acf->get_rotation();
+            };
+            
+            inline aircraft_parameters_t & _get_acf_parameters() {
+                return _ptr_acf->_params;
             };
             
             inline void _front_wp_reached() {
@@ -101,6 +111,10 @@ namespace xenon {
                 _ptr_acf->set_will_on_ground( on_ground );
             };
             
+            inline bool _will_acf_on_ground() {
+                return _ptr_acf->will_on_ground();
+            }
+            
             void _finish();
             
             inline double _calculate_distance_to_wp( const waypoint_t & wp ) {
@@ -114,6 +128,14 @@ namespace xenon {
             
             double _calculate_distance_to_turn();
             float _calculate_distance_to_runway();
+            
+            /** 
+             * @short Пропорциональное подруливание на нулевую точку полетного плана по курсу.
+             * @param elapsed_since_last_call Квант времени, за который считаем приращение.
+             * @param kp пропорциональный коэффициент.
+             */
+
+            void _head_steering(float elapsed_since_last_call, double kp);
             
         private:
             
@@ -137,8 +159,11 @@ namespace xenon {
             
             void __start();
             void __step( const float & elapsed_since_last_call );
-            void __control_of_speed( const float & elapsed_since_last_call );
+            void __control_of_speeds( const float & elapsed_since_last_call );
             void __control_of_angles( const float & elapsed_since_last_call );
+            void __control_of_one_value( 
+                const float & elapsed_since_last_call, float & acceleration, const float & endpoint, float & controlled_value, bool & changed 
+            );
             void __move_straight( const float & elapsed_since_last_call );
 
             

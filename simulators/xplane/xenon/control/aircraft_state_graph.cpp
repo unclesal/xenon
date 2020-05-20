@@ -37,6 +37,10 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     auto state_ready_for_take_off_d = __create_state< AircraftStateReadyForTakeOff >(
         ACF_STATE_READY_FOR_TAKE_OFF, "Ready for take off"
     );
+    // Состояние "взлетел".
+    auto state_airborned_d = __create_state< AircraftStateAirborned > (
+        ACF_STATE_AIRBORNED, "Airborned"
+    );
     
 
     // ------------------------------------------------------------------------
@@ -45,7 +49,7 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     
     // На парковке можно находиться бесконечно и ничего не делать. Это неправильно,
     // т.к. может привести к "зависанию" самолета. Но пока я ничего лучшего не придумал.
-    auto does_nothing_on_parking_d = __create_action< AircraftDoesNothing >( 
+    __create_action< AircraftDoesNothing >( 
         ACF_DOES_NOTHING, "Nothing to do", state_parking_d, state_parking_d
     );
 
@@ -54,24 +58,30 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // Зависит от того, где по курсу расположена начальная точка руления.
     // TODO: тут надо еще иметь промежуточное состояние на разрешение этого дела.
 
-    auto does_slow_taxing_to_start_point_d = __create_action< AircraftDoesSlowTaxing > (
+    __create_action< AircraftDoesSlowTaxing > (
         ACF_DOES_SLOW_TAXING, "Taxing (slowly)", state_parking_d, state_ready_for_taxing_d
     );
-    auto does_push_back_d = __create_action< AircraftDoesPushBack >(
+    __create_action< AircraftDoesPushBack >(
         ACF_DOES_PUSH_BACK, "Push back", state_parking_d, state_ready_for_taxing_d
     );
 
     // Из состояния "готов к рулению" в состояние "на
     // предварительном старте" можно перейти рулением.
 
-    auto does_taxing_to_hp_d = __create_action< AircraftDoesTaxing >(
+    __create_action< AircraftDoesTaxing >(
         ACF_DOES_NORMAL_TAXING, "Taxing (normal)", state_ready_for_taxing_d, state_on_hp_d
     );
     
     // Из состояния "на предварительном старте" можно перейти в состояние
     // "готов к взлету" - выравниванием (lining up)
-    auto does_lining_up_d = __create_action< AircraftDoesLiningUp > (
+    __create_action< AircraftDoesLiningUp > (
         ACF_DOES_LINING_UP, "Lining up", state_on_hp_d, state_ready_for_take_off_d
+    );
+    
+    // Из состояния "готов к взлету" можно перейти в
+    // состояние airborned путем взлета.
+    __create_action< AircraftDoesTakeOff >(
+        ACF_DOES_TAKE_OFF, "Take off", state_ready_for_take_off_d, state_airborned_d
     );
     
 }

@@ -43,11 +43,14 @@ namespace xenon {
             virtual void move( float meters ) {};
             
             virtual void set_will_on_ground( bool on_ground ) {};
+            virtual bool will_on_ground() { return false; };
 
         protected:
             
             deque<waypoint_t> _flight_plan;
             bool _placed_on_ground;
+            
+            aircraft_parameters_t _params;
             
             virtual void _action_finished( void * action ) = 0;            
 

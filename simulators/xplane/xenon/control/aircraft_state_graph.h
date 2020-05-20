@@ -12,6 +12,7 @@
 #include "aircraft_state_graph_definition.h"
 #include "aircraft_abstract_state.h"
 
+#include "aircraft_state_airborned.h"
 #include "aircraft_state_parking.h"
 #include "aircraft_state_ready_for_take_off.h"
 #include "aircraft_state_ready_for_taxing.h"
@@ -20,6 +21,7 @@
 #include "aircraft_does_lining_up.h"
 #include "aircraft_does_nothing.h"
 #include "aircraft_does_slow_taxing.h"
+#include "aircraft_does_take_off.h"
 #include "aircraft_does_push_back.h"
 #include "aircraft_does_taxing.h"
 
@@ -106,7 +108,7 @@ namespace xenon {
             AircraftAbstractState * __current_state;
             AircraftAbstractAction * __current_action;
             
-            aircraft_state_graph::action_parameters_t __previous_action_params;
+            action_parameters_t __previous_action_params;
             
             // Добавить узел графа (состояние) и класс реализации этого состояния.
             template < class T >
