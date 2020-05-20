@@ -36,6 +36,7 @@ namespace xenon {
         private:
             
             phase_t __phase;
+            float __gear_up_altitude;
             
             void __step__run_up( const float & elapsed_since_last_call );
             void __step__break_away ( const float & elapsed_since_last_call );

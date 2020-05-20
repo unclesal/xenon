@@ -22,6 +22,8 @@
 #include "abstract_aircraft.h"
 #include "xplane.hpp"
 
+using namespace XPMP2;
+
 namespace xenon {
 
     class BimboAircraft : public AbstractAircraft, public XPMP2::Aircraft {
@@ -61,11 +63,39 @@ namespace xenon {
             void UpdatePosition(float elapsed_since_last_call, int fl_counter) override ;
 
             // Освещение вкл-выкл
-            void set_taxi_lites(bool on) override;
-            void set_landing_lites(bool on) override;
-            void set_beacon_lites(bool on) override;
-            void set_strobe_lites(bool on) override;
-            void set_nav_lites(bool on) override;
+            void set_taxi_lites(bool on) override {
+                on ? v[ V_CONTROLS_TAXI_LITES_ON ] = 1.0 : v[ V_CONTROLS_TAXI_LITES_ON ] = 0.0;
+            };
+            
+            void set_landing_lites(bool on) override {
+                on ? v[ V_CONTROLS_LANDING_LITES_ON ] = 1.0 : v[ V_CONTROLS_LANDING_LITES_ON ] = 0.0;
+            };
+            
+            void set_beacon_lites(bool on) override {
+                on ? v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0 : v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;    
+            };
+            
+            void set_strobe_lites(bool on) override {
+                on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;    
+            };
+            void set_nav_lites(bool on) override {
+                on ? v[ V_CONTROLS_NAV_LITES_ON ] = 1.0 : v[ V_CONTROLS_NAV_LITES_ON ] = 0.0;
+            };
+            
+            void set_gear_down( bool down ) override {
+                down ? __actuators[ V_CONTROLS_GEAR_RATIO ].endpoint = 1.0 : __actuators[ V_CONTROLS_GEAR_RATIO ].endpoint = 0.0;
+                __actuators[  V_CONTROLS_GEAR_RATIO ].requested = true;
+            };
+            
+            void set_flaps_position( const float & position ) override {
+                __actuators[ V_CONTROLS_FLAP_RATIO ].endpoint = position;
+                __actuators[ V_CONTROLS_FLAP_RATIO ].requested = true;
+            };
+            
+            void set_thrust_value( const float & value ) override {                
+                __actuators[ V_CONTROLS_THRUST_RATIO ].endpoint = value;
+                __actuators[ V_CONTROLS_THRUST_RATIO ].requested = true;
+            };
             
             void set_will_on_ground( bool on_ground ) override {
                 bClampToGround = on_ground;

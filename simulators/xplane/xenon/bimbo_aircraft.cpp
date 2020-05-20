@@ -278,7 +278,7 @@ rotation_t BimboAircraft::get_rotation() {
 void BimboAircraft::_on_ground_correction() {
 
     if ( acIcaoType == "B738" ) {
-        drawInfo.y += 1.5; // 0.5;
+        drawInfo.y += 2.0; // 0.5;
         drawInfo.pitch = -1.8;
     }
 
@@ -298,6 +298,11 @@ void BimboAircraft::__acf_parameters_correction() {
         _params.cruise_speed = 300.0;
         _params.vertical_climb_speed = 1900.0;
         _params.vertical_descend_speed = 1400.0;
+        
+        __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_THRUST_RATIO ].full_time = 30.0;
+        
     } else XPlane::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
 }
 
@@ -607,17 +612,35 @@ void BimboAircraft::_control_request_lites( const unsigned int & request, const 
 void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOLINT(bugprone-reserved-identifier)
     for ( auto i=0; i<XPMP2::V_COUNT; i++ ) {
         if ( __actuators[i].requested ) {
-
+            
             float current_value = v[i];
             if (current_value != __actuators[i].endpoint) {
-                float delta = elapsed_since_last_call / __actuators[i].full_time;
+                
+                float delta = elapsed_since_last_call / __actuators[i].full_time;                                                
                 if ( __actuators[i].endpoint < current_value ) delta = -delta;
-                v[i] += delta;
-                if ( abs(v[i]) >= abs(__actuators[i].endpoint) ) {
-                    // Достигли конечной точки.
-                    v[i] = __actuators[i].endpoint;
-                    __actuators[i].requested = false;
-                }
+                
+                v[i] += delta;                
+                if ( delta < 0 ) {
+                    
+                    // Отрицательное - может уйти меньше заданного.
+                    if ( v[i] <= __actuators[i].endpoint ) {
+                        // Достигли конечной точки.
+                        v[i] = __actuators[i].endpoint;
+                        __actuators[i].requested = false;
+                    };
+                    
+                } else {
+                    
+                    // Положительное - может уйти выше заданного.
+                    if ( v[i] >= __actuators[i].endpoint ) {
+                        // Достигли конечной точки.
+                        v[i] = __actuators[i].endpoint;
+                        __actuators[i].requested = false;
+                    }
+
+                };
+                
+                
             } else __actuators[i].requested = false;
 
         }
@@ -649,56 +672,6 @@ void BimboAircraft::move( float meters ) {
     drawInfo.x += dx;
     drawInfo.z -= dz;
 
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                    Включение / выключение рулежных огней                                          *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::set_taxi_lites(bool on) {
-    on ? v[ V_CONTROLS_TAXI_LITES_ON ] = 1.0 : v[ V_CONTROLS_TAXI_LITES_ON ] = 0.0;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                   Включение / выключение посадочных огней                                         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::set_landing_lites(bool on) {
-    on ? v[ V_CONTROLS_LANDING_LITES_ON ] = 1.0 : v[ V_CONTROLS_LANDING_LITES_ON ] = 0.0;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                         Включение / выключение проблескового маячка (anti-collision)                              *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::set_beacon_lites(bool on) {    
-    on ? v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0 : v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;    
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                              Включение / выключение навигационного стробоскопа                                    *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::set_strobe_lites(bool on) {    
-    on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;    
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                    Включение / выключение навигационных огней                                     *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::set_nav_lites(bool on) {
-    on ? v[ V_CONTROLS_NAV_LITES_ON ] = 1.0 : v[ V_CONTROLS_NAV_LITES_ON ] = 0.0;
 }
 
 // *********************************************************************************************************************

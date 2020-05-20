@@ -131,12 +131,10 @@ void XPlanePlugin::__init_around() {
     auto way = usss.get_taxi_way_for_departure( where_i_am );
     bimbo->prepare_for_take_off( way );
     
-    // auto rotation = bimbo->get_rotation();
-    // rotation.pitch = 10;
-    // bimbo->set_rotation( rotation );
-    
+    // Тест - начиная от предварительного старта.
     bimbo->test__place_on_hp();
     
+    // Тест - на конце ВПП.
     // bimbo->test__place_on_rwy_end();
 
     __bimbos.push_back( bimbo );

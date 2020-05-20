@@ -30,7 +30,6 @@ namespace xenon {
         public:
 
             AbstractAircraft();
-            // AbstractAircraft(const AbstractAircraft & aacf);
             virtual ~AbstractAircraft() override = default;    
             
             // Освещение вкл-выкл
@@ -40,6 +39,10 @@ namespace xenon {
             virtual void set_strobe_lites(bool on) {};
             virtual void set_nav_lites(bool on) {};
             
+            virtual void set_gear_down( bool down ) { };
+            virtual void set_flaps_position( const float & position ) { };
+            virtual void set_thrust_value( const float & value ) {};
+            
             virtual void move( float meters ) {};
             
             virtual void set_will_on_ground( bool on_ground ) {};
@@ -48,7 +51,6 @@ namespace xenon {
         protected:
             
             deque<waypoint_t> _flight_plan;
-            bool _placed_on_ground;
             
             aircraft_parameters_t _params;
             

@@ -39,11 +39,15 @@ void AircraftDoesLiningUp::_internal_start() {
     _params.heading_acceleration = 0.0;
     
     _ptr_acf->set_taxi_lites( false );
-    // Включим - перед взлетом.
-    _ptr_acf->set_landing_lites( false );
+    
+    _ptr_acf->set_landing_lites( true );
+    
     _ptr_acf->set_beacon_lites( true );
     _ptr_acf->set_strobe_lites( true );
     _ptr_acf->set_nav_lites( true );
+    
+    // Типа "взлетное положение"
+    _ptr_acf->set_flaps_position( 0.3 );
     
 }
 

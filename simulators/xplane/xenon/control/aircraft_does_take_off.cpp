@@ -18,6 +18,7 @@ AircraftDoesTakeOff::AircraftDoesTakeOff(
 ) : AircraftAbstractAction( ptr_acf, edge_d )
 {
     __phase = PHASE_NOTHING;
+    __gear_up_altitude = 0.0;
 }
 
 // *********************************************************************************************************************
@@ -29,6 +30,8 @@ AircraftDoesTakeOff::AircraftDoesTakeOff(
 void AircraftDoesTakeOff::_internal_start() {
     
     __phase = PHASE_RUN_UP;
+    
+    __gear_up_altitude = 0.0;
     
     _ptr_acf->set_will_on_ground( true );
     
@@ -90,6 +93,10 @@ void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_c
         _params.vertical_acceleration = 0.6f;
         _params.target_vertical_speed = feet_per_min_to_meters_per_second( _get_acf_parameters().vertical_climb_speed );
         
+        // Высота, на которой включим уборку шасси.
+        auto position = _get_acf_position();
+        __gear_up_altitude = position.y + 10.0;
+        
     }
 }
 
@@ -101,22 +108,27 @@ void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_c
 
 void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_call ) {
 
-//     auto position = _get_acf_position();
-//     auto location = _get_acf_location();
-//     
-//     XPlane::log(
-//         "va=" + to_string( _params.vertical_acceleration ) + ", vs=" + to_string( _params.vertical_speed )
-//         + ", y=" + to_string( position.y ) + ", alt=" + to_string( location.altitude )
-//         + ", on_ground=" + to_string( _will_acf_on_ground() ) 
-//     );
+    // Возможно, фаза взлета закончена и надо переходить на следующее действие.
+    // Это определяется по расстоянию до дальней конечной точки ВПП.
     
-    auto wp = _get_front_wp();    
+    auto wp = _get_front_wp();
     auto distance = xenon::distance( _get_acf_location(), wp.location );
     if ( distance < 100.0 ) {
         XPlane::log("Take off done");
         __phase = PHASE_NOTHING;
         _finish();
         return;
+    }
+    
+    // Если фаза еще не закончилась, то может быть надо убрать шасси.
+    if ( __gear_up_altitude != 0.0 ) {
+        auto position = _get_acf_position();
+        if ( position.y >= __gear_up_altitude ) {
+            // Поднимаем шасси и запоминаем, что мы его подняли,
+            // чтобы больше не заходить в этот кусок кода и не проверять.
+            _ptr_acf->set_gear_down( false );
+            __gear_up_altitude = 0.0;
+        };
     }
 
 }
