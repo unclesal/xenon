@@ -769,3 +769,47 @@ void BimboAircraft::set_strobe_lites(bool on) {
 void BimboAircraft::set_nav_lites(bool on) {
     on ? v[ V_CONTROLS_NAV_LITES_ON ] = 1.0 : v[ V_CONTROLS_NAV_LITES_ON ] = 0.0;
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                С целью тестирования, чтобы не ждать слишком долго - расположить на предварительном                *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::test__place_on_hp() {
+    location_t location;
+    rotation_t rotation;
+    
+    // 08L
+    location.latitude = 56.746317;
+    location.longitude = 60.780804;
+    rotation.heading = 180.161499;
+    
+    position_t position = XPlane::location_to_position( location );    
+    
+    
+    place_on_ground( position, rotation, true );
+    
+    auto wp = _flight_plan.at(0);
+    while ( 
+        ( wp.type != WAYPOINT_RUNWAY ) 
+        && ( wp.action_to_achieve != ACF_DOES_LINING_UP ) 
+        && ( ! _flight_plan.empty()) 
+    ) {
+        XPlane::log("pop type=" + to_string( wp.type ) + ", action= " + to_string( wp.action_to_achieve ) );
+        _flight_plan.pop_front();
+        if ( ! _flight_plan.empty() ) wp = _flight_plan.at( 0 );
+    }
+    
+    if ( wp.action_to_achieve != ACF_DOES_LINING_UP ) {
+        XPlane::log("ERROR: impossible starting from HP due FP content");
+        return;
+    };
+    
+    auto on_hp = __graph->get_node_for( ACF_STATE_HP );
+    __graph->set_active_state( on_hp );
+    
+    __start_fp0_action();
+    
+}
+

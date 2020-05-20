@@ -55,12 +55,12 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_tim
     _params.target_heading = bearing;
     _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
     
-    double distance = _calculate_distance_to_wp( wp );    
-    XPlane::log("Distance=" + to_string( distance ) );
-    if ( distance < 20.0 ) {
+    double distance = _calculate_distance_to_wp( wp );        
+    if ( distance < 8.0 ) {
         __phase = PHASE_ROTATION;
         // Убираем ближнюю точку ВПП, мы ее достигли.
         _front_wp_reached();
+        XPlane::log("go to rotaion");
         
         // И здесь же устанавливаем параметры изменения курса и торможения.
         // Это уже будет - дальняя точка рулежки.
@@ -69,7 +69,7 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_tim
         heading = _get_acf_rotation().heading;
         delta = bearing - heading;        
         _params.target_heading = bearing;
-        _params.heading_acceleration = 10.0 * delta * elapsed_since_last_time;
+        _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
                 
     }
 }
@@ -85,20 +85,23 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_tim
     auto wp = _get_front_wp();
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );
     auto heading = _get_acf_rotation().heading;
-    auto delta = bearing - heading;  
-    if ( abs(delta) < 5.0 ) {
+    auto delta = bearing - heading; 
+    
+    if ( ( abs(delta) < 5.0 ) && ( _params.target_speed != 0.0 ) ) {
+        XPlane::log("Breaking, line_up does finish");
         // Тормозим.
         _params.acceleration = 0.0;
-        _params.tug = -0.1;
-        _params.target_acceleration = -1.0;
+        _params.tug = -0.2;
+        _params.target_acceleration = -2.0;
         _params.target_speed = 0.0;
 
     } else {
+        // Все еще выполняем поворот.
         _params.target_heading = bearing;
-        _params.heading_acceleration = 10.0 * delta * elapsed_since_last_time;
+        _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
     };
     
-    XPlane::log("Phase rotation, speed=" + to_string( _params.speed ) );
+    // XPlane::log("Phase rotation, speed=" + to_string( _params.speed ) + ", delta=" + to_string( delta ) );
         
     if ( _params.speed <= 0.2 ) {
         XPlane::log("Line up ended.");
@@ -120,8 +123,6 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_tim
 
 void AircraftDoesLiningUp::_internal_step( const float & elapsed_since_last_time ) {
     
-    XPlane::log("DoesLineUp:: internal step, phase=" + to_string( __phase ));
-        
     switch ( __phase ) {
         case PHASE_STRAIGHT: __step_straight( elapsed_since_last_time ); break;
         case PHASE_ROTATION: __step_rotation( elapsed_since_last_time ); break;

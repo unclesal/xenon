@@ -114,6 +114,11 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_time )
         
         if ( abs(_params.speed) <= 0.2 ) {
             XPlane::log("Full stop on HP. Distance=" + to_string(distance_to_rwy));
+            XPlane::log(
+                "Lat=" + to_string( _get_acf_location().latitude ) 
+                + ", lon=" + to_string( _get_acf_location().longitude ) 
+                + ", heading=" + to_string( _get_acf_rotation().heading )
+            );
             _params.speed = 0.0;
             _params.tug = 0.0;
             _params.acceleration = 0.0;

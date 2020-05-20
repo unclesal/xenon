@@ -106,6 +106,8 @@ namespace xenon {
             void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
             
             void choose_next_action();
+            
+            void test__place_on_hp();
 
         protected:
 
@@ -142,7 +144,7 @@ namespace xenon {
 
             void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
             
-            void __start_fp0_action();
+            void __start_fp0_action();                        
             
             
             

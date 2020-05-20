@@ -114,15 +114,18 @@ void XPlanePlugin::__init_around() {
 
     auto usss = Airport::get_by_icao("USSS");
     auto gate = usss.get_startup_locations()["15"];
+    
     bimbo->place_on_ground( gate );
-
     auto where_i_am = bimbo->get_location();
     
     auto way = usss.get_taxi_way_for_departure( where_i_am );
     bimbo->prepare_for_take_off( way );
+    
+    bimbo->test__place_on_hp();
 
     __bimbos.push_back( bimbo );
-    bimbo->choose_next_action();
+    
+    // bimbo->choose_next_action();
 
     // Инициализировали. Больше этого делать - не будем.
     __around_inited = true;
