@@ -50,9 +50,6 @@ namespace xenon {
 
             ~BimboAircraft() override = default;
 
-            // virtual void observe() override;
-            // virtual void control( float elapsed_since_last_call ) override;
-
             position_t get_position() override;
             position_with_angles_t get_position_with_angles();
             void set_position( const position_t & position ) override;
@@ -117,19 +114,6 @@ namespace xenon {
             float shift_from_ramp();
 
             /**
-             * @short Подготовить маршрут либо к выталкиванию, либо к рулежке.
-             * Самолет стоит на стоянке и ему дают некую начальную точку рулежки к ВПП для вылета.
-             * Два варианта. Либо нужно выталкивание, либо самолет сам сможет вырулить на эту точку.
-             * Самолет решает это самостоятельно в зависимости от направления на эту самую конечную
-             * точку. В результате он должен встать где-то близко к заданной точке с заданным
-             * курсом, тоже "где-то близко".
-             * @param target
-             */
-            // void prepare_for_push_back_or_taxing( const waypoint_t & target );
-
-            // void prepare_for_taxing( const vector<location_t> & taxi_way );
-                        
-            /**
              * @short Подготовить маршрут к взлету.
              * От аэропорта был получен путь руления к ВПП и сама рабочая ВПП.
              * Определяем действия (ребра графа) и складываем эти точки в план полета.
@@ -154,9 +138,6 @@ namespace xenon {
 
 
         private:
-
-            // aircraft_condition_t _current_condition;
-            // vector<aircraft_condition_t> _conditions;
 
             actuator_motion_t __actuators[ XPMP2::V_COUNT ];
             

@@ -64,7 +64,9 @@ namespace xenon {
         WAYPOINT_TAXING,
         WAYPOINT_RUNWAY,
         WAYPOINT_SID,
-        WAYPOINT_CRUISING,
+        // Точка - собственно полетного плана. Вне зависимости,
+        // набирает он там высоту или идет на круизе.
+        WAYPOINT_FLYING,
         WAYPOINT_VECTORING,
         WAYPOINT_STAR
     };
@@ -83,7 +85,11 @@ namespace xenon {
         // хотя по сути это называется line up.
         ACF_STATE_READY_FOR_TAKE_OFF,
         // Взлет произведен
-        ACF_STATE_AIRBORNED
+        ACF_STATE_AIRBORNED,
+        // Находится на глиссаде
+        ACF_STATE_ON_FINAL,
+        // Произвел посадку и ушел с ВПП
+        ACF_STATE_RUNWAY_LEAVED
     };
 
     // Действия (ребра графа состояний самолета).
@@ -103,11 +109,16 @@ namespace xenon {
         ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
         // Выходит на взлетку.
         ACF_DOES_LINING_UP,
-        // Взлет.
+        // Выполняет взлет.
         ACF_DOES_TAKE_OFF,
-        
+        // Находится в полете. Там будут разные 
+        // фазы: набор высоты, круизинг, снижение и др.
+        // Но действие на все это - одно.
         ACF_DOES_FLYING,
-        ACF_DOES_LANDING
+        // Выполняет посадку (уже находится на глиссаде)
+        ACF_DOES_LANDING,
+        // Посадку произвел и освобождает ВПП.
+        ACF_DOES_RUNWAY_LEAVING
     };
 
 

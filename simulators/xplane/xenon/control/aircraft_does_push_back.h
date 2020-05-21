@@ -21,7 +21,7 @@ namespace xenon {
             };
             
             AircraftDoesPushBack(
-                AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
+                AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d
             );
             ~AircraftDoesPushBack() override = default;
             

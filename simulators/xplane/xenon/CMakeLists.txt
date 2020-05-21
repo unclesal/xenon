@@ -52,18 +52,23 @@ add_library(xenon MODULE
         # Управление. Пока что в этом же директории, на потом надо будет перенести в common.
         control/aircraft_abstract_action.cpp
         control/aircraft_abstract_state.cpp 
+        control/aircraft_does_flying.cpp
+        control/aircraft_does_landing.cpp
         control/aircraft_does_lining_up.cpp
         control/aircraft_does_nothing.cpp
         control/aircraft_does_push_back.cpp
+        control/aircraft_does_runway_leaving.cpp
         control/aircraft_does_slow_taxing.cpp
         control/aircraft_does_take_off.cpp
         control/aircraft_does_taxing.cpp
         control/aircraft_state_airborned.cpp
         control/aircraft_state_graph.cpp
         control/aircraft_state_parking.cpp
+        control/aircraft_state_on_final.cpp
         control/aircraft_state_on_hp.cpp
         control/aircraft_state_ready_for_take_off.cpp
         control/aircraft_state_ready_for_taxing.cpp
+        control/aircraft_state_runway_leaved.cpp
         # Основной каталог.
         abstract_aircraft.cpp
         abstract_vehicle.cpp

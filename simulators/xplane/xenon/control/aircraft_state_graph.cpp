@@ -41,6 +41,14 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     auto state_airborned_d = __create_state< AircraftStateAirborned > (
         ACF_STATE_AIRBORNED, "Airborned"
     );
+    // Состояние "на глиссаде"
+    auto state_on_final_d = __create_state< AircraftStateOnFinal > (
+        ACF_STATE_ON_FINAL, "On final"
+    );
+    // Освободил ВПП.
+    auto state_rwy_leaved_d =  __create_state< AircraftStateRunwayLeaved > (
+        ACF_STATE_RUNWAY_LEAVED, "Runway leaved"
+    );
     
 
     // ------------------------------------------------------------------------
@@ -80,9 +88,16 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     
     // Из состояния "готов к взлету" можно перейти в
     // состояние airborned путем взлета.
-    __create_action< AircraftDoesTakeOff >(
+    __create_action< AircraftDoesTakeOff > (
         ACF_DOES_TAKE_OFF, "Take off", state_ready_for_take_off_d, state_airborned_d
     );
+    
+    // Из состояния airborned начинается полет. Который закончится только выходом на глиссаду.
+    __create_action< AircraftDoesFlying > (
+        ACF_DOES_FLYING, "Flying", state_airborned_d, state_on_final_d
+    );
+    
+    
     
 }
 

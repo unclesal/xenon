@@ -1,21 +1,24 @@
 // *********************************************************************************************************************
-// *                                        Состояние самолета "готов к рулежке"                                       *
+// *                               Самолет освободил ВПП и дальше пойдет руление на стоянку                            *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 may 2020 at 12:20 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 21 may 2020 at 14:19 *
 // *********************************************************************************************************************
-
 #pragma once
+
 #include "aircraft_abstract_state.h"
 
 namespace xenon {
-    class AircraftStateReadyForTaxing : public AircraftAbstractState {
-        
+    
+    class AircraftStateRunwayLeaved : public AircraftAbstractState { 
+    
         public:
             
-            AircraftStateReadyForTaxing(
+            AircraftStateRunwayLeaved(
                 AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd 
             );
-            virtual ~AircraftStateReadyForTaxing() = default;
             
-    };
+            ~AircraftStateRunwayLeaved() override = default;
+            
+    }; // class AircraftStateRunwayLeaved
+    
 }; // namespace xenon
