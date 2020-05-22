@@ -1,4 +1,4 @@
-[English][https://github.com/unclesal/xenon/blob/master/README.md]
+[English](https://github.com/unclesal/xenon/blob/master/README.md)
 
 # XENON
 
@@ -6,4 +6,4 @@
 
 # Видяшки
 
-[1. Улет в пампасы][]
+[1. Улет в пампасы]()

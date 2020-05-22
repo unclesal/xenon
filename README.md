@@ -1,4 +1,4 @@
-[На русском][https://github.com/unclesal/xenon/blob/master/README-RU.md]
+[На русском](https://github.com/unclesal/xenon/blob/master/README-RU.md)
 
 # XENON
 
@@ -6,4 +6,4 @@ Please do not compile nor install it, because this project still does not do any
 
 # movies
 
-[1. Flying out to pampas][]
+[1. Flying out to pampas]()
