@@ -8,7 +8,7 @@
 
 1. Прекраснейший (и официально приобретенный) симулятор полета [X-Plane](https://www.x-plane.com/)
 2. Свободно распространяемый [сценарий](http://x-flight.su/ural.php) аэропорта USSS (Кольцово)
-3. Свободно распространяемую библиотеку нового поколения X-Plane Multiplay Library, поддерживающую стандарты OpenGL, Vulcan, Metal и трехмерные модели CSL 8, написанную [TwinFan](https://github.com/TwinFan/XPMP2)
+3. Свободно распространяемую библиотеку нового поколения X-Plane Multiplay Library, поддерживающую стандарты OpenGL, Vulcan, Metal, поддерживающую систему TCAS и трехмерные модели CSL8, написанную [TwinFan](https://github.com/TwinFan/XPMP2)
 
 # Видяшки
 
