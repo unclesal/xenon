@@ -75,6 +75,7 @@ namespace xenon {
             );
             
             aircraft_state_graph::edge_t get_edge_for( AircraftAbstractAction * action );
+
             inline aircraft_state_graph::edge_t get_edge_for( const aircraft_state_graph::graph_t::edge_descriptor & ed ) {
                 try {
                     aircraft_state_graph::edge_t edge = __graph[ ed ];

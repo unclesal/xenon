@@ -112,7 +112,7 @@ void XPlanePlugin::__init_around() {
     XPlane::log("Init one bimbo...");
     auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
     bimbo->label = "Boeing 737-800";
-    bimbo->colLabel[0] = 1.0f;  // R
+    bimbo->colLabel[0] = 0.0f;  // R
     bimbo->colLabel[1] = 1.0f;  // G
     bimbo->colLabel[2] = 0.0f;  // B
         
@@ -132,14 +132,14 @@ void XPlanePlugin::__init_around() {
     bimbo->prepare_for_take_off( way );
     
     // Тест - начиная от предварительного старта.
-    bimbo->test__place_on_hp();
+    // bimbo->test__place_on_hp();
     
     // Тест - на конце ВПП.
     // bimbo->test__place_on_rwy_end();
 
     __bimbos.push_back( bimbo );
     
-    // bimbo->choose_next_action();
+    bimbo->choose_next_action();
 
     // Инициализировали. Больше этого делать - не будем.
     __around_inited = true;

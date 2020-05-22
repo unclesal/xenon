@@ -130,6 +130,16 @@ void BimboAircraft::choose_next_action() {
         return;
     };
     
+    if ( __graph->current_state_is( ACF_STATE_AIRBORNED ) ) {
+        
+        aircraft_state_graph::graph_t::edge_descriptor action 
+            = __graph->get_action_outgoing_from_current_state( ACF_DOES_FLYING );
+            
+        __graph->set_active_action( action );
+        
+        return;
+    }
+    
     XPlane::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
 
@@ -278,7 +288,7 @@ rotation_t BimboAircraft::get_rotation() {
 void BimboAircraft::_on_ground_correction() {
 
     if ( acIcaoType == "B738" ) {
-        drawInfo.y += 2.0; // 0.5;
+        drawInfo.y += 3.0; // 0.5;
         drawInfo.pitch = -1.8;
     }
 

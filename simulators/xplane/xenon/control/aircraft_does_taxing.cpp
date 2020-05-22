@@ -30,7 +30,9 @@ void AircraftDoesTaxing::_internal_start() {
     
     _acf_will_on_ground( true );
     _ptr_acf->set_taxi_lites( true );
+    _ptr_acf->set_landing_lites( true );
     _ptr_acf->set_beacon_lites( true );
+    
     __choose_speed();    
         
 }
