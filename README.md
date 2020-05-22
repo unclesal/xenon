@@ -7,7 +7,7 @@ Please do not compile nor install it, because this project still does not do any
 # I use
 
 1. Beautiful (and officially purchased) flight simulator [X-Plane](https://www.x-plane.com/)
-2. Free USSS (Kol'tsovo) [scrnery](http://x-flight.su/ural.php)
+2. Free USSS (Kol'tsovo) [scenery](http://x-flight.su/ural.php)
 3. Free new generation X-Plane Multiplay Library supporting OpenGL, Vulcan, Metal standards and CSL-8 3D models, made by [TwinFan](https://github.com/TwinFan/XPMP2)
 
 # movies
