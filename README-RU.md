@@ -1,4 +1,4 @@
-[English]
+[English][https://github.com/unclesal/xenon/blob/master/README.md]
 
 # XENON
 
