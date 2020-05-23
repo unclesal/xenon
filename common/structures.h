@@ -58,6 +58,7 @@ namespace xenon {
     
     // Одна точка маршрута.
     struct waypoint_t {
+        std::string name = "";
         xenon::waypoint_type_t type = WAYPOINT_UNKNOWN;
         // Положение в пространстве данной точки.
         location_t location;

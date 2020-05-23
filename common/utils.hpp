@@ -94,6 +94,16 @@ namespace xenon {
         normalize_degrees( brng );
         return brng;
     };
+    
+    /**
+     * @short Преобразование градусов из минут-секунд - в десятичную форму.
+     */
+    
+    inline double degrees_to_decimal( const double & grad, const double & min, const double & sec, const char & dir ) {
+        double result = grad + min / 60.0 + sec / 3600.0;
+        if ( ( dir == 'S' ) || ( dir == 'W' ) ) result = -result;
+        return result;
+    };
 
 
 }; // namespace xenon
