@@ -27,8 +27,7 @@ AircraftDoesFlying::AircraftDoesFlying(
 
 void AircraftDoesFlying::_internal_start() {
     XPlane::log("FLY: start");
-    __previous_delta = 0.0;    
-    __step = 0;
+    for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) __previous_delta[i] = 0.0;        
 };
 
 // *********************************************************************************************************************
@@ -52,48 +51,44 @@ void AircraftDoesFlying::__head_bearing( const float & elapsed_since_last_call )
     float bearing = xenon::bearing( location, wp.location );
     auto delta = bearing - heading;
     
-    delta < 0 ? _params.target_roll = -25.0 : _params.target_roll = 25.0;
-    
     // Работа PID-регулятора, который устанавливает крен самолета. 
     // Сдвиг по курсу потом формируется - уже в зависимости от крена.
-    float P = 2.0;
-    float D = 5.0;
-    float I = 2.0;
+    float P = 1.0;
+    float D = 0.0;
+    float I = 1.0;
     
-    float regulator_out = P * delta + D * ( delta - __previous_delta ) + I * ( delta + __previous_delta );
+    float ivalue = 0.0;    
+    for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
+        ivalue += __previous_delta[i];
+    };
+    ivalue /= (float) PREVIOUS_ARRAY_SIZE;
     
-    if ( regulator_out >= 10.0 ) regulator_out = 10.0;
-    if ( regulator_out <= -10.0 ) regulator_out = -10.0;
+    float dvalue = 0.0;
+    for ( int i=0; i<PREVIOUS_ARRAY_SIZE - 1; ++i ) {
+        dvalue += __previous_delta[i] - __previous_delta[i+1];
+    };        
     
-    // rotation.roll += regulator_out;    
-    // if ( rotation.roll < -25.0 ) rotation.roll = -25.0;
-    // if ( rotation.roll > 25.0 ) rotation.roll = 25.0;    
-    // _set_acf_rotation( rotation );
+    float regulator_out = P * delta + D * dvalue + I * ivalue;
     
-    _params.roll_acceleration = regulator_out;
-    
-    // Чтобы считать синусы-косинусы - надо иметь сдвинутый и повернутый угол.
+    if ( regulator_out >= 25.0 ) regulator_out = 25.0;
+    if ( regulator_out <= -25.0 ) regulator_out = -25.0;
+        
+    _params.target_roll = regulator_out;
+    delta < 0 ? _params.roll_acceleration = -3.0 : _params.roll_acceleration = 3.0;
+        
+    // Чтобы считать синусы-косинусы - надо иметь сдвинутый угол.
+    // Повернутость угла влияет на знак, но он и так учитывается дальше.
     double radians = degrees_to_radians( rotation.roll - 90.0 );
     
     double dh = cos( radians );
     
-    XPlane::log(
-        "heading=" + to_string(heading) + ", delta=" + to_string(delta) 
-        + ", p=" + to_string( P * delta )
-        + ", diff=" + to_string( D * (delta - __previous_delta ) ) 
-        + ", integral=" + to_string( I * (delta + __previous_delta ) ) 
-        + ", reg_out=" + to_string( regulator_out )
-        + ", roll=" + to_string( rotation.roll )
-    );
-    
     _params.target_heading = heading + dh * 10;
     _params.heading_acceleration = 10.0 * dh;
-    
-    // __step ++;
-    // if ( __step >= 4  ) {
-    //    __step = 0;
-        __previous_delta = delta;
-    // }
+        
+    for (int i = PREVIOUS_ARRAY_SIZE - 1 ; i >= 0; -- i ) {
+        __previous_delta[i+1] = __previous_delta[i];
+    };
+    __previous_delta[0] = delta;
     
 }
 

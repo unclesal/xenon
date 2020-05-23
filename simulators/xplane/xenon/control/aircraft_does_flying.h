@@ -7,9 +7,11 @@
 
 #include "aircraft_abstract_action.h"
 
+#define PREVIOUS_ARRAY_SIZE 50
+
 namespace xenon {
 
-    class AircraftDoesFlying : public AircraftAbstractAction {
+    class AircraftDoesFlying : public AircraftAbstractAction {        
     
         public:
             
@@ -25,8 +27,7 @@ namespace xenon {
             
         private:
             
-            float __previous_delta;
-            int __step;
+            float __previous_delta[ PREVIOUS_ARRAY_SIZE ];
             
             void __head_bearing( const float & elapsed_since_last_call );
         

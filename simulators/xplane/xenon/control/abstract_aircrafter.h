@@ -58,11 +58,7 @@ namespace xenon {
             inline rotation_t _get_acf_rotation() {
                 return _ptr_acf->get_rotation();
             };
-            
-            inline void _set_acf_rotation( const rotation_t & rotation ) {
-                _ptr_acf->set_rotation( rotation );
-            };
-            
+                        
             inline aircraft_parameters_t & _get_acf_parameters() {
                 return _ptr_acf->_params;
             };
