@@ -16,6 +16,10 @@ namespace xenon {
             AircraftStateAirborned( AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd );
             ~AircraftStateAirborned() override = default;
             
+        protected:
+            
+            void _internal_activate() override {};
+            
     };
     
 };

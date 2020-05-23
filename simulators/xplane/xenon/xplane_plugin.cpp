@@ -139,6 +139,9 @@ void XPlanePlugin::__init_around() {
 
     __bimbos.push_back( bimbo );
     
+    bimbo->test__fly();
+    
+    // Это по сути "старт".
     bimbo->choose_next_action();
 
     // Инициализировали. Больше этого делать - не будем.

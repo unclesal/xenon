@@ -484,6 +484,33 @@ void BimboAircraft::move( float meters ) {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                                           Добавить точки в полетный план.                                         *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp ) {
+    
+    // Прямо по входному массиву - ничего страшного.
+    // Потому что выходной массив, т.е. действующий полетный план,
+    // вообще-то уже может что-то содержать.
+    
+    for ( int i=0; i < fp.size() - 1; ++i ) {
+        waypoint_t & at_i = fp.at( i );
+        waypoint_t & at_n = fp.at( i + 1 );
+        at_i.distance_to_next_wp = xenon::distance(at_i.location, at_n.location );
+        auto bearing = xenon::bearing( at_i.location, at_n.location );
+        at_i.outgoing_heading = bearing;
+        at_n.incomming_heading = bearing;
+    };
+    
+    // TODO: вообще-то - не факт, что в самый конец, они могут и перетасовываться же? 
+    for ( int i=0; i < fp.size(); ++ i ) {
+        _flight_plan.push_back( fp.at( i ) );
+    };
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                С целью тестирования, чтобы не ждать слишком долго - расположить на предварительном                *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -565,4 +592,125 @@ void BimboAircraft::test__place_on_rwy_end() {
     
 }
 
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                           Тестирование полетной фазы                                              *
+// *                                                                                                                   *
+// *********************************************************************************************************************
 
+void BimboAircraft::test__fly() {
+    
+    deque< waypoint_t > fp;
+    
+    // При вылете с полосы 08L
+    // SS028
+    waypoint_t ss028 = {
+        .name = "SS028",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
+            .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
+            .altitude = 700.0
+        },
+        .outgoing_heading = 0.0,
+        .incomming_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    fp.push_back( ss028 );
+    
+    // D237K
+    waypoint_t d237k = {
+        .name = "D237K",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
+            .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
+            .altitude = 700.0
+        },
+        .outgoing_heading = 0.0,
+        .incomming_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    fp.push_back( d237k );
+    
+     
+    // SS025 
+    waypoint_t ss025 = {
+        .name = "SS025",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
+            .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
+            .altitude = 700.0
+        },
+        .outgoing_heading = 0.0,
+        .incomming_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    fp.push_back( ss025 );
+    
+    // CF08L
+    waypoint_t cf08l = {
+        .name = "CF08L",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 41.97, 'N' ),
+            .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
+            .altitude = 600.0
+        },
+        .outgoing_heading = 0.0,
+        .incomming_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    fp.push_back( cf08l );
+    
+    // RW08L 
+    waypoint_t rwy08l = {
+        .name = "RWY08L",
+        .type = WAYPOINT_RUNWAY,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 41.41, 'N' ),
+            .longitude = degrees_to_decimal( 60, 46, 40.90, 'E' ),
+            .altitude = 600.0
+        },
+        .outgoing_heading = 0.0,
+        .incomming_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_LANDING
+    };
+    fp.push_back( rwy08l );
+    
+    // RWY26R
+    waypoint_t rwy26r = {
+        .name = "RWY26R",
+        .type = WAYPOINT_RUNWAY,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
+            .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
+            .altitude = 600.0
+        },
+        .outgoing_heading = 0.0,
+        .incomming_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_LANDING
+    };
+    fp.push_back( rwy26r );
+     
+    prepare_flight_plan( fp );
+    
+    
+    // Состояние AIRBORNED имеет только одно исходящее действие, это полет.
+    auto airborned_d = __graph->get_node_for( ACF_STATE_AIRBORNED );
+    __graph->set_active_state( airborned_d );    
+    
+    // Приподнимем над землей, чтобы видно было, как он крутится.
+    set_will_on_ground( false );
+    auto position = get_position();
+    position.y += 50;
+    set_position( position );                
+    
+}

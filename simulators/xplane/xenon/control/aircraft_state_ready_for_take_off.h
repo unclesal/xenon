@@ -12,8 +12,13 @@ namespace xenon {
     class AircraftStateReadyForTakeOff : public AircraftAbstractState {
     
         public:
+            
             AircraftStateReadyForTakeOff( AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd );
             ~AircraftStateReadyForTakeOff() override = default;
+            
+        protected:
+            
+            void _internal_activate() override {};
             
     }; // class AircraftStateReadyForTakeOff
     

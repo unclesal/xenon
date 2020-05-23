@@ -20,7 +20,7 @@ namespace xenon {
             
         protected:
             
-            virtual void _internal_step( const float & elapsed_since_last_time );
+            virtual void _internal_step( const float & elapsed_since_last_call );
             virtual void _internal_start();
 
     };

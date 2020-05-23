@@ -21,7 +21,7 @@ namespace xenon {
 
     class AbstractAircraft : public AbstractVehicle {
         
-        friend class AircraftAbstractAction;
+        friend class AbstractAircrafter;
 
         /**
          * Абстрактрый самолет, как пользовательский, так и внутри симулятора.

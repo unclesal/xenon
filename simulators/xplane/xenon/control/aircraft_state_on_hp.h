@@ -12,10 +12,15 @@ namespace xenon {
     class AircraftStateOnHP : public AircraftAbstractState {
         
         public:
+            
             AircraftStateOnHP(
                 AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd
             );
             ~AircraftStateOnHP() override = default;
+            
+        protected:
+            
+            void _internal_activate() override {};
     };
     
 }; // namespace xenon

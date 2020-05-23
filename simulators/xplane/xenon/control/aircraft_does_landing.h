@@ -22,7 +22,7 @@ namespace xenon {
         protected:
             
             void _internal_start() override;
-            void _internal_step( const float & elapsed_since_last_time ) override;
+            void _internal_step( const float & elapsed_since_last_call ) override;
             
             
         private:

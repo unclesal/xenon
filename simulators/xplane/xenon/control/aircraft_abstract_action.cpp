@@ -16,9 +16,10 @@ using namespace xenon;
 
 AircraftAbstractAction::AircraftAbstractAction (
     AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
-) {
+): AbstractAircrafter( ptr_acf ) 
+
+{
     _edge_d = edge_d;
-    _ptr_acf = ptr_acf;
         
     __total_duration = 0.0;
     __started = false;
@@ -142,19 +143,21 @@ void AircraftAbstractAction::__control_of_one_value(
     if ( av != 0.0 ) {
         controlled_value += av;
         changed = true;
+        
         if ( acceleration < 0 ) {
             // Ускорение - отрицательное, значение может стать - меньше заданного.
-            if ( controlled_value <= endpoint ) {
+            if ( controlled_value < endpoint ) {
                 controlled_value = endpoint;
                 acceleration = 0.0;
             }
-        } else if ( _params.pitch_acceleration > 0 ) {
+        } else if ( acceleration  > 0 ) {
             // Ускорение - положительное, значение может стать - больше заданного.
-            if ( controlled_value >= endpoint ) {
+            if ( controlled_value > endpoint ) {
                 controlled_value = endpoint;
                 acceleration = 0.0;
             };
         }
+        
     }
 }
 
@@ -168,7 +171,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
                 
     // Углы подравниваем только в том случае, если есть хоть какая-то скорость.
     // Чтобы избежать вращения самолета на месте.
-    if ( abs( _params.speed ) >= 0.8 ) {
+    // if ( abs( _params.speed ) >= 0.8 ) {
         
         auto rotation = _ptr_acf->get_rotation();
         bool changed = false;
@@ -200,7 +203,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
         );
                 
         if ( changed ) _ptr_acf->set_rotation( rotation );
-    }
+    // }
     
 }
 
@@ -234,54 +237,6 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
     
 }
 
-// ********************************************************************************************************************
-// *                                                                                                                  *
-// *                            Посчитать расстояние до "достаточно крутого поворота"                                 *
-// *                                                                                                                  *
-// ********************************************************************************************************************
-
-double AircraftAbstractAction::_calculate_distance_to_turn() {
-    
-    auto location = _get_acf_location();
-    for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
-        auto wp = _ptr_acf->_flight_plan.at(i);
-        double change = wp.incomming_heading - wp.outgoing_heading;
-        if ( change >= 20.0 ) {
-            return xenon::distance(location, wp.location);
-        }
-    }
-    return 0.0;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                               Посчитать расстояние до точки, которая принадлежит ВПП                              *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-float AircraftAbstractAction::_calculate_distance_to_runway() {
-    auto location = _get_acf_location();
-    for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
-        auto wp = _ptr_acf->_flight_plan.at(i);
-        if ( wp.type == WAYPOINT_RUNWAY ) {
-            return (float) xenon::distance( location, wp.location );
-        }
-    };
-    return 0.0;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                       Окончание выполнения данного действия                                       *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void AircraftAbstractAction::_finish() {
-    __finished = true;
-    _ptr_acf->_action_finished( this );
-}
-
-
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                Подруливание на первую точку полетного плана по курсу.                             *
@@ -290,7 +245,7 @@ void AircraftAbstractAction::_finish() {
 
 void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, double kp ) {
 
-    if ( _ptr_acf->_flight_plan.empty() ) {
+    if ( _is_flight_plan_empty() ) {
         XPlane::log("ERROR: AircraftAbstractAction::_head_steering, but FP is empty");
         return;
     };

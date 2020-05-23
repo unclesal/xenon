@@ -19,6 +19,10 @@ namespace xenon {
             
             ~AircraftStateRunwayLeaved() override = default;
             
+        protected:
+            
+            void _internal_activate() override {};
+            
     }; // class AircraftStateRunwayLeaved
     
 }; // namespace xenon

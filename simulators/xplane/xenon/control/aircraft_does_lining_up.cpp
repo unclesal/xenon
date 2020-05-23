@@ -57,10 +57,10 @@ void AircraftDoesLiningUp::_internal_start() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_time ) {
+void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_call ) {
     
     // Подруливание на точку осуществляем - сразу же, в "прямолинейной" фазе.
-    _head_steering( elapsed_since_last_time, 25.0 );
+    _head_steering( elapsed_since_last_call, 25.0 );
 
     auto wp = _get_front_wp();
     double distance = _calculate_distance_to_wp( wp );        
@@ -78,7 +78,7 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_tim
         // И здесь же устанавливаем параметры изменения курса и торможения.
         // Это уже будет - дальняя точка рулежки.
         
-        _head_steering( elapsed_since_last_time, 25.0 );                
+        _head_steering( elapsed_since_last_call, 25.0 );                
                 
     }
 }
@@ -89,7 +89,7 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_tim
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_time ) {
+void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_call ) {
     
     auto wp = _get_front_wp();
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );
@@ -105,7 +105,7 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_tim
 
     } else {
         // Все еще выполняем поворот.
-        _head_steering( elapsed_since_last_time, 25.0 );
+        _head_steering( elapsed_since_last_call, 25.0 );
     };
     
     if ( _params.speed <= 0.2 ) {
@@ -125,11 +125,11 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_tim
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesLiningUp::_internal_step( const float & elapsed_since_last_time ) {
+void AircraftDoesLiningUp::_internal_step( const float & elapsed_since_last_call ) {
     
     switch ( __phase ) {
-        case PHASE_STRAIGHT: __step_straight( elapsed_since_last_time ); break;
-        case PHASE_ROTATION: __step_rotation( elapsed_since_last_time ); break;
+        case PHASE_STRAIGHT: __step_straight( elapsed_since_last_call ); break;
+        case PHASE_ROTATION: __step_rotation( elapsed_since_last_call ); break;
         default: XPlane::log("ERROR: AircraftDoesLiningUp::_internal_step(), unhandled phase " + to_string( __phase ) );
     }
     

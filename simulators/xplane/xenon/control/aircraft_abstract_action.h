@@ -6,12 +6,11 @@
 #pragma once
 
 #include "aircraft_state_graph_definition.h"
-#include "abstract_aircraft.h"
-#include "xplane.hpp"
+#include "abstract_aircrafter.h"
 
 namespace xenon {
     
-    class AircraftAbstractAction {
+    class AircraftAbstractAction : public AbstractAircrafter {
         
         friend class AircraftStateGraph;
         
@@ -45,59 +44,19 @@ namespace xenon {
         
         protected:
             
-            aircraft_state_graph::graph_t::edge_descriptor _edge_d;
-            AbstractAircraft * _ptr_acf;
+            aircraft_state_graph::graph_t::edge_descriptor _edge_d;            
             
             action_parameters_t _params;
             
             
-            virtual void _internal_step( const float & elapsed_since_last_time ) = 0;
+            virtual void _internal_step( const float & elapsed_since_last_call ) = 0;
             virtual void _internal_start() = 0;
-            
-            /**
-             * @short Вернуть нулевую точку полетного плана.
-             */
-            inline waypoint_t & _get_front_wp() {
-                if ( _ptr_acf->_flight_plan.empty() ) {
-                    XPlane::log("ERROR: AircraftAbstractAction::_get_front_wp(), but flight plan is empty");
-                    return __fake_waypoint;
-                }
-                return _ptr_acf->_flight_plan.at(0);        
+                        
+            inline void _finish() {
+                __finished = true;
+                _action_has_been_finished( this );
             };
-            
-            /**
-             * @short Вернуть первую (следующую за нулевой) точку полетного плана.
-             */
-            inline waypoint_t & _get_first_wp() {
-                if ( _ptr_acf->_flight_plan.size() >= 2 ) {
-                    return _ptr_acf->_flight_plan.at(1);
-                };
-                XPlane::log("ERROR: AircraftAbstractAction::_get_first_wp(), but flight plan size=" + to_string( _ptr_acf->_flight_plan.size() ) );
-                return __fake_waypoint;
-            };
-            
-            inline location_t _get_acf_location() {
-                return _ptr_acf->get_location();                
-            };
-            
-            inline position_t _get_acf_position() {
-                auto location = _get_acf_location();
-                return XPlane::location_to_position(location);
-            };
-            
-            inline rotation_t _get_acf_rotation() {
-                return _ptr_acf->get_rotation();
-            };
-            
-            inline aircraft_parameters_t & _get_acf_parameters() {
-                return _ptr_acf->_params;
-            };
-            
-            inline void _front_wp_reached() {
-                if ( ! _ptr_acf->_flight_plan.empty() ) _ptr_acf->_flight_plan.pop_front();
-                else XPlane::log("ERROR: AircraftAbstractAction::_front_wp_reached(), empty flight plan.");
-            };
-            
+                        
             /**
              * @short Нулевая точка плана - удаляется, а не приближается, как оно должно быть в "штатном" режиме.
              */
@@ -106,28 +65,12 @@ namespace xenon {
                 auto wp = _get_front_wp();
                 return ( __previous_distance_to_front_wp < (int) _calculate_distance_to_wp( wp ) );
             };
-            
-            inline void _acf_will_on_ground( bool on_ground ) {
-                _ptr_acf->set_will_on_ground( on_ground );
-            };
-            
-            inline bool _will_acf_on_ground() {
-                return _ptr_acf->will_on_ground();
-            }
-            
-            void _finish();
-            
-            inline double _calculate_distance_to_wp( const waypoint_t & wp ) {
-                auto location = _get_acf_location();
-                return xenon::distance( location, wp.location );
-            };
+
             
             double _previous_distance_to_front_wp() {
                 return __previous_distance_to_front_wp;
             };
             
-            double _calculate_distance_to_turn();
-            float _calculate_distance_to_runway();
             
             /** 
              * @short Пропорциональное подруливание на нулевую точку полетного плана по курсу.
@@ -140,9 +83,7 @@ namespace xenon {
         private:
             
             bool __started;
-            bool __finished;
-            
-            waypoint_t __fake_waypoint;
+            bool __finished;                        
             
             /** 
              * @short Полное время в секундах, проведенное в данном действии.

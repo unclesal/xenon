@@ -120,11 +120,13 @@ namespace xenon {
              */
 
             void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
+            void prepare_flight_plan( deque<waypoint_t> & fp );
             
             void choose_next_action();
             
             void test__place_on_hp();
             void test__place_on_rwy_end();
+            void test__fly();
 
         protected:
 

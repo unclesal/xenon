@@ -19,6 +19,10 @@ namespace xenon {
             );
             virtual ~AircraftStateParking() = default;
             
+        protected:
+            
+            void _internal_activate() override {};
+            
     }; // class AircraftStateParking
     
 }; // namespace xenon

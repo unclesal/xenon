@@ -141,7 +141,8 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
     
     try {
         __graph[ nd ].current_state = true;
-        __current_state = ( AircraftAbstractState * ) __graph[ nd ].ptr_state_class;    
+        __current_state = ( AircraftAbstractState * ) __graph[ nd ].ptr_state_class;
+        if ( __current_state ) __current_state->__activate();
     } catch ( const std::range_error & re ) {
         XPlane::log("ERROR: AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
     }

@@ -15,6 +15,10 @@ namespace xenon {
             
             AircraftStateOnFinal( AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd );
             ~AircraftStateOnFinal() override = default;
+            
+        protected:
+            
+            void _internal_activate() override {};
 
     };
     

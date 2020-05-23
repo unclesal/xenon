@@ -17,5 +17,9 @@ namespace xenon {
             );
             virtual ~AircraftStateReadyForTaxing() = default;
             
+    protected:
+        
+        void _internal_activate() override {};
+            
     };
 }; // namespace xenon

@@ -92,7 +92,7 @@ void AircraftDoesTaxing::__choose_speed() {
 // *                                                                                                                  *
 // ********************************************************************************************************************
 
-void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_time ) {
+void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call ) {
     
     // Если в FP нет ВПП, то будет ровно 0. И здесь намеренно берется
     // не первая точка из полетного плана, т.к. между RWY и нами 
@@ -143,7 +143,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_time )
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading;        
     _params.target_heading = bearing;
-    _params.heading_acceleration = 25.0 * delta * elapsed_since_last_time;
+    _params.heading_acceleration = 25.0 * delta * elapsed_since_last_call;
     
     double distance = _calculate_distance_to_wp( wp );    
 

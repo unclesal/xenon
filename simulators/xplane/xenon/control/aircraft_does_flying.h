@@ -20,10 +20,15 @@ namespace xenon {
             
         protected:
             
-            void _internal_step( const float & elapsed_since_last_time ) override;
+            void _internal_step( const float & elapsed_since_last_call ) override;
             void _internal_start() override;
             
         private:
+            
+            float __previous_delta;
+            int __step;
+            
+            void __head_bearing( const float & elapsed_since_last_call );
         
     }; // AircraftDoesFlying
     
