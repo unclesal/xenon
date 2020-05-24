@@ -18,7 +18,7 @@ namespace xenon {
             
         protected:
             
-            void _internal_activate() override {};
+            void _internal_activate() override;
             
     };
     

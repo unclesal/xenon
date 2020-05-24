@@ -7,6 +7,7 @@
 
 #include "aircraft_abstract_action.h"
 
+
 #define PREVIOUS_ARRAY_SIZE 50
 
 namespace xenon {
@@ -27,9 +28,23 @@ namespace xenon {
             
         private:
             
+            enum phase_t {
+                PHASE_UNKNOWN = 0,
+                PHASE_WAYPOINT_CONTROLLED,
+                PHASE_CLIMBING,
+                PHASE_CRUISING,
+                PHASE_DESCENDING
+                // Фазы "посдки" здесь нет, т.к. 
+                // для посадки предусмотрено отдельное действие.
+            };
+            
+            phase_t __phase;
+            
             float __previous_delta[ PREVIOUS_ARRAY_SIZE ];
             
             void __head_bearing( const float & elapsed_since_last_call );
+            void __control_of_altitude( const waypoint_t & waypoint, const float & time_to_achieve );
+            void __control_of_speed( const waypoint_t & waypoint, const float & time_to_achieve );
         
     }; // AircraftDoesFlying
     

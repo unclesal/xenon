@@ -305,9 +305,13 @@ void BimboAircraft::__acf_parameters_correction() {
     if ( acIcaoType == "B738" ) {
         _params.v1 = 100.0;
         _params.v2 = 120.0;
+        _params.climb_speed = 240.0;
         _params.cruise_speed = 300.0;
+        _params.descent_speed = 220.0;
+        _params.landing_speed = 140.0;
         _params.vertical_climb_speed = 1900.0;
         _params.vertical_descend_speed = 1400.0;
+        _params.take_off_flaps_position = 0.35;
         
         __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
         __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
@@ -395,7 +399,7 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     _flight_plan.push_front( wp );
     
     __taxing_prepared = true;
-        
+            
 }
 
 // *********************************************************************************************************************
@@ -488,7 +492,7 @@ void BimboAircraft::move( float meters ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp ) {
+void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp, const float & cruise_altitude ) {
     
     // Прямо по входному массиву - ничего страшного.
     // Потому что выходной массив, т.е. действующий полетный план,
@@ -507,6 +511,9 @@ void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp ) {
     for ( int i=0; i < fp.size(); ++ i ) {
         _flight_plan.push_back( fp.at( i ) );
     };
+    
+    _params.cruise_altitude = cruise_altitude;
+    
 }
 
 // *********************************************************************************************************************
@@ -612,8 +619,9 @@ void BimboAircraft::test__fly() {
             .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
             .altitude = 700.0
         },
-        .outgoing_heading = 0.0,
-        .incomming_heading = 0.0,        
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_FLYING
     };
@@ -628,8 +636,9 @@ void BimboAircraft::test__fly() {
             .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
             .altitude = 700.0
         },
-        .outgoing_heading = 0.0,
-        .incomming_heading = 0.0,        
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_FLYING
     };
@@ -645,8 +654,9 @@ void BimboAircraft::test__fly() {
             .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
             .altitude = 700.0
         },
-        .outgoing_heading = 0.0,
-        .incomming_heading = 0.0,        
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_FLYING
     };
@@ -661,8 +671,9 @@ void BimboAircraft::test__fly() {
             .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
             .altitude = 600.0
         },
-        .outgoing_heading = 0.0,
-        .incomming_heading = 0.0,        
+        .speed = 190.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_FLYING
     };
@@ -677,40 +688,51 @@ void BimboAircraft::test__fly() {
             .longitude = degrees_to_decimal( 60, 46, 40.90, 'E' ),
             .altitude = 600.0
         },
-        .outgoing_heading = 0.0,
-        .incomming_heading = 0.0,        
+        .speed = _params.landing_speed,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,          
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_LANDING
     };
     fp.push_back( rwy08l );
     
-    // RWY26R
+    // RWY26R - только для обеспечения посадки, для установки курса и торможения на ВПП.
     waypoint_t rwy26r = {
         .name = "RWY26R",
-        .type = WAYPOINT_RUNWAY,
+        .type = WAYPOINT_DESTINATION,
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
             .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
             .altitude = 600.0
         },
-        .outgoing_heading = 0.0,
+        .speed = 0.0,
         .incomming_heading = 0.0,        
+        .outgoing_heading = 0.0,        
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_LANDING
     };
     fp.push_back( rwy26r );
      
-    prepare_flight_plan( fp );
-    
-    
-    // Состояние AIRBORNED имеет только одно исходящее действие, это полет.
-    auto airborned_d = __graph->get_node_for( ACF_STATE_AIRBORNED );
-    __graph->set_active_state( airborned_d );    
-    
-    // Приподнимем над землей, чтобы видно было, как он крутится.
+    prepare_flight_plan( fp, 1000.0f );
+        
+    // Для теста встаем на последнюю точку ВПП.
     set_will_on_ground( false );
-    auto position = get_position();
-    position.y += 50;
-    set_position( position );                
+    location_t start_point = {
+        .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
+        .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
+        .altitude = 600.0
+    };
+    set_location( start_point );
+    
+    auto rotation = get_rotation();
+    rotation.heading = 80.0;
+    rotation.pitch = 15.0;
+    set_rotation( rotation );
+    
+    v[ V_CONTROLS_GEAR_RATIO ] = 0.0;
+    v[ V_CONTROLS_SPEED_BRAKE_RATIO ] = 0.0;
+        
+    // Состояние AIRBORNED имеет только одно исходящее действие, это полет.
+    __graph->set_active_state( ACF_STATE_AIRBORNED );    
     
 }

@@ -46,6 +46,7 @@ namespace xenon {
             void clear_actions_activity();
             
             void set_active_state( const aircraft_state_graph::graph_t::vertex_descriptor & nd );
+            void set_active_state( const aircraft_state_t & state );
             void set_active_action( const aircraft_state_graph::graph_t::edge_descriptor & ed );
             
             void update( float elapsed_since_last_call );

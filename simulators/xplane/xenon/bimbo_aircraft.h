@@ -120,7 +120,12 @@ namespace xenon {
              */
 
             void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
-            void prepare_flight_plan( deque<waypoint_t> & fp );
+            
+            /**
+             * @param cruise_altitude высота в футах. Она не сильно необходима в подготовке полетного
+             * плана, но просто чтобы не забывать, что ее нужно устанавливать на полетный план.
+             */
+            void prepare_flight_plan( deque<waypoint_t> & fp, const float & cruise_altitude );
             
             void choose_next_action();
             

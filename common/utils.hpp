@@ -51,8 +51,15 @@ namespace xenon {
         return degrees * PI / 180.0;
     };
     
-    inline double meters_per_second_to_knodes_per_hour( const double & mps ) {
-        return 3600.0 * mps / (double) M_per_NM;
+    inline double meters_per_second_to_knodes( const double & mps ) {
+        // 1 м/с = 1.9438444924574 kt
+        // return 3600.0 * mps / (double) M_per_NM;
+        return mps * 1.9438444924574;
+    };
+    
+    inline double knodes_to_merets_per_second( const double & kt ) {        
+        // 1 kt = 0.51444444444 м/с
+        return 0.51444444444 * kt;
     };
     
     inline double meters_per_seconds_to_feet_per_min( const double mps ) {

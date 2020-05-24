@@ -64,8 +64,12 @@ namespace xenon {
             };
             
             inline void _front_wp_reached() {
+                XPlane::log("_front_wp_reached, before pop=" + to_string( _ptr_acf->_flight_plan.size() ) );
+                
                 if ( ! _ptr_acf->_flight_plan.empty() ) _ptr_acf->_flight_plan.pop_front();
                 else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");
+                
+                XPlane::log("_front_wp_reached, after pop=" + to_string( _ptr_acf->_flight_plan.size() ) );
             };
                         
             inline void _acf_will_on_ground( bool on_ground ) {

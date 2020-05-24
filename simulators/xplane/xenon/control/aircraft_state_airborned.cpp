@@ -18,3 +18,25 @@ AircraftStateAirborned::AircraftStateAirborned(
 {
     
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                           Активация состояния "взлетел"                                           *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftStateAirborned::_internal_activate() {
+    // После взлета убираем все точки полетного плана, которые относились к 
+    // земле, к фазам руления, выравнивания и собственно взлета.
+    auto wp = _get_front_wp();
+    while (
+        ( wp.type == WAYPOINT_PARKING )
+        || ( wp.type == WAYPOINT_TAXING )
+        || ( wp.type == WAYPOINT_RUNWAY )
+    ) {
+        XPlane::log("Delete WP type=" + to_string( wp.type ) + ", action=" + to_string( wp.action_to_achieve ) );
+        _front_wp_reached();
+        wp = _get_front_wp();
+    };
+        
+}

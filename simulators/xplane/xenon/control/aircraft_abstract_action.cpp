@@ -91,7 +91,7 @@ void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_la
     }
     
     // После вычисления скорости происходит ее запоминание в морских миль в час
-    _params.speed_kph = meters_per_second_to_knodes_per_hour( _params.speed ); 
+    _params.speed_kph = meters_per_second_to_knodes( _params.speed ); 
     
     // Вертикальная скорость и достижение ею целевого показателя.
     bool changed = false; // Оно здесь не нужно, но нужно в параметрах - ок.
@@ -102,6 +102,7 @@ void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_la
             changed         
     );
     
+    // Смещение самолета по вертикальной оси, если оно нужно.
     if ( _params.vertical_speed != 0.0 ) {
         auto position = _ptr_acf->get_position();
         position.y += _params.vertical_speed * elapsed_since_last_call;
@@ -171,7 +172,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
                 
     // Углы подравниваем только в том случае, если есть хоть какая-то скорость.
     // Чтобы избежать вращения самолета на месте.
-    // if ( abs( _params.speed ) >= 0.8 ) {
+    if ( abs( _params.speed ) >= 0.8 ) {
         
         auto rotation = _ptr_acf->get_rotation();
         bool changed = false;
@@ -203,7 +204,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
         );
                 
         if ( changed ) _ptr_acf->set_rotation( rotation );
-    // }
+    }
     
 }
 
