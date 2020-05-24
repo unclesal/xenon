@@ -83,8 +83,11 @@ void AircraftDoesFlying::__head_bearing( const float & elapsed_since_last_call )
     
     // Работа PID-регулятора, который устанавливает крен самолета. 
     // Сдвиг по курсу потом формируется - уже в зависимости от крена.
+    // Особо не подбирался, оставил первый результат, зрительно 
+    // более-менее похожий на правду.
+    
     float P = 1.0;
-    float D = 0.0;
+    float D = 0.0; // Не понадобилось, и так хорошо.
     float I = 1.0;
     
     float ivalue = 0.0;    
@@ -116,8 +119,8 @@ void AircraftDoesFlying::__head_bearing( const float & elapsed_since_last_call )
     _params.target_heading = heading + dh * 10;
     
     // А этот коэффициент определяет скорость вращения в воздухе.
-    // Подобран исходя из зрительного восприятия картинки.
-    _params.heading_acceleration = 15.0 * dh;
+    // Подобран исходя из правдоподобности зрительного восприятия картинки.
+    _params.heading_acceleration = 11.5 * dh;
         
     for (int i = PREVIOUS_ARRAY_SIZE - 1 ; i >= 0; -- i ) {
         __previous_delta[i+1] = __previous_delta[i];
@@ -247,7 +250,9 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
     auto distance = xenon::distance( _get_acf_location(), wp.location );
     
     // XPlane::log( to_string(distance) );
-    if ( distance <= 1000.0 ) {
+    if ((( distance <= 5000.0 ) && ( _front_wp_recedes()))
+        || ( distance <= 2500.0 )
+    ) {
         XPlane::log("Front WP reached, distance=" + to_string( distance ) );
         _front_wp_reached();
         wp = _get_front_wp();
