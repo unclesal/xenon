@@ -13,5 +13,5 @@
 
 # Видяшки
 
-[1. Улет в пампасы](https://www.youtube.com/watch?v=wfAPAnU-FBk)
-[2. Посадка](https://www.youtube.com/watch?v=SvydTdDbwhs)
+1. [Улет в пампасы](https://www.youtube.com/watch?v=wfAPAnU-FBk)
+2. [Посадка](https://www.youtube.com/watch?v=SvydTdDbwhs)
