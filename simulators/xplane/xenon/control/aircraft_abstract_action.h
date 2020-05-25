@@ -8,6 +8,8 @@
 #include "aircraft_state_graph_definition.h"
 #include "abstract_aircrafter.h"
 
+#define PREVIOUS_ARRAY_SIZE 50
+
 namespace xenon {
     
     class AircraftAbstractAction : public AbstractAircrafter {
@@ -80,6 +82,15 @@ namespace xenon {
 
             void _head_steering(float elapsed_since_last_call, double kp);
             
+            /**
+             * @short Подруливание на курс - в "авиационной" реализации.
+             */
+            void _head_bearing( const waypoint_t & wp );
+            
+            void _altitude_adjustment( const float & target_altitude, const float & time_to_achieve );
+            void _speed_adjustment( const float & target_speed, const float & time_to_achieve );
+
+            
         private:
             
             bool __started;
@@ -97,6 +108,9 @@ namespace xenon {
              * С точностью до метра. Иначе там набежки бывают, если оно double. 
              */
             int __previous_distance_to_front_wp;
+            
+            // Массив предыдущих значений для вычисления интегральной составляющей по курсу
+            double __previous_heading_delta[ PREVIOUS_ARRAY_SIZE ];
             
             void __start();
             void __step( const float & elapsed_since_last_call );

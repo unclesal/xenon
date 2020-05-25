@@ -47,7 +47,7 @@ void AircraftDoesLiningUp::_internal_start() {
     _ptr_acf->set_nav_lites( true );
     
     // Типа "взлетное положение"
-    _ptr_acf->set_flaps_position( _get_acf_parameters().take_off_flaps_position );
+    _ptr_acf->set_flaps_position( _get_acf_parameters().flaps_take_off_position );
     
 }
 

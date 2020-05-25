@@ -7,6 +7,10 @@
 
 #include "structures.h"
 
+#ifdef INSIDE_XPLANE
+#include "XPLMScenery.h"
+#endif
+
 namespace xenon {
 
     class AbstractVehicle {
@@ -14,7 +18,7 @@ namespace xenon {
         public:
 
             AbstractVehicle();
-            virtual ~AbstractVehicle() = default;
+            virtual ~AbstractVehicle();
 
             virtual position_t get_position() = 0;
             virtual void set_position( const position_t & position ) = 0;
@@ -26,9 +30,30 @@ namespace xenon {
 
             virtual void observe() {};
             // virtual void control( float elapse_since_last_call ) {};
+            
+            /**
+             * @short Установить координату высоты - на земле.
+             * Перенесен в "абстрактную самоходку" из-за того, что вроде бы как 
+             * время создания XPLMProbeRef достаточно большое и не хочется
+             * его создавать каждый раз в цикле перемещения. 
+             */
+            virtual void hit_to_ground( position_t & position );
+            
+            /**
+             * @short Это то же самое, что и выше, просто обернуто в локацию.
+             */
+            virtual void hit_to_ground( location_t & location );
+            
+            void clamp_to_ground();
+            bool is_clamped_to_ground;
 
-        protected:
-
+        protected:                        
+            
+        private:
+            
+#ifdef INSIDE_XPLANE
+           XPLMProbeRef __terrain_ref;
+#endif
 
     };
 

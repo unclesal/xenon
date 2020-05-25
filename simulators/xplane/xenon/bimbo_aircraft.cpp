@@ -138,6 +138,11 @@ void BimboAircraft::choose_next_action() {
         __graph->set_active_action( action );
         
         return;
+    };
+    
+    if ( __graph->current_state_is ( ACF_STATE_ON_FINAL ) ) {
+        __start_fp0_action();
+        return;
     }
     
     XPlane::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
@@ -158,6 +163,22 @@ void BimboAircraft::_action_finished( void * action ) {
     choose_next_action();
     
 };
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                             Перекрытая функция касания земли с учетом высоты самолета.                            *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::hit_to_ground( position_t & position ) {
+    
+    AbstractVehicle::hit_to_ground( position );
+    // Учет высоты данной модели воздушного судна.
+    position.y += GetVertOfs();
+    // "Костыль" на пока, чтобы не зарывался в ВПП.
+    position.y += 2.0;
+
+}
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -311,11 +332,19 @@ void BimboAircraft::__acf_parameters_correction() {
         _params.landing_speed = 140.0;
         _params.vertical_climb_speed = 1900.0;
         _params.vertical_descend_speed = 1400.0;
-        _params.take_off_flaps_position = 0.35;
+        
+        _params.take_off_angle = 8.0;
+        _params.taxing_pitch = -1.8;
+        
+        _params.flaps_take_off_position = 0.35;
+        _params.flaps_take_off_speed = 200.0;
+        _params.flaps_landing_speed = 170.0;
         
         __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
         __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
         __actuators[ V_CONTROLS_THRUST_RATIO ].full_time = 30.0;
+        __actuators[ V_CONTROLS_THRUST_REVERS ].full_time = 5.0;
+        __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].full_time = 5.0;
         
     } else XPlane::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
 }
@@ -465,9 +494,10 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {
+void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
     __update_actuators(elapsed_since_last_call);
-    __graph->update( elapsed_since_last_call );        
+    __graph->update( elapsed_since_last_call );
+    if ( is_clamped_to_ground ) clamp_to_ground();
 }
 
 // *********************************************************************************************************************
@@ -609,41 +639,41 @@ void BimboAircraft::test__fly() {
     
     deque< waypoint_t > fp;
     
-    // При вылете с полосы 08L
-    // SS028
-    waypoint_t ss028 = {
-        .name = "SS028",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
-            .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
-            .altitude = 700.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
-    fp.push_back( ss028 );
+//     При вылете с полосы 08L
+//     SS028
+//     waypoint_t ss028 = {
+//         .name = "SS028",
+//         .type = WAYPOINT_FLYING,
+//         .location = {
+//             .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
+//             .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
+//             .altitude = 700.0
+//         },
+//         .speed = 240.0,
+//         .incomming_heading = 0.0,
+//         .outgoing_heading = 0.0,        
+//         .distance_to_next_wp = 0.0,
+//         .action_to_achieve = ACF_DOES_FLYING
+//     };
+//     fp.push_back( ss028 );
     
-    // D237K
-    waypoint_t d237k = {
-        .name = "D237K",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
-            .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
-            .altitude = 700.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
-    fp.push_back( d237k );
-    
+//     D237K
+//     waypoint_t d237k = {
+//         .name = "D237K",
+//         .type = WAYPOINT_FLYING,
+//         .location = {
+//             .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
+//             .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
+//             .altitude = 700.0
+//         },
+//         .speed = 240.0,
+//         .incomming_heading = 0.0,
+//         .outgoing_heading = 0.0,        
+//         .distance_to_next_wp = 0.0,
+//         .action_to_achieve = ACF_DOES_FLYING
+//     };
+//     fp.push_back( d237k );
+//     
      
     // SS025 
     waypoint_t ss025 = {
@@ -652,7 +682,7 @@ void BimboAircraft::test__fly() {
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
             .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
-            .altitude = 700.0
+            .altitude = 900.0
         },
         .speed = 240.0,
         .incomming_heading = 0.0,
@@ -669,7 +699,7 @@ void BimboAircraft::test__fly() {
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 41.97, 'N' ),
             .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
-            .altitude = 600.0
+            .altitude = 900.0
         },
         .speed = 190.0,
         .incomming_heading = 0.0,
@@ -686,7 +716,7 @@ void BimboAircraft::test__fly() {
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 41.41, 'N' ),
             .longitude = degrees_to_decimal( 60, 46, 40.90, 'E' ),
-            .altitude = 600.0
+            .altitude = 170.0
         },
         .speed = _params.landing_speed,
         .incomming_heading = 0.0,
@@ -717,16 +747,19 @@ void BimboAircraft::test__fly() {
         
     // Для теста встаем на последнюю точку ВПП.
     set_will_on_ground( false );
-    location_t start_point = {
-        .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
-        .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
-        .altitude = 600.0
-    };
-    set_location( start_point );
+    
+//     location_t start_point = {
+//         .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
+//         .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
+//         .altitude = 600.0
+//     };
+//     set_location( start_point );
+    set_location( fp.at(0).location );
+    
     
     auto rotation = get_rotation();
-    rotation.heading = 80.0;
-    rotation.pitch = 15.0;
+    rotation.heading = 70.0;
+    rotation.pitch = 1.0;
     set_rotation( rotation );
     
     v[ V_CONTROLS_GEAR_RATIO ] = 0.0;

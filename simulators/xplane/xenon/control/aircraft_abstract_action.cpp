@@ -44,6 +44,10 @@ void AircraftAbstractAction::__start() {
         
         __total_duration = 0.0;
         __total_distance = 0.0;
+        
+        // Массив предыдущих расхождений по курсу для каждой фазы будет свой.
+        for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) __previous_heading_delta[i] = 0.0;
+
         __started = true;                
         
         auto wp = _get_front_wp();
@@ -91,7 +95,7 @@ void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_la
     }
     
     // После вычисления скорости происходит ее запоминание в морских миль в час
-    _params.speed_kph = meters_per_second_to_knodes( _params.speed ); 
+    _params.speed_kts = meters_per_second_to_knots( _params.speed ); 
     
     // Вертикальная скорость и достижение ею целевого показателя.
     bool changed = false; // Оно здесь не нужно, но нужно в параметрах - ок.
@@ -240,7 +244,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                Подруливание на первую точку полетного плана по курсу.                             *
+// *                Подруливание на первую точку полетного плана по курсу (в "автомобильной" реализации).              *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
@@ -259,3 +263,154 @@ void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, doub
     _params.heading_acceleration = kp * delta * elapsed_since_last_call;
 
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                             "Подруливание" на курс - в авиационной реализации, не в колесной                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
+    
+    auto rotation = _get_acf_rotation();
+    
+    if ( wp.type == WAYPOINT_UNKNOWN ) {
+        XPlane::log("ERROR: AircraftDoesFlying::__head_bearing(), type of front FP waypoint is UNKNOWN...");
+        return;
+    };
+    
+    auto location = _get_acf_location();
+    auto heading = _get_acf_rotation().heading;
+    auto bearing = xenon::bearing( location, wp.location );
+    if (( bearing < 90.0 ) && ( heading > 270.0 )) bearing += 360;
+    auto delta = bearing - heading;
+    
+    // Работа PID-регулятора, который устанавливает крен самолета. 
+    // Сдвиг по курсу потом формируется - уже в зависимости от крена.
+    // Особо не подбирался, оставил первый результат, зрительно 
+    // более-менее похожий на правду.
+    
+    double P = 1.0;
+    double D = 0.0; // Не понадобилось, и так хорошо.
+    double I = 1.0;
+    
+    double ivalue = 0.0;    
+    for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
+        ivalue += __previous_heading_delta[i];
+    };
+    ivalue /= (double) PREVIOUS_ARRAY_SIZE;
+    
+    double dvalue = 0.0;
+    for ( int i=0; i<PREVIOUS_ARRAY_SIZE - 1; ++i ) {
+        dvalue += __previous_heading_delta[i] - __previous_heading_delta[i+1];
+    };        
+    
+    double regulator_out = P * delta + D * dvalue + I * ivalue;
+    
+    if ( regulator_out >= 25.0 ) regulator_out = 25.0;
+    if ( regulator_out <= -25.0 ) regulator_out = -25.0;
+        
+    _params.target_roll = regulator_out;
+    delta < 0 ? _params.roll_acceleration = -3.0 : _params.roll_acceleration = 3.0;
+        
+    // Чтобы считать синусы-косинусы - надо иметь сдвинутый угол.
+    // Повернутость угла влияет на знак, но он и так учитывается дальше.
+    double radians = degrees_to_radians( rotation.roll - 90.0 );
+    
+    double dh = cos( radians );
+    
+    // Этот коэффициент не сильно важен. Важно, чтобы курс изменился.
+    _params.target_heading = heading + dh * 10;
+    
+    // А этот коэффициент определяет скорость вращения в воздухе.
+    // Подобран исходя из правдоподобности зрительного восприятия картинки.
+    _params.heading_acceleration = 11.5 * dh;
+
+    for (int i = PREVIOUS_ARRAY_SIZE - 2 ; i >= 0; -- i ) {
+        __previous_heading_delta[i+1] = __previous_heading_delta[i];
+    };
+    __previous_heading_delta[0] = delta;    
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *      Автоматическое подруливание по высоте - через указанное время должна быть достигнута целевая высота.         *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude, const float & time_to_achieve ) {
+    
+    auto location = _get_acf_location();
+    auto acf_rotation = _get_acf_rotation();
+    auto current_altitude = location.altitude;
+
+    auto da = target_altitude - current_altitude;        
+    
+    // Сначала обнуляем параметры изменения высоты, т.к. пока еще непонятно,
+    // в каком положении мы сейчас находимся, выше или ниже целевого значения.
+    _params.pitch_acceleration = 0.0;
+    _params.target_pitch = 0.0;
+    
+    _params.vertical_acceleration = 0.0;
+    _params.target_vertical_speed = 0.0;
+    
+    // Вертикальная скорость выбирается таким образом, чтобы достигнуть нужной нам высоты прямо на 
+    // точке привода. Несколько "не кошерно" в том плане, что вертикальная скорость может измениться 
+    // рывком. Но видно этого не будет при любом раскладе событий, так что - вполне допустимо.
+    
+    _params.vertical_speed = 0.0;
+    if ( time_to_achieve ) _params.vertical_speed = da / time_to_achieve;
+    
+    // Если ему просто взять и поставить некий градус, скажем, 5, то выглядит не 
+    // реалистично. Угол тангажа надо ставить в зависимости от вертикальной скорости.
+    
+    float degrees = 1.0;
+    if ( abs(_params.vertical_speed) > 7.0 ) degrees = 10.0;
+    else if ( abs(_params.vertical_speed) > 5.0 ) degrees = 5.0;
+    else if ( abs(_params.vertical_speed) > 2.0 ) degrees = 2.0;
+    
+    // Целевое значение тангажа.
+    if ( da > 0.0 ) {
+        // Мы находимся - ниже, надо подниматься.
+        _params.target_pitch = degrees;
+    } else if ( da < 0.0 ) {            
+        // Мы находимся - выше, надо опускаться.            
+        _params.target_pitch = -degrees;                        
+    }
+    
+    // Изменение тангажа. А вот тангаж можно увидеть. 
+    // Соответственно, резко изменяться он не может.
+    if ( acf_rotation.pitch > _params.target_pitch ) _params.pitch_acceleration = -1.0f;
+    else _params.pitch_acceleration = 1.0f;
+    
+//     XPlane::log(
+//         "target=" + to_string( target_altitude )
+//         + ", current=" + to_string( current_altitude )
+//         + ", da=" + to_string( da )
+//         + ", vs=" + to_string( _params.vertical_speed )
+//         + ", pithc=" + to_string( acf_rotation.pitch )
+//     );
+
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *        Автоматическая подстройка скорости. Целевая скорость должна быть достигнута через указанное время          *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void xenon::AircraftAbstractAction::_speed_adjustment( const float & target_speed, const float & time_to_achieve) {
+    auto ds = target_speed - _params.speed;
+    _params.target_speed = target_speed;
+    _params.acceleration = 0.0;
+    if ( time_to_achieve != 0.0 ) _params.acceleration = ds / time_to_achieve;
+        
+//         XPlane::log(
+//             "Speed=" + to_string(_params.speed) + ", target=" + to_string( target_speed )
+//             + ", ds=" + to_string( ds ) + ", achieve=" + to_string( time_to_achieve )
+//             + ", accel=" + to_string( _params.acceleration )
+//         );
+
+}
+

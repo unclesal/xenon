@@ -10,7 +10,7 @@
 #include <fstream>
 #include <filesystem>
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
 #include "XPLMNavigation.h"
 #endif
 
@@ -919,7 +919,7 @@ void Airport::_put_node_container( node_container_t ** ptr_container ) {
 // *********************************************************************************************************************
 
 void Airport::get_nearest( location_t & location ) {
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
 #endif
 }
 

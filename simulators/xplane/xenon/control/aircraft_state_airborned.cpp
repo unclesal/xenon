@@ -34,7 +34,6 @@ void AircraftStateAirborned::_internal_activate() {
         || ( wp.type == WAYPOINT_TAXING )
         || ( wp.type == WAYPOINT_RUNWAY )
     ) {
-        XPlane::log("Delete WP type=" + to_string( wp.type ) + ", action=" + to_string( wp.action_to_achieve ) );
         _front_wp_reached();
         wp = _get_front_wp();
     };

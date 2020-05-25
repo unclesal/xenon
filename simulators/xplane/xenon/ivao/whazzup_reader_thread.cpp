@@ -18,7 +18,7 @@
 using namespace std;
 using namespace xenon;
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
 extern void whazzup_reloaded(void);
 #endif
 
@@ -63,7 +63,7 @@ void fetch_whazzup() {
         if (whazzup_file.reload()) {
             // Файл был пере-получен с интернета.
             // Нужно об этом сообщить вышележащим уровням.
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
             whazzup_reloaded();
 #else
             cout << "whazzup file reloaded.";

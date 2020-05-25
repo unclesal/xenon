@@ -84,9 +84,19 @@ namespace xenon {
                 __actuators[  V_CONTROLS_GEAR_RATIO ].requested = true;
             };
             
+            void set_reverse_on( bool on ) override { 
+                on ? __actuators[ V_CONTROLS_THRUST_REVERS ].endpoint = 1.0 : __actuators[ V_CONTROLS_THRUST_REVERS ].endpoint = 0.0;
+                __actuators[ V_CONTROLS_THRUST_REVERS ].requested = true;
+            };
+            
             void set_flaps_position( const float & position ) override {
                 __actuators[ V_CONTROLS_FLAP_RATIO ].endpoint = position;
                 __actuators[ V_CONTROLS_FLAP_RATIO ].requested = true;
+            };
+            
+            void set_speed_brake_position( const float & position ) override {
+                __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].endpoint = position;
+                __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].requested = true;
             };
             
             void set_thrust_value( const float & value ) override {                
@@ -132,6 +142,12 @@ namespace xenon {
             void test__place_on_hp();
             void test__place_on_rwy_end();
             void test__fly();
+            
+            /**
+             * @short Перекрытая функция "касания земли" с учетом высоты самолета.
+             */
+            void hit_to_ground( position_t & position ) override;
+
 
         protected:
 
@@ -141,9 +157,7 @@ namespace xenon {
              * @short Текущее действие было завершено.
              */
             void _action_finished( void * action ) override;
-
-
-
+            
         private:
 
             actuator_motion_t __actuators[ XPMP2::V_COUNT ];

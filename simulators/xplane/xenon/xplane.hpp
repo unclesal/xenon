@@ -11,7 +11,7 @@
 
 #include "math.h"
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
 
 // Внутри X-Plane (plugin) - подцепляем реальные исходники.
 #include "XPLMDataAccess.h"
@@ -51,7 +51,7 @@ namespace xenon {
                 concated += "\n";
 #endif
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
                 // "Боевой" режим - внутри X-Plane.
                 XPLMDebugString( concated.c_str() );
 #else
@@ -65,7 +65,7 @@ namespace xenon {
              * @short Search opaque pointer to data structure internal of simulator for specified name.
              */
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
             /**
              * Получить ссылку на данные по определенному пути внутри X-Plane.
              */
@@ -85,9 +85,9 @@ namespace xenon {
                 };
 #endif
                 return result;
-            } // find_data_ref
+            }; // find_data_ref
 
-#endif // ifdef INTERNAL_XPLANE
+#endif // ifdef INSIDE_XPLANE
 
             /**
              * @short Получить системный путь (директорий, в котором расположен сам X-Plane).
@@ -95,7 +95,7 @@ namespace xenon {
 
             static const string get_system_path() {
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
                 char system_path[1024];
                 XPLMGetSystemPath( (char *) system_path);
                 return string(system_path);
@@ -103,7 +103,7 @@ namespace xenon {
                 return string("/home/sal/program/X-Plane 11");
 #endif
 
-            }
+            };
 
 
             /**
@@ -111,20 +111,20 @@ namespace xenon {
              */
 
             static const string get_directory_separator() {
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
                 // Реальное выполнение плагина внутри X-Plane.
                 return string(XPLMGetDirectorySeparator());
 #else
                 // Мое собственное тестирование - явно же под Linux?
                 return string("/");
 #endif
-            }
+            };
 
             /**
              * Путь к корню плагина, последним идет сепаратор.
              */
             static string get_plugin_path() {
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
                 // Реальный запуск, внутри плагина.
                 string system_path = XPlane::get_system_path();
                 string separator = XPlane::get_directory_separator();
@@ -136,7 +136,7 @@ namespace xenon {
                 // Отладочный режим, не внутри плагина.
                 return "/home/sal/program/X-Plane 11/Resources/plugins/xenon/";
 #endif
-            }
+            };
 
             /**
              * @short Перевод координат из 3D OGL игровых - в гео-формат.
@@ -144,7 +144,7 @@ namespace xenon {
              * @return
              */
             static location_t position_to_location( const position_t & position ) {
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
                 location_t location;
                 XPLMLocalToWorld(
                     position.x, position.y, position.z,
@@ -154,7 +154,7 @@ namespace xenon {
 #else
                 return location_t();
 #endif
-            }
+            };
 
             /**
              * @short Перевод координат из гео-формата в локальную 3D OGL форму.
@@ -163,7 +163,7 @@ namespace xenon {
              */
             static position_t location_to_position( const location_t & location ) {
 
-#ifdef INTERNAL_XPLANE
+#ifdef INSIDE_XPLANE
                 position_t position;
                 XPLMWorldToLocal(
                     location.latitude, location.longitude, location.altitude,
@@ -173,20 +173,20 @@ namespace xenon {
 #else
                 return position_t();
 #endif
-            }
+            };
 
             static double bearing( const position_t & position_from, const position_t & position_to ) {
                 auto location_from = position_to_location( position_from );
                 auto location_to = position_to_location( position_to );
                 return xenon::bearing( location_from, location_to );
-            }
+            };
 
             /**
              * @short Дистанция между двумя точками - в "плоском" ее смысле, без учета высоты.
              */
             static double distance_2d(const position_t & p1, const position_t & p2 ) {
                 return sqrt( pow(( p1.x - p2.x ), 2) + pow(( p1.z - p2.z ), 2));
-            }
+            };
 
             /**
              * @short Дистанция в "плоском" смысле между точкой и прямой линией.
@@ -198,7 +198,7 @@ namespace xenon {
                 pos2.x = ( pos.x + l.k * pos.z - l.k * l.b ) / ( pow(l.k, 2 ) + 1 );
                 pos2.z = l.k * pos2.x + l.b;
                 return distance_2d(pos, pos2);
-            }
+            };
 
             /**
              * @short Полная дистанция, с учетом высоты.
@@ -208,7 +208,7 @@ namespace xenon {
                 return sqrt(
                     pow(( p1.x - p2.x ), 2) + pow((p1.y - p2.y), 2) + pow((p1.z - p2.z), 2)
                 );
-            }
+            };
 
             /**
              * @short Математическое описание линии, проходящей через заданную точку и имеющей данный курс.
@@ -228,8 +228,7 @@ namespace xenon {
                 result.b = pos.z - result.k * pos.x;
 
                 return result;
-            }
-
-    };
-
-};
+            };
+            
+    }; // class XPlane
+}; // namespace xenon

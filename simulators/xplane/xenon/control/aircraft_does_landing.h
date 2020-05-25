@@ -27,6 +27,27 @@ namespace xenon {
             
         private:
             
+            enum phase_t {
+                PHASE_UNKNOWN = 0,
+                PHASE_DESCENDING,
+                // Выравнивание и выдерживание - в
+                // одной фазе, вплоть до касания ВПП.
+                PHASE_ALIGNMENT,
+                // Торможение
+                PHASE_BREAKING,
+                // Уход с ВПП на ближайшую рулежку
+                PHASE_LEAVE_RUNWAY
+            };
+            
+            phase_t __phase;
+            
+            bool __flaps_to_take_off_position;
+            bool __flaps_to_landing_position;
+                        
+            void __step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters );
+            void __step__alignment( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters, const float & elapsed_since_last_call );
+            void __step__breaking();
+            
     }; //AircraftDoesLanding
     
 }; // namespace xenon

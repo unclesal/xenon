@@ -59,11 +59,11 @@ void AircraftDoesTakeOff::_internal_start() {
 
 void AircraftDoesTakeOff::__step__run_up( const float & elapsed_since_last_call ) {
     
-    if ( _params.speed_kph > _get_acf_parameters().v1 ) {
+    if ( _params.speed_kts > _get_acf_parameters().v1 ) {
         
         __phase = PHASE_BREAK_AWAY;        
         // Нос пошел вверх. Не слишком высоко, чтобы не царапал хвостом ВПП.
-        _params.target_pitch = 9.0f;
+        _params.target_pitch = _get_acf_parameters().take_off_angle;
         _params.pitch_acceleration = 2.5f;
         
     }
@@ -77,7 +77,7 @@ void AircraftDoesTakeOff::__step__run_up( const float & elapsed_since_last_call 
 
 void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_call ) {
     
-    if ( _params.speed_kph > _get_acf_parameters().v2 ) {
+    if ( _params.speed_kts > _get_acf_parameters().v2 ) {
         
         __phase = PHASE_CLIMBING;
         _acf_will_on_ground( false );

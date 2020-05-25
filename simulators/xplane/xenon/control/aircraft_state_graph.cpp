@@ -97,6 +97,10 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_FLYING, "Flying", state_airborned_d, state_on_final_d
     );
     
+    // Из выхода на глиссаду в состояние "освободил ВПП" выходим посадкой.
+    __create_action < AircraftDoesLanding > (
+        ACF_DOES_LANDING, "Landing",  state_on_final_d, state_rwy_leaved_d
+    );
     
     
 }
@@ -167,9 +171,7 @@ void AircraftStateGraph::set_active_state( const aircraft_state_t & state ) {
 
 void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t::edge_descriptor & ed ) {
     
-    XPlane::log("In graph::set_active_action");
     clear_actions_activity();
-    XPlane::log("clear actions activity done");
     
     try {
 

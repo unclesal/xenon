@@ -33,7 +33,7 @@ add_compile_options(-O3 -fPIC)
 add_definitions(-DXPLM200=1 -DXPLM210=1 -DXPLM300=1 -DXPLM301=1)
 
 # Compilation for running inside of X-Plane
-add_definitions(-DINTERNAL_XPLANE)
+add_definitions(-DINSIDE_XPLANE)
 # Produces some more messages in Log.txt file.
 add_definitions(-DDEBUG)
 

@@ -40,8 +40,10 @@ namespace xenon {
             virtual void set_nav_lites(bool on) {};
             
             virtual void set_gear_down( bool down ) { };
+            virtual void set_reverse_on( bool on ) { };
             virtual void set_flaps_position( const float & position ) { };
             virtual void set_thrust_value( const float & value ) {};
+            virtual void set_speed_brake_position( const float & value ) {};
             
             virtual void move( float meters ) {};
             

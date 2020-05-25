@@ -36,6 +36,15 @@ namespace xenon {
             };
             
             /**
+             * @short Заместить, либо добавить нулевую точку полетного плана.
+             */
+            
+            inline void _set_front_wp( const waypoint_t & wp ) {
+                if ( !_ptr_acf->_flight_plan.empty() ) _ptr_acf->_flight_plan[0] = wp;
+                else _ptr_acf->_flight_plan.push_front( wp );
+            };
+            
+            /**
              * @short Вернуть первую (следующую за нулевой) точку полетного плана.
              */
             inline waypoint_t & _get_first_wp() {
@@ -64,12 +73,8 @@ namespace xenon {
             };
             
             inline void _front_wp_reached() {
-                XPlane::log("_front_wp_reached, before pop=" + to_string( _ptr_acf->_flight_plan.size() ) );
-                
                 if ( ! _ptr_acf->_flight_plan.empty() ) _ptr_acf->_flight_plan.pop_front();
-                else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");
-                
-                XPlane::log("_front_wp_reached, after pop=" + to_string( _ptr_acf->_flight_plan.size() ) );
+                else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");                
             };
                         
             inline void _acf_will_on_ground( bool on_ground ) {
