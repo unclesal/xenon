@@ -77,10 +77,12 @@ add_library(xenon MODULE
         airport_network.cpp
         bimbo_aircraft.cpp
         main_plugin.cpp
+        talker.cpp
         user_aircraft.cpp
         windll_main.cpp
         XAmbient.cpp
         XNetworking.cpp
+        xplane_communicator.cpp
         xplane_plugin.cpp
 )
 

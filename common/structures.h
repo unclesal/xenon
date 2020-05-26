@@ -213,7 +213,24 @@ namespace xenon {
         float target_roll = 0.0;
     };
 
+    // Типы возможных агентов
+    enum agent_t {
+        AGENT_UNKNOWN = 0,
+        AGENT_AIRCRAFT,
+        // Тягач, он же "толкач".
+        AGENT_PUSHER,
+        // Внутренний класс аэропорта, который собрал в 
+        // себе сведения об имеющихся в X-Plane аэропотрах.
+        AGENT_AIRPORT_CLASS,
+        // Аэропорт как процесс, как внешний агент.
+        AGENT_AIRPORT_PROCESS
+    };
 
+    // Описание агента с точки зрения его возможности общаться.
+    struct talker_t {
+        std::string uuid = "",
+        agent_t type = AGENT_UNKNOWN
+    };
 
     /*
     // Характеристики самолета.
