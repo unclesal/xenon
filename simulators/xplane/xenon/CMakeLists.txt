@@ -27,7 +27,7 @@ if (EXISTS "$ENV{PLUGIN_DIR}")
     set(PLUGIN_DIR_EXISTS TRUE)
 endif()
 
-add_compile_options(-O3 -fPIC)
+add_compile_options(-O3 -fPIC -Wno-deprecated-declarations)
 
 # Enable all X-Plane SDK APIs up to the newest version.
 add_definitions(-DXPLM200=1 -DXPLM210=1 -DXPLM300=1 -DXPLM301=1)
@@ -46,6 +46,8 @@ add_definitions(-DAPL=$<BOOL:${APPLE}> -DIBM=$<BOOL:${WIN32}> -DLIN=$<AND:$<BOOL
 add_library(xenon MODULE
         ../../../common/network/Ambient.cpp
         ../../../common/network/CommandSet.cpp
+        ../../../common/network/communicator_interface.cpp
+        ../../../common/network/command_parser.cpp
         ../../../common/network/CommandAutopilotState.cpp
         ../../../common/jsonable.cpp
         ../../../common/utils.cpp
@@ -77,7 +79,6 @@ add_library(xenon MODULE
         airport_network.cpp
         bimbo_aircraft.cpp
         main_plugin.cpp
-        talker.cpp
         user_aircraft.cpp
         windll_main.cpp
         XAmbient.cpp
@@ -99,6 +100,7 @@ target_include_directories(xenon PUBLIC
         ../XPSDK301/CHeaders/XPLM
         ../../../common
         ../../../common/network
+        ../../../common/network/commands
         ../../../3dparty
         ../../../3dparty/nlohmann
 )

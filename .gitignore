@@ -1,1 +1,7 @@
 .DS_Store
+server
+.idea
+*.kdev4
+.qmake.stash
+*debug*
+*release*

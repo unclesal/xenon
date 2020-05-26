@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+<file alias="resources/MainTab.css">/home/sal/work/x-plane/xenon/desktop/resources/MainTab.css</file>
+</qresource>
+</RCC>

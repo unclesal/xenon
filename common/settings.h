@@ -14,6 +14,12 @@
 // Plugin port
 #define NETWORK_PORT 14242
 
+// Порт TCP-коммуникатора (выделенного сервера общения агентов между собой)
+#define COMMUNICATOR_PORT 14243
+
+// Максимальное число клиентов, которые может обслужить один коммуникатор.
+#define COMMUNICATOR_MAX_CLIENTS 2000
+
 // The frequency of sending to the network the status of the
 // aircrafts by default, Hertz (times per second).
 

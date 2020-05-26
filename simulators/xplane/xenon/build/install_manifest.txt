@@ -1,0 +1,1 @@
+/home/sal/program/X-Plane 11/Resources/plugins/xenon/lin.xpl
