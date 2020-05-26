@@ -4,4 +4,5 @@ server
 *.kdev4
 .qmake.stash
 *debug*
+*build*
 *release*

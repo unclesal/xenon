@@ -1,4 +1,0 @@
-export DISTRIB_DIR=/home/sal/work/x-plane/xenon/distrib/xplane_plugin_dir/xenon
-export PLUGIN_DIR="/home/sal/program/X-Plane 11/Resources/plugins/xenon"
-cmake ..
-make -j 8 && make install

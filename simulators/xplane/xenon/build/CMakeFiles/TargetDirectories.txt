@@ -1,7 +1,0 @@
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/install/strip.dir
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/install/local.dir
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/install.dir
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/list_install_components.dir
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/rebuild_cache.dir
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/edit_cache.dir
-/home/sal/work/x-plane/xenon/simulators/xplane/xenon/build/CMakeFiles/xenon.dir
