@@ -22,10 +22,12 @@
 #include "bimbo_aircraft.h"
 #include "XAmbient.h"
 #include "XSetReactor.h"
+#include "connected_communicator.h"
+#include "abstract_command.h"
 
 namespace xenon {
 
-    class XPlanePlugin : public XSetReactor {
+    class XPlanePlugin : public XSetReactor, public ConnectedCommunicatorReactor {
 
         public:
 
@@ -58,12 +60,19 @@ namespace xenon {
             [[nodiscard]] bool is_enabled() const {
                 return __enabled;
             }
+            
+            void on_connect() override;
+            void on_disconnect() override;
+            void on_received( AbstractCommand * cmd ) override;
+            void on_error( std::string message ) override;
 
         private:
 
             bool __enabled;
             int __uair_count;
             bool __around_inited;
+            
+            ConnectedCommunicator * __communicator;
 
             /**
              * @short This plugin identifier.

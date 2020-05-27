@@ -8,8 +8,6 @@
 
 using namespace xenon;
 
-string xenon::JSONAble::COMMAND_NAME="JSONAble";
-
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                             The constructor of JSONAble object                                    *
@@ -17,7 +15,7 @@ string xenon::JSONAble::COMMAND_NAME="JSONAble";
 // *********************************************************************************************************************
 
 JSONAble::JSONAble() {
-    _command_name = JSONAble::COMMAND_NAME;
+    _command_name = UNKNOWN_COMMAND_NAME;
 }
 
 // *********************************************************************************************************************
@@ -28,7 +26,7 @@ JSONAble::JSONAble() {
 
 void JSONAble::to_json( JSON & json ) {
 
-    json["command_name"] = this->_command_name;
+    json["command_name"] = _command_name;
 
 }
 

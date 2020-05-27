@@ -8,7 +8,7 @@
 #include <string>
 
 #include "structures.h"
-#include "xplane_communicator_interface.h"
+#include "communicator_interface.h"
 
 namespace xenon {
 
@@ -20,7 +20,7 @@ namespace xenon {
              * @short Конструктор.
              * @param uuid уникальный идентификатор этого агента.
              */
-            Talker( const takler_t & talker );
+            Talker( const talker_t & talker );
             virtual ~Talker() = default;
 
             talker_t get_talker() {

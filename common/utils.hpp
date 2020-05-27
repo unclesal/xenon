@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "constants.h"
+#include "settings.h"
 #include "structures.h"
 
 using namespace std;
@@ -15,7 +16,20 @@ using namespace xenon;
 
 namespace xenon {
 
-    vector< string > split( const string & s, char delim );
+    /**
+     * @short Разбиение строки на массив подстрок по указанному разделителю.
+     */
+    inline vector<std::string> split (const string & s, char delim) {
+        vector<string> result;
+        stringstream ss (s);
+        string item;
+
+        while (getline (ss, item, delim)) {
+            result.push_back (item);
+        }
+
+        return result;
+    };    
 
     /**
      * @short Нормализация градусов.
@@ -111,6 +125,28 @@ namespace xenon {
         if ( ( dir == 'S' ) || ( dir == 'W' ) ) result = -result;
         return result;
     };
-
+    
+    /**
+     * @short Вернуть сервер, на котором расположен коммуникатор.
+     */
+    
+    inline std::string get_communicator_host() {
+        return COMMUNICATOR_HOST;
+    };
+    
+    /**
+     * @short Вернуть порт коммуникатора.
+     */
+    inline int get_communicator_port() {
+        return COMMUNICATOR_PORT;
+    };
+    
+    /**
+     * @short Вернуть максимальное число соединений, допустимых для коммуникатора.
+     */
+    
+    inline int get_communicator_max_clients() {
+        return COMMUNICATOR_MAX_CLIENTS;
+    }
 
 }; // namespace xenon

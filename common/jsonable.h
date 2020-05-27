@@ -25,8 +25,6 @@ namespace xenon {
 
         public:
 
-            static string COMMAND_NAME;
-
             JSONAble();
             virtual ~JSONAble() = default;
 
@@ -34,6 +32,10 @@ namespace xenon {
             virtual void from_json( JSON & json );
 
             // JSON concat_with_jsonable( JSON & json );
+            
+            const string & command_name() {
+                return _command_name;
+            };
 
         protected:
 

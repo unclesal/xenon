@@ -216,6 +216,8 @@ namespace xenon {
     // Типы возможных агентов
     enum agent_t {
         AGENT_UNKNOWN = 0,
+        // X-Plane - это тоже агент.
+        AGENT_XPLANE,
         AGENT_AIRCRAFT,
         AGENT_AIRPORT,
         // Тягач, он же "толкач".

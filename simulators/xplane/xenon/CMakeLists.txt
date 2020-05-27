@@ -1,7 +1,7 @@
 ########################################################################################################################
 # CMake file. You need set environment variable PLUGIN_DIR pointed to Resources/plugins/xenon in your X-Plane folder.
 ########################################################################################################################
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.17)
 project(xenon LANGUAGES C CXX)
 set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
@@ -44,13 +44,14 @@ add_definitions(-DAPL=$<BOOL:${APPLE}> -DIBM=$<BOOL:${WIN32}> -DLIN=$<AND:$<BOOL
 #                                              Source Files
 ########################################################################################################################
 add_library(xenon MODULE
+        ../../../common/network/commands/cmd_hello.cpp
+        ../../../common/network/abstract_command.cpp
         ../../../common/network/Ambient.cpp
         ../../../common/network/CommandSet.cpp
-        ../../../common/network/communicator_interface.cpp
         ../../../common/network/command_parser.cpp
+        ../../../common/network/connected_communicator.cpp
         ../../../common/network/CommandAutopilotState.cpp
         ../../../common/jsonable.cpp
-        ../../../common/utils.cpp
         # Управление. Пока что в этом же директории, на потом надо будет перенести в common.
         control/abstract_aircrafter.cpp
         control/aircraft_abstract_action.cpp
@@ -83,7 +84,6 @@ add_library(xenon MODULE
         windll_main.cpp
         XAmbient.cpp
         XNetworking.cpp
-        xplane_communicator.cpp
         xplane_plugin.cpp
 )
 
