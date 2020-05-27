@@ -107,9 +107,10 @@ void XPlanePlugin::observe_user_aircraft() {
 void XPlanePlugin::__init_around() {
 
     if ( __around_inited ) return;
+    
     // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
     if ( ! Airport::airports_was_readed() ) return;
-
+    
     // Порождаем самолетик для пробы.
     XPlane::log("Init one bimbo...");
     auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
@@ -126,8 +127,10 @@ void XPlanePlugin::__init_around() {
     auto usss = Airport::get_by_icao("USSS");
     auto gate = usss.get_startup_locations()["15"];
     
-    bimbo->set_will_on_ground( true );
+    bimbo->is_clamped_to_ground = true;
     bimbo->place_on_ground( gate );
+    
+    
     auto where_i_am = bimbo->get_location();
     
     auto way = usss.get_taxi_way_for_departure( where_i_am );
@@ -141,8 +144,8 @@ void XPlanePlugin::__init_around() {
 
     __bimbos.push_back( bimbo );
     
-    bimbo->test__fly();
-    
+//     bimbo->test__fly();
+//     
     // Это по сути "старт".
     bimbo->choose_next_action();
 

@@ -47,9 +47,6 @@ namespace xenon {
             
             virtual void move( float meters ) {};
             
-            virtual void set_will_on_ground( bool on_ground ) {};
-            virtual bool will_on_ground() { return false; };
-
         protected:
             
             deque<waypoint_t> _flight_plan;

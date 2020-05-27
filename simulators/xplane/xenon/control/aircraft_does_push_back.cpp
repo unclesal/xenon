@@ -29,7 +29,7 @@ AircraftDoesPushBack::AircraftDoesPushBack(
 
 void AircraftDoesPushBack::_internal_start() {
     
-    _acf_will_on_ground( true );
+    _ptr_acf->is_clamped_to_ground = true;
     
     _ptr_acf->set_nav_lites( true );
     _params.tug = - TAXI_SLOW_TUG;

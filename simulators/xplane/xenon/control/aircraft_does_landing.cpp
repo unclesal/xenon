@@ -56,9 +56,8 @@ void AircraftDoesLanding::_internal_start() {
     
     __flaps_to_take_off_position = false;
     __flaps_to_landing_position = false;
-    
-    // TODO: фигня полная, убрать ее.
-    _acf_will_on_ground( false );
+        
+    _ptr_acf->is_clamped_to_ground = false;
     
 #ifdef INSIDE_XPLANE
     

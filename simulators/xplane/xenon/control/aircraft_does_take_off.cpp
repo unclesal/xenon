@@ -33,7 +33,7 @@ void AircraftDoesTakeOff::_internal_start() {
     
     __gear_up_altitude = 0.0;
     
-    _ptr_acf->set_will_on_ground( true );
+    _ptr_acf->is_clamped_to_ground = true;
     
     _ptr_acf->set_taxi_lites( false );
     _ptr_acf->set_landing_lites( true );
@@ -80,7 +80,7 @@ void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_c
     if ( _params.speed_kts > _get_acf_parameters().v2 ) {
         
         __phase = PHASE_CLIMBING;
-        _acf_will_on_ground( false );
+        _ptr_acf->is_clamped_to_ground = false;
         
         // Нос пошел еще выше.
         _params.target_pitch = 15.0f;

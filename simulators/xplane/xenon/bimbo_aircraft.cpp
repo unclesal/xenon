@@ -26,8 +26,6 @@ BimboAircraft::BimboAircraft(
 )
     : AbstractAircraft(), XPMP2::Aircraft(icao_type, icao_airline, livery )
 {
-    // _current_condition.speed = -0.4;
-    // _current_condition.heading_shift = -0.5;
 
     bClampToGround = false;
     for (auto i=0; i<XPMP2::V_COUNT; i++ ) {
@@ -174,9 +172,7 @@ void BimboAircraft::hit_to_ground( position_t & position ) {
     
     AbstractVehicle::hit_to_ground( position );
     // Учет высоты данной модели воздушного судна.
-    position.y += GetVertOfs();
-    // "Костыль" на пока, чтобы не зарывался в ВПП.
-    position.y += 2.0;
+    position.y += _params.on_ground_offset;
 
 }
 
@@ -244,15 +240,10 @@ void BimboAircraft::set_rotation( const rotation_t & rotation ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::place_on_ground( const position_t & position, const rotation_t & rotation, bool clamp ) {
+void BimboAircraft::place_on_ground( const position_t & position, rotation_t & rotation, bool clamp ) {
     set_position( position );
+    rotation.pitch = _params.taxing_pitch;
     set_rotation( rotation );
-    // Теперь корректировка положения - с тем, чтобы прижать самолет к земле.
-    if ( clamp ) {
-        ClampToGround();
-        // Эта штука может корректировать pitch, поэтому ее в конце.
-        _on_ground_correction();
-    }
     // Если самолет на земле, то шасси-то у него точно выпущены же.
     v[ V_CONTROLS_GEAR_RATIO ] = 1.0;
 }
@@ -302,21 +293,6 @@ rotation_t BimboAircraft::get_rotation() {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                      Корректировка вертикального смещения, в CSL установлены не очень точно.                      *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::_on_ground_correction() {
-
-    if ( acIcaoType == "B738" ) {
-        drawInfo.y += 3.0; // 0.5;
-        drawInfo.pitch = -1.8;
-    }
-
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
 // *                                 Коррекция параметров в зависимости от типа самолета                               *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -335,6 +311,7 @@ void BimboAircraft::__acf_parameters_correction() {
         
         _params.take_off_angle = 8.0;
         _params.taxing_pitch = -1.8;
+        _params.on_ground_offset = 3.25;
         
         _params.flaps_take_off_position = 0.35;
         _params.flaps_take_off_speed = 200.0;
@@ -624,7 +601,7 @@ void BimboAircraft::test__place_on_rwy_end() {
     position.y = 170.0 + 200.0;
     rotation_t rotation;
     rotation.heading = wp.incomming_heading;
-    set_will_on_ground( false );
+    is_clamped_to_ground = true;
     place_on_ground( position, rotation, false );    
     
 }
@@ -745,8 +722,9 @@ void BimboAircraft::test__fly() {
      
     prepare_flight_plan( fp, 1000.0f );
         
-    // Для теста встаем на последнюю точку ВПП.
-    set_will_on_ground( false );
+    // Для теста встаем на последнюю точку ВПП по горизонтали,
+    // но - в небе, типа только что взлетели.
+    is_clamped_to_ground = false;
     
 //     location_t start_point = {
 //         .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),

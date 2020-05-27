@@ -103,17 +103,11 @@ namespace xenon {
                 __actuators[ V_CONTROLS_THRUST_RATIO ].endpoint = value;
                 __actuators[ V_CONTROLS_THRUST_RATIO ].requested = true;
             };
-            
-            void set_will_on_ground( bool on_ground ) override {
-                bClampToGround = on_ground;
-            };
-            
-            bool will_on_ground() override { return bClampToGround; };
-
+                        
             // Расположить самолет на данной стоянке.
             void place_on_ground( const startup_location_t & ramp );
             void place_on_ground(
-                const position_t & position, const rotation_t & rotation, bool clamp_to_ground = true
+                const position_t & position, rotation_t & rotation, bool clamp_to_ground = true
             );
 
             // Переместить самолет на определенное количество
@@ -150,8 +144,6 @@ namespace xenon {
 
 
         protected:
-
-            void _on_ground_correction();
             
             /**
              * @short Текущее действие было завершено.

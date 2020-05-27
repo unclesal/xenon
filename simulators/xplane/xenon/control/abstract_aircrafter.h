@@ -29,7 +29,7 @@ namespace xenon {
              */
             inline waypoint_t & _get_front_wp() {
                 if ( _ptr_acf->_flight_plan.empty() ) {
-                    XPlane::log("ERROR: AbstractAircrafter::_get_front_wp(), but flight plan is empty");
+                    // XPlane::log("ERROR: AbstractAircrafter::_get_front_wp(), but flight plan is empty");
                     return __fake_waypoint;
                 }
                 return _ptr_acf->_flight_plan.at(0);        
@@ -77,14 +77,6 @@ namespace xenon {
                 else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");                
             };
                         
-            inline void _acf_will_on_ground( bool on_ground ) {
-                _ptr_acf->set_will_on_ground( on_ground );
-            };
-            
-            inline bool _will_acf_on_ground() {
-                return _ptr_acf->will_on_ground();
-            };
-            
             inline double _calculate_distance_to_wp( const waypoint_t & wp ) {
                 auto location = _get_acf_location();
                 return xenon::distance( location, wp.location );
