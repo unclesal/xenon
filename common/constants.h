@@ -13,6 +13,9 @@ namespace xenon {
     
     /// Convert nautical miles to meters
     const float M_per_NM      = 1852.0;
+
+    // Радиус Земли в метрах.
+    const double EARTH_RADIUS = 6371.0 * 1000.0;
     
     // Сильно большая константа, используется, когда ищем минимум.
     const double FAR_AWAY = (double) size_t(-1);

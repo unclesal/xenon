@@ -63,7 +63,7 @@ namespace xenon {
                 auto location = _get_acf_location();
                 return XPlane::location_to_position(location);
             };
-            
+
             inline rotation_t _get_acf_rotation() {
                 return _ptr_acf->get_rotation();
             };
@@ -72,14 +72,15 @@ namespace xenon {
                 return _ptr_acf->_params;
             };
             
-            inline void _front_wp_reached() {
-                if ( ! _ptr_acf->_flight_plan.empty() ) _ptr_acf->_flight_plan.pop_front();
-                else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");                
+            inline void _front_wp_reached() {                
+                if ( ! _ptr_acf->_flight_plan.empty() ) {
+                    _ptr_acf->_flight_plan.pop_front();
+                } else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");
             };
                         
             inline double _calculate_distance_to_wp( const waypoint_t & wp ) {
                 auto location = _get_acf_location();
-                return xenon::distance( location, wp.location );
+                return xenon::distance2d( location, wp.location );
             };
             
             /**
@@ -93,7 +94,7 @@ namespace xenon {
                     auto wp = _ptr_acf->_flight_plan.at(i);
                     double change = wp.incomming_heading - wp.outgoing_heading;
                     if ( change >= 20.0 ) {
-                        return xenon::distance(location, wp.location);
+                        return xenon::distance2d(location, wp.location);
                     }
                 }
                 return 0.0;
@@ -108,7 +109,7 @@ namespace xenon {
                 for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
                     auto wp = _ptr_acf->_flight_plan.at(i);
                     if ( wp.type == WAYPOINT_RUNWAY ) {
-                        return xenon::distance( location, wp.location );
+                        return xenon::distance2d( location, wp.location );
                     }
                 };
                 return 0.0;

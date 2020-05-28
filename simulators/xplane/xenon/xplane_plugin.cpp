@@ -134,6 +134,7 @@ void XPlanePlugin::__init_around() {
     auto where_i_am = bimbo->get_location();
     
     auto way = usss.get_taxi_way_for_departure( where_i_am );
+    XPlane::log("Got " + to_string(way.size()) + " points in FP");
     bimbo->prepare_for_take_off( way );
     
     // Тест - начиная от предварительного старта.

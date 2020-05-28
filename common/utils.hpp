@@ -4,8 +4,13 @@
 // * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 02 may 2020 at 10:32 *
 // *********************************************************************************************************************
 #pragma once
+#include <math.h>
+
 #include <string>
+#include <array>
 #include <vector>
+
+#include <GeographicLib/Geodesic.hpp>
 
 #include "constants.h"
 #include "settings.h"
@@ -13,6 +18,7 @@
 
 using namespace std;
 using namespace xenon;
+using namespace GeographicLib;
 
 namespace xenon {
 
@@ -86,21 +92,46 @@ namespace xenon {
     };
 
     /**
+     * @short Футы в метры.
+     */
+    inline double feet_to_meters( const double & feet ) {
+        // 1 ft = 0,3048 м
+        return feet * 0.3048;
+    };
+
+    /**
      * @short Полная дистанция в сферических координатах.
      */
 
-    static inline double distance( const location_t & from, const location_t & to ) {
-        auto boost_from = boost_location_t( from.latitude, from.longitude, from.altitude );
-        auto boost_to = boost_location_t( to.latitude, to.longitude, to.altitude );
-        double distance = boost::geometry::distance( boost_from, boost_to, geoid_distance_t());
-        return distance;
+//    inline double distance3d( const location_t & from, const location_t & to ) {
+//        auto boost_from = boost_location_t( from.latitude, from.longitude, from.altitude );
+//        auto boost_to = boost_location_t( to.latitude, to.longitude, to.altitude );
+//        double distance = boost::geometry::distance( boost_from, boost_to, geoid_distance_t());
+//        // Он похоже не в метрах считает-то.
+//        return distance;
+//    };
+
+    inline double distance2d( const location_t & from, const location_t & to ) {
+
+        // Формула "гаверсинуса"
+
+        double lat1 = degrees_to_radians( from.latitude );
+        double lon1 = degrees_to_radians( from.longitude );
+
+        double lat2 = degrees_to_radians( to.latitude );
+        double lon2 = degrees_to_radians( to.longitude );
+
+        double sin1 = sin(( lat1 - lat2 ) / 2.0 );
+        double sin2 = sin(( lon1 - lon2 ) / 2.0 );
+
+        return 2.0 * EARTH_RADIUS *asin(sqrt(sin1*sin1+sin2*sin2*cos(lat1)*cos(lat2)));
     };
     
     /**
      * @short Курс (азимут) от точки на точку.
      */
 
-    static inline double bearing(const location_t & location_from, const location_t & location_to ) {
+    inline double bearing(const location_t & location_from, const location_t & location_to ) {
         double teta1 = degrees_to_radians( location_from.latitude ); // lat
         double teta2 = degrees_to_radians( location_to.latitude ); // lat2
         double delta1 = degrees_to_radians( location_to.latitude - location_from.latitude ); // lat2-lat
@@ -114,6 +145,47 @@ namespace xenon {
         brng = radians_to_degrees(brng);// radians to degrees
         normalize_degrees( brng );
         return brng;
+    };
+
+    inline location_t shift( const location_t & from, const double & meters, const float & heading ) {
+
+        const Geodesic & geod = GeographicLib::Geodesic::WGS84();
+
+        location_t to;
+        to.altitude = from.altitude;
+
+        double azi2 = 0.0, m12 = 0.0, M12 = 0.0, M21 = 0.0, S12 = 0.0;
+
+        geod.Direct(
+            from.latitude, from.longitude, heading, meters,
+            to.latitude, to.longitude, azi2, m12, M12, M21, S12
+        );
+
+        return to;
+    };
+
+    /**
+     * @brief Расстояние от точки до линии, определенной двумя другими точками.
+     * @param from_point Точка, от которой хотели бы знать расстояние.
+     * @param segment_point_1 Точка "начала линии".
+     * @param segment_point_2 Точка "конца линии".
+     * @return
+     */
+
+    inline double distance_to_segment (
+            const location_t & from_point, const location_t & segment_point_1, const location_t & segment_point_2
+    ) {
+
+        double d0 = distance2d( from_point, segment_point_1 );
+        double d1 = distance2d( segment_point_1, segment_point_2);
+        double d2 = distance2d( from_point, segment_point_2 );
+
+        double half_perimeter = (d0 + d1 + d2) * 0.5;
+        double area = sqrt(half_perimeter * ( half_perimeter - d0 ) * ( half_perimeter - d1 ) * ( half_perimeter - d2 ));
+
+        double distance_to_line = 2.0 * area / distance2d ( segment_point_1, segment_point_2 );
+        return distance_to_line;
+
     };
     
     /**

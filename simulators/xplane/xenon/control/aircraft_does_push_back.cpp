@@ -55,6 +55,8 @@ void AircraftDoesPushBack::_internal_start() {
 void AircraftDoesPushBack::__internal_step__phase_straight() {
     // Точка, до которой нас выталкивают.
     waypoint_t wp = _get_front_wp();
+    auto wp1 = _get_first_wp();
+
     auto wp_position = XPlane::location_to_position( wp.location );        
     
     // Описатель "целевой рулежной дорожки", куда мы собрались приехать.
@@ -63,6 +65,10 @@ void AircraftDoesPushBack::__internal_step__phase_straight() {
 
     // "Плоское" расстояние от места положения самолета до этой самой прямой линии.
     double distance = XPlane::distance_2d( _ptr_acf->get_position(), final_taxiway );
+
+    double d1 = xenon::distance_to_segment(
+        _ptr_acf->get_location(), wp.location, wp1.location
+    );
         
     // TODO: Переделать на точку соединения с дугой, а не на "лобовую" оценку расстояния.
     if ( distance <= TAXI_TURN_RADIUS ) {

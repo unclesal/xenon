@@ -12,7 +12,9 @@ Please do not compile nor install it, because this project still does not do any
 
 1. Beautiful (and officially purchased) flight simulator [X-Plane](https://www.x-plane.com/)
 
-2. USSS (Kol'tsovo) [scenery](http://x-flight.su/ural.php)
+2. Free USSS (Kol'tsovo, Yekaterinburg, Russia) X-Plane scenery. The original scenery can be downloaded from [here](http://x-flight.su/ural.php).
+I have modified this one for my purposes (all static airplanes and ground traffic has been removed). You can get
+modified scenery from [here](https://drive.google.com/file/d/1ZsokPeAb87V5MtS3KQzZL7dX1c05e4Z5/view?usp=sharing).
 
 3. New generation X-Plane Multiplay Library supporting OpenGL, Vulcan, Metal standards, supporting TCAS and CSL OBJ8 
 3D models, made by [TwinFan](https://github.com/TwinFan/XPMP2). You do not need to install it separately, as it compiles 

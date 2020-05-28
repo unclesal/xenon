@@ -112,7 +112,7 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     // Это определяется по расстоянию до дальней конечной точки ВПП.
     
     auto wp = _get_front_wp();
-    auto distance = xenon::distance( _get_acf_location(), wp.location );
+    auto distance = xenon::distance2d( _get_acf_location(), wp.location );
     if ( distance < 100.0 ) {
         XPlane::log("Take off done");
         __phase = PHASE_NOTHING;

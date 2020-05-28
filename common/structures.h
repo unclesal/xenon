@@ -4,6 +4,9 @@
 // * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 02 may 2020 at 10:25 *
 // *********************************************************************************************************************
 #pragma once
+
+#include <stdlib.h>
+
 #include <string>
 #include <functional>
 #include <boost/geometry.hpp>
@@ -27,14 +30,16 @@ namespace xenon {
         double z = 0.0;
     };
 
-    // boost-style location
-    typedef boost::geometry::model::point<
-        double, 3, boost::geometry::cs::geographic < boost::geometry::degree
-        >> boost_location_t;
+//    // boost-style location
+//    typedef boost::geometry::model::point<
+//        double, 3, boost::geometry::cs::geographic < boost::geometry::degree
+//        >> boost_location_t;
 
-    // Стратегия для вычисления расстояния в гео-координатах.
-    typedef boost::geometry::srs::spheroid <double> spheroid_t;
-    typedef boost::geometry::strategy::distance::thomas < spheroid_t > geoid_distance_t;
+//    // Стратегия для вычисления расстояния в гео-координатах.
+//    typedef boost::geometry::srs::spheroid <double> spheroid_t;
+//    typedef boost::geometry::strategy::distance::thomas < spheroid_t > geoid_distance_t;
+
+//    typedef boost::geometry::model::segment<boost_location_t> boost_segment_t;
 
     // Локация в геосистеме
     struct location_t {
@@ -44,6 +49,10 @@ namespace xenon {
         // Вот ей по-идее double излишне. Но деваться некуда,
         // WorldToLocal / LocalToWorld воспринимает только double.
         double altitude = 0.0;
+        // Метрика по метке L1
+        double l1_flat() {
+            return abs(latitude) + abs(longitude);
+        };
     };
 
 

@@ -84,7 +84,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     auto acf_location = _get_acf_location();
     auto acf_rotation = _get_acf_rotation();
     
-    auto distance = xenon::distance( acf_location, wp.location );    
+    auto distance = xenon::distance2d( acf_location, wp.location );
     if ( _params.speed != 0.0 ) {
         auto time_to_achieve = distance / _params.speed;
         _altitude_adjustment( wp.location.altitude, time_to_achieve );

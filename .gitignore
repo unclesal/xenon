@@ -3,6 +3,7 @@ server
 .idea
 *.kdev4
 .qmake.stash
+*.user
 *debug*
 *build*
 *release*

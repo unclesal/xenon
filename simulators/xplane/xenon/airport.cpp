@@ -41,11 +41,11 @@ Airport Airport::_fake_airport_;
 // *********************************************************************************************************************
 
 Airport::Airport() {
-    _full_path_to_apt_dat_ = "";
+    __full_path_to_apt_dat = "";
     _origin_ = "";
     _version_ = 0;
     _ap_type_ = AP_TYPE_UNKNOWN;
-    _evalution_in_feet_ = 0;
+    __evalution_in_feet = 0;
     _icao_code_ = "";
     _name_ = "";
     _viewpoint_ = viewpoint_t();
@@ -197,10 +197,10 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // в одном файле может быть - несколько аэропортов).
             apt->_origin_ = origin;
             apt->_version_ = version;
-            apt->_full_path_to_apt_dat_ = full_path_to_apt_dat;
+            apt->__full_path_to_apt_dat = full_path_to_apt_dat;
             // Здесь же - элементы этой самой начальной строки.
             apt->_ap_type_ = i_type;
-            apt->_evalution_in_feet_ = stoi(contents.at(1));
+            apt->__evalution_in_feet = stoi(contents.at(1));
             apt->_icao_code_ = contents.at(4);
             pos = line.find( apt->_icao_code_ );
             pos += apt->_icao_code_.length();
@@ -1083,11 +1083,16 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
 
     // Кратчайший путь от найденного узла до взлетки.
     auto path = __routes.get_shortest_path( nearest_node_descriptor, departure_rwy.location() );
-    for ( auto nd: path ) {
+    for ( unsigned int i=0; i<path.size(); ++ i ) {
+    // for ( auto nd: path ) {
+        // Дескриптор узла.
+        auto nd = path.at( i );
+        // Сам узел.
         auto node_itself = __routes.graph()[nd];
         waypoint_t wp;
         wp.type = WAYPOINT_TAXING;
         wp.location = node_itself.location;
+        wp.location.altitude = evalution_in_meters();
         result.push_back( wp );
     }
     
@@ -1098,26 +1103,26 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     // ему нужно дать еще и сам взлет, т.е. "дальный торец" ВПП,
     // по отношению к которому будет осущестляться разбег.
     waypoint_t take_off_wp;
+
     // Последняя точка должна быть RUNWAY, иначе маршрут посчитается ошибочным.
     take_off_wp.type = WAYPOINT_RUNWAY; 
     take_off_wp.location = departure_rwy.farest_end_location;    
+    take_off_wp.location.altitude = evalution_in_meters();
     result.push_back( take_off_wp );
     
     // Теперь проходимся поочередно по элементам,
     // выставляя курс на следующую точку и расстояние до нее.
-    for ( int i=0; i<result.size() - 1; i++ ) {
+    for ( unsigned long i=0; i<result.size() - 1; i++ ) {
         location_t l_current = result.at( i ).location;
         location_t l_next = result.at( i + 1 ).location; 
-        double d = xenon::distance( l_current, l_next );
+        double d = xenon::distance2d( l_current, l_next );
         // Здесь точки идут в "правильном порядке", не реверсированы.
         double bearing = xenon::bearing( l_current, l_next );
         result.at(i).distance_to_next_wp = d;
         result.at(i).outgoing_heading = bearing;        
         result.at( i + 1 ).incomming_heading = bearing;
     }
-    
-    // Обратный проход, с конца, 
-
+        
     return result;
 
 }

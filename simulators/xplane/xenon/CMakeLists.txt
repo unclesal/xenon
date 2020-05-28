@@ -1,7 +1,7 @@
 ########################################################################################################################
 # CMake file. You need set environment variable PLUGIN_DIR pointed to Resources/plugins/xenon in your X-Plane folder.
 ########################################################################################################################
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 project(xenon LANGUAGES C CXX)
 set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
@@ -94,18 +94,23 @@ set_property(TARGET xenon PROPERTY CXX_STANDARD_REQUIRED 20)
 set_property(TARGET xenon PROPERTY CXX_STANDARD 20)
 
 target_include_directories(xenon PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        control
-        3dparty/libXPMP2/include
-        ../XPSDK301/CHeaders/XPLM
-        ../../../common
-        ../../../common/network
-        ../../../common/network/commands
-        ../../../3dparty
-        ../../../3dparty/nlohmann
+    /usr/local/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    control
+    3dparty/libXPMP2/include
+    ../XPSDK301/CHeaders/XPLM
+    ../../../common
+    ../../../common/network
+    ../../../common/network/commands
+    ../../../3dparty
+    ../../../3dparty/nlohmann
 )
 
-target_link_libraries(xenon ${CMAKE_SOURCE_DIR}/3dparty/libXPMP2/libXPMP2.a )
+target_link_libraries(xenon
+    ${CMAKE_SOURCE_DIR}/3dparty/libXPMP2/libXPMP2.a
+    /usr/local/lib/libGeographic.a
+)
+
 
 set_target_properties(xenon PROPERTIES LIBRARY_OUTPUT_DIRECTORY "$ENV{DISTRIB_DIR}")
 set_target_properties(xenon

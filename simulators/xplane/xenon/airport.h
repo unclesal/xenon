@@ -475,6 +475,13 @@ namespace xenon {
             }
 
             /**
+             * @short Высота аэропорта в метрах.
+             */
+            double evalution_in_meters() {
+                return xenon::feet_to_meters( __evalution_in_feet );
+            };
+
+            /**
              * @short Вернуть ссылку на все имеющиеся стоянки.
              * @return
              */
@@ -517,11 +524,11 @@ namespace xenon {
             static xenon::Airport _fake_airport_;
 
             // На всякий случай запоминается полный путь к исходному распарзенному файлу.
-            string _full_path_to_apt_dat_;
+            string __full_path_to_apt_dat;
             string _origin_;
             int _version_;
             int _ap_type_;
-            int _evalution_in_feet_;
+            int __evalution_in_feet;
             string _icao_code_;
             string _name_;
             viewpoint_t _viewpoint_;

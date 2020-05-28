@@ -123,7 +123,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
     
     // XPlane::log("After bearing phase=" + to_string( __phase ) );    
     
-    auto distance = xenon::distance( _get_acf_location(), wp.location );
+    auto distance = xenon::distance2d( _get_acf_location(), wp.location );
         
     // XPlane::log( "after distance phase=" + to_string( __phase ) + ", distance=" + to_string(distance) );
     

@@ -87,7 +87,7 @@ void AirportNetwork::add_apt_dat_edge(int i_type, const string &line, const vect
     // равно не меняется же, поэтому высчитывать дистанцию каждый раз - грешно.
     auto elem_node_start = __graph[ node_start ];
     auto elem_node_end = __graph[ node_end ];
-    edge.distance = xenon::distance(elem_node_start.location, elem_node_end.location);
+    edge.distance = xenon::distance2d(elem_node_start.location, elem_node_end.location);
 
     // Прямая дуга будет в любом случае.
     auto direct_arc = add_edge( node_start, node_end, __graph );
@@ -187,7 +187,7 @@ AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
             if ((way_type == WAY_ANY) || ( e.way_type == way_type )) {
                 // Обнаружено ребро с нужным нам типом. Смотрим на расстояние.
                 node_t here_node = __graph[ node_descriptor ];
-                double current_distance = distance(from, here_node.location);
+                double current_distance = xenon::distance2d(from, here_node.location);
 
                 if ( current_distance <= min_distance ) {
                     min_distance = current_distance;
@@ -247,6 +247,7 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::get_sho
     auto distmap = _dist.data(); // interior properties: boost::get(boost::vertex_distance, g);
 
     // лямбда-функция для выдачи дистанции в качестве map'а.
+
     auto g = __graph;
     auto custom_distance = boost::make_function_property_map< graph_t::edge_descriptor >(
         [ & g ]( graph_t::edge_descriptor e ) {
@@ -366,10 +367,9 @@ vector< AirportNetwork::node_t > AirportNetwork::get_nodes_for( const string & e
     }
     // Сортировка массива nodes, ключом является сумма latitude + logitude.
     sort( nodes.begin(), nodes.end(), []( node_t & a, node_t & b ) {
-        return
-            ( a.location.latitude + a.location.longitude )
-            > ( b.location.latitude + b.location.longitude );
-
+        return ( a.location.l1_flat() > b.location.l1_flat() );
+            // ( a.location.latitude + a.location.longitude )
+            // > ( b.location.latitude + b.location.longitude );
     } );
     return nodes;
 }
@@ -386,7 +386,7 @@ AirportNetwork::node_t AirportNetwork::get_nearest_node(
     node_t result;
     double min_distance = FAR_AWAY;
     for ( auto const & n: nodeset ) {
-        double current_distance = xenon::distance( location, n.location );
+        double current_distance = xenon::distance2d( location, n.location );
         if ( current_distance < min_distance ) {
             result = n;
             min_distance = current_distance;
@@ -407,7 +407,7 @@ AirportNetwork::node_t AirportNetwork::get_farest_node(
     node_t result;
     double max_distance = 0.0;
     for ( auto const & n: nodeset ) {
-        double current_distance = xenon::distance( location, n.location );
+        double current_distance = xenon::distance2d( location, n.location );
         if ( current_distance > max_distance ) {
             result = n;
             max_distance = current_distance;

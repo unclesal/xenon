@@ -281,7 +281,7 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-rotation_t BimboAircraft::get_rotation() {    
+rotation_t BimboAircraft::get_rotation() {        
     // У "имитационного" самолета нет разницы между
     // истинными и магнитным курсом, выдаем один к одному.
     rotation_t rotation;
@@ -353,56 +353,38 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
         XPlane::log("ERROR: BimboAircraft::prepare_for_take_off, but aircraft is not parked.");
         return;
     }
+        
+    // Самая первая с конца точка - дальний конец ВПП.
     
-    // В полетный план они будут вставляться в самое начало, потому что
-    // полетный план может быть уже заполнен. Например, SIDом или вообще
-    // полным путем. Соответственно, добавление начинается с конца полученного
-    // вектора. Чтобы не извращаться - проще его реверсировать на входе.
-    
-    deque< waypoint_t > tw = taxi_way;
-    std::reverse( tw.begin(), tw.end() );
-    
-    // Две начальных точки - должна быть взлетка.
-    for ( int i=0; i<2; i++ ) {
-        if ( tw.at( 0 ).type != WAYPOINT_RUNWAY ) {
-            XPlane::log("ERROR: latest waypoints for take off is not runway!");
-            return;
-        }
-    };
-    
-    // Самая первая (в инвертированном плане) точка - дальний конец ВПП.
-    
-    waypoint_t wp = tw.front(); tw.pop_front();
+    waypoint_t wp = taxi_way.at( taxi_way.size() - 1 );
     wp.action_to_achieve = ACF_DOES_TAKE_OFF;
     wp.location.altitude = 150.0;
     _flight_plan.push_front( wp );
         
     // Вторая точка - это ближний конец ВПП. На нее выходим из состояния HP
     // выравниванием ( lining up )
-    wp = tw.front(); tw.pop_front();
+    wp = taxi_way.at( taxi_way.size() - 2 );
     wp.action_to_achieve = ACF_DOES_LINING_UP;
     _flight_plan.push_front( wp );
-    
-    // Дальше все точки - это рулежка.
-    
-    for ( int i=0; i<tw.size() - 1; i++ ) {
-        wp = tw.front(); tw.pop_front();
+
+    // Дальше все точки - это рулежка.    
+    for ( int i = (int) taxi_way.size() - 3; i>=0; -- i) {
+        wp = taxi_way.at(i);
         wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
         _flight_plan.push_front( wp );
     }
     
-    // Осталась одна точка. До нее можно добраться либо выруливанием,
+    // До самой первой точки руления можно добраться либо выруливанием,
     // либо выталкиванием. Зависит от того, где она находится от нас,
     // спереди или сзади и можно ли до нее доехать самостоятельно.
     
-    wp = tw.front(); tw.pop_front();
     location_t current_location = get_location();
-    double azimuth = xenon::bearing( current_location, wp.location );
+    double azimuth = xenon::bearing( current_location, _flight_plan.at(0).location );
     if ( ( azimuth <= 60.0 ) || ( azimuth >= 300.0 ) )
         // Это "выруливание", потому что точка у нас перед носом.
-        wp.action_to_achieve = ACF_DOES_SLOW_TAXING;
-    else wp.action_to_achieve = ACF_DOES_PUSH_BACK;
-    _flight_plan.push_front( wp );
+        _flight_plan.at( 0 ).action_to_achieve = ACF_DOES_SLOW_TAXING;
+    else
+        _flight_plan.at( 0 ).action_to_achieve = ACF_DOES_PUSH_BACK;
     
     __taxing_prepared = true;
             
@@ -485,11 +467,21 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused
 
 void BimboAircraft::move( float meters ) {
 
-    auto radians = ( float ) degrees_to_radians( drawInfo.heading );
+#ifdef INSIDE_XPLANE
+
+    auto radians = degrees_to_radians( drawInfo.heading );
+
     float dx = meters * sinf( radians );
     float dz = meters * cosf( radians );
     drawInfo.x += dx;
     drawInfo.z -= dz;
+
+#else
+
+    auto location = get_location();
+    auto dest = xenon::shift( location, meters, drawInfo.heading );
+    set_location( dest );
+#endif
 
 }
 
@@ -505,17 +497,17 @@ void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp, const float 
     // Потому что выходной массив, т.е. действующий полетный план,
     // вообще-то уже может что-то содержать.
     
-    for ( int i=0; i < fp.size() - 1; ++i ) {
+    for ( int i=0; i < (int) fp.size() - 1; ++i ) {
         waypoint_t & at_i = fp.at( i );
         waypoint_t & at_n = fp.at( i + 1 );
-        at_i.distance_to_next_wp = xenon::distance(at_i.location, at_n.location );
+        at_i.distance_to_next_wp = xenon::distance2d(at_i.location, at_n.location );
         auto bearing = xenon::bearing( at_i.location, at_n.location );
         at_i.outgoing_heading = bearing;
         at_n.incomming_heading = bearing;
     };
     
     // TODO: вообще-то - не факт, что в самый конец, они могут и перетасовываться же? 
-    for ( int i=0; i < fp.size(); ++ i ) {
+    for ( int i=0; i < (int) fp.size(); ++ i ) {
         _flight_plan.push_back( fp.at( i ) );
     };
     
