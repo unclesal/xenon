@@ -6,6 +6,8 @@
 #pragma once
 
 #include "structures.h"
+#include "utils.hpp"
+#include "logger.h"
 
 #ifdef INSIDE_XPLANE
 #include "XPLMScenery.h"
@@ -48,7 +50,11 @@ namespace xenon {
             virtual void hit_to_ground( location_t & location );
             void clamp_to_ground();
 #endif
-            bool is_clamped_to_ground;
+            /**
+             * @short "Состояние самоходки".
+             * Является публичным членом, т.к. к нему обращаются все: и сама самоходка, и граф, и его узлы/грани.
+             */
+            vehicle_condition_t vcl_condition;
 
         protected:                        
             

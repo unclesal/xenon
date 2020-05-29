@@ -6,7 +6,10 @@
 #pragma once
 
 #include "abstract_aircraft.h"
+
+#ifdef INSIDE_XPLANE
 #include "xplane.hpp"
+#endif
 
 namespace xenon {
     
@@ -51,7 +54,7 @@ namespace xenon {
                 if ( _ptr_acf->_flight_plan.size() >= 2 ) {
                     return _ptr_acf->_flight_plan.at(1);
                 };
-                XPlane::log("ERROR: AbstractAircrafter::_get_first_wp(), but flight plan size=" + to_string( _ptr_acf->_flight_plan.size() ) );
+                Logger::log("ERROR: AbstractAircrafter::_get_first_wp(), but flight plan size=" + to_string( _ptr_acf->_flight_plan.size() ) );
                 return __fake_waypoint;
             };
             
@@ -77,7 +80,7 @@ namespace xenon {
             inline void _front_wp_reached() {                
                 if ( ! _ptr_acf->_flight_plan.empty() ) {
                     _ptr_acf->_flight_plan.pop_front();
-                } else XPlane::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");
+                } else Logger::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");
             };
                         
             inline double _calculate_distance_to_wp( const waypoint_t & wp ) {

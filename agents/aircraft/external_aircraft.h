@@ -16,6 +16,7 @@ namespace xenon {
     // Его проще сюда передрать полностью, т.к. я использую не только
     // v_count, но и многие из этих определений. Не сильно хорошо, т.к.
     // придется следить за их соответствием с XPMP2 классом.
+    /*
 
     enum DR_VALS {
         V_CONTROLS_GEAR_RATIO = 0,                  ///< `libxplanemp/controls/gear_ratio` and \n`sim/cockpit2/tcas/targets/position/gear_deploy`
@@ -53,7 +54,7 @@ namespace xenon {
 
         V_COUNT                                     ///< always last, number of dataRefs supported
     };
-
+    */
 
     class ExternalAircraft {
 
@@ -65,27 +66,17 @@ namespace xenon {
             virtual ~ExternalAircraft() = default;
 
             // Имена сохранены такие же, как в XPMP2::Aircraft
-            std::string acIcaoType;
-            std::string acIcaoAirline;
-            std::string acLivery;
 
-            std::array<float,V_COUNT> v;
+            // std::array<float,V_COUNT> v;
 
             virtual void UpdatePosition(float elapsed_since_last_call, int fl_counter);
 
             // Имена сохранены, что позволяет в Bimbo вызывать эти функции.
 
-            float GetPitch () const         { return _rotation.pitch;   };
-            void  SetPitch (float _deg)     { _rotation.pitch = _deg;   };
-            float GetHeading () const       { return _rotation.heading; };
-            void  SetHeading (float _deg)   { _rotation.heading = _deg; };
-            float GetRoll () const          { return _rotation.roll;    };
-            void  SetRoll (float _deg)      { _rotation.roll = _deg;    };
-
 
         protected:
 
-            rotation_t _rotation;
+            // rotation_t _rotation;
 
         private:
 

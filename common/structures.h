@@ -194,15 +194,28 @@ namespace xenon {
         float cruise_altitude = 5000.0;
         
     };
-    
-    // Параметры действия, чтобы их можно было передавать следующему 
-    // выбранному действию от предыдущего (для обеспечения плавности).
-    
-    struct action_parameters_t {            
+
+    /**
+     * @short Текущие параметры ("состояние") - любой "самоходки".
+     * Структуры состояния "наземного транспортного средства" и "самолета"
+     * полностью разделены (попытка поэкономить память).
+     */
+    struct vehicle_condition_t {
+        
+        // Текущее местоположение.
+        location_t location;
+
+        // Угловое положение. 
+        rotation_t rotation;
+
+        // Движение на плоскости.
+
         // "Рывок", производная от ускорения.
-        float tug = 0.0;
-        float acceleration = 0.0;
-        float target_acceleration = 0.0;
+        // float tug = 0.0;
+        // float target_acceleration = 0.0;
+
+        // Ускорение, метров в секунду.
+        float acceleration = 0.0;        
         // Скорость, метров в секунду.
         float speed = 0.0;
         // Скорость, узлов (морских миль) в час.
@@ -210,28 +223,55 @@ namespace xenon {
         // Целевая скорость, которую хотим достичь, 
         // применяя параметры "рывка" и ускорения..
         float target_speed = 0.0;
-                
+        
+        // Является ли "прижатой к земле".
+        bool is_clamped_to_ground = false;
+
+        // "Курс" - это "плоскостное" понятие, т.к. 
+        // он применим и к машинкам, и к самолетам.
+
+        float heading_acceleration = 0.0;
+        float target_heading = 0.0;
+
+    };
+    
+    /**
+     * @short Текущие параметры ("состояние") - самолета.
+     */
+    
+    struct aircraft_condition_t {        
+        
         // Вертикальная скорость, метров в секунду.
         float vertical_speed = 0.0;
         // Целевая вертикальная скорость. При ее достижении -
         // больше не увеличивается, ускорение будет сброшено.
         float target_vertical_speed = 0.0;        
         // Вертикальное ускорение, метров в секунду.
-        float vertical_acceleration = 0.0;
-        
+        float vertical_acceleration = 0.0;        
         // Вертикальная скорость, футов в минуту. Пересчитывается
         // в конце "шага" в абстрактном действии, так же,
         // как и горизонтальная скорость.
         float vertical_speed_fpm = 0.0;
-        
-        
-        // Угловые величины.
-        float heading_acceleration = 0.0;
-        float target_heading = 0.0;
+
+        // Угловые величины.        
         float pitch_acceleration = 0.0;
         float target_pitch = 0.0;
+        
         float roll_acceleration = 0.0;
         float target_roll = 0.0;
+        
+        // Положение и состояние актуаторов.
+        bool is_taxi_lites_on = false;
+        bool is_landing_lites_on = false;
+        bool is_beacon_lites_on = false;
+        bool is_strobe_lites_on = false;
+        bool is_nav_lites_on = false;
+        bool is_gear_down = false;
+        bool is_reverse_on = false;
+        float flaps_position = 0.0;
+        float speed_brake_position = 0.0;
+        float thrust_position = 0.0;
+        
     };
 
     // Типы возможных агентов
@@ -250,52 +290,5 @@ namespace xenon {
         std::string uuid = "";
         agent_t type = AGENT_UNKNOWN;
     };
-
-    /*
-    // Характеристики самолета.
-    struct aircraft_condition_t {
-        // Фаза, в которой находится самолет.
-        aircraft_does_t does = ACF_DOES_NOTHING;
-        // По какой рулежке или воздушной трассе двигаемся.
-        string way = "";
-        // Скорость, метров в секунду.
-        float speed = 0.0;
-        // Целевая скорость. Если положительная, то дальше
-        // изменяться на основе ускорения - не будет.
-        float target_speed = 0.0;
-        // Ускорение, метров в секунду за секунду.
-        float acceleration = 0.0;
-        // Целевое ускорение. Если не равно нулю, то дальше
-        // изменяться на основе "рывка" оно не будет.
-        float target_acceleration = 0.0;
-        // "рывок", третья производная от скорости
-        float tug = 0.0;
-        // Скорее всего, потом надо убрать.
-        // float heading = -1;
-
-        // Угловое смещение по курсу в градусах за секунду.
-        float heading_shift = 0.0;
-        // Сколько уже пройдено в метрах в данном сегменте.
-        double distance = 0.0;
-        // Время в секундах продолжительности работы данной фазы.
-        double duration = 0.0;
-        // Текущее положение самолета в 3D игровом пространстве.
-        position_with_angles_t current_pwa;
-        // Положение самолета или некой конечной точки,
-        // заданное здесь как параметр, обрабатываемый в exit_function.
-        position_with_angles_t target_pwa;
-        // Для внутреннего подсчета оставшейся дистанции до конечной точки.
-        double previous_position_distance_to_target = 0.0;
-
-        // Функция перехода на следующее состояние.
-        std::function<bool(
-            aircraft_condition_t & condition
-        )>
-            exit = [](
-                aircraft_condition_t & condition
-            ) { return false; };
-
-    };
-    */
 
 };  // namespace xenon

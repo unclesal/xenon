@@ -31,17 +31,18 @@ void AircraftDoesLiningUp::_internal_start() {
     
     __phase = PHASE_STRAIGHT;
     // Поехали потихоньку.
-    _params.acceleration = 0.0;
-    _params.tug = TAXI_NORMAL_TUG;
-    _params.target_acceleration = TAXI_NORMAL_ACCELERATION;
-    _params.target_speed = TAXI_SLOW_SPEED;
+    
+    // _ptr_acf->condition.tug = TAXI_NORMAL_TUG;
+    // _ptr_acf->vcl_condition.target_acceleration = TAXI_NORMAL_ACCELERATION;
+    
+    _ptr_acf->vcl_condition.acceleration = 0.0;        
+    _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
+    
     // Причем поехали пока что прямо, как стоим.
-    _params.heading_acceleration = 0.0;
+    _ptr_acf->vcl_condition.heading_acceleration = 0.0;
     
-    _ptr_acf->set_taxi_lites( false );
-    
-    _ptr_acf->set_landing_lites( true );
-    
+    _ptr_acf->set_taxi_lites( false );    
+    _ptr_acf->set_landing_lites( true );    
     _ptr_acf->set_beacon_lites( true );
     _ptr_acf->set_strobe_lites( true );
     _ptr_acf->set_nav_lites( true );
@@ -70,10 +71,12 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
         _front_wp_reached();
         
         // Чуть начинаем подтормаживать.
-        _params.acceleration = 0.0;
-        _params.tug = -0.2;
-        _params.target_acceleration = -2.0;
-        _params.target_speed = 2.0;
+        _ptr_acf->vcl_condition.acceleration = 0.0;
+        _ptr_acf->vcl_condition.target_speed = 2.0;
+
+        // _ptr_acf->condition.tug = -0.2;
+        // _ptr_acf->vcl_condition.target_acceleration = -2.0;
+        
         
         // И здесь же устанавливаем параметры изменения курса и торможения.
         // Это уже будет - дальняя точка рулежки.
@@ -96,23 +99,25 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading; 
     
-    if ( ( abs(delta) < 5.0 ) && ( _params.target_speed != 0.0 ) ) {
+    if ( ( abs(delta) < 5.0 ) && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
         // Тормозим.
-        _params.acceleration = 0.0;
-        _params.tug = -0.2;
-        _params.target_acceleration = -2.0;
-        _params.target_speed = 0.0;
+        
+        // _ptr_acf->condition.tug = -0.2;
+        // _ptr_acf->vcl_condition.target_acceleration = -2.0;
+        
+        _ptr_acf->vcl_condition.acceleration = 0.0;        
+        _ptr_acf->vcl_condition.target_speed = 0.0;
 
     } else {
         // Все еще выполняем поворот.
         _head_steering( elapsed_since_last_call, 25.0 );
     };
     
-    if ( _params.speed <= 0.2 ) {
-        _params.speed = 0.0;
-        _params.target_speed = 0.0;
-        _params.tug = 0.0;
-        _params.acceleration = 0.0;
+    if ( _ptr_acf->vcl_condition.speed <= 0.2 ) {
+        _ptr_acf->vcl_condition.speed = 0.0;
+        _ptr_acf->vcl_condition.target_speed = 0.0;
+        // _ptr_acf->condition.tug = 0.0;
+        _ptr_acf->vcl_condition.acceleration = 0.0;
         _finish();
     }
     
@@ -130,7 +135,7 @@ void AircraftDoesLiningUp::_internal_step( const float & elapsed_since_last_call
     switch ( __phase ) {
         case PHASE_STRAIGHT: __step_straight( elapsed_since_last_call ); break;
         case PHASE_ROTATION: __step_rotation( elapsed_since_last_call ); break;
-        default: XPlane::log("ERROR: AircraftDoesLiningUp::_internal_step(), unhandled phase " + to_string( __phase ) );
+        default: Logger::log("ERROR: AircraftDoesLiningUp::_internal_step(), unhandled phase " + to_string( __phase ) );
     }
     
 }

@@ -26,13 +26,13 @@ using namespace lemon;
 using namespace xenon;
 
 // Статические найденные аэропорты.
-map<string, Airport> Airport::_airports_;
-bool Airport::_airports_was_readed_ = false;
+map<string, Airport> Airport::__airports;
+bool Airport::__airports_was_readed = false;
 
 // Обработчик события чтения нового аэропорта.
-void ( * Airport::_has_been_parsed_ )( string & icao_code ) = nullptr;
+void ( * Airport::__has_been_parsed )( string & icao_code ) = nullptr;
 // Фейковый аэропорт.
-Airport Airport::_fake_airport_;
+Airport Airport::__fake_airport;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -42,54 +42,54 @@ Airport Airport::_fake_airport_;
 
 Airport::Airport() {
     __full_path_to_apt_dat = "";
-    _origin_ = "";
-    _version_ = 0;
-    _ap_type_ = AP_TYPE_UNKNOWN;
+    __origin = "";
+    __version = 0;
+    __ap_type = AP_TYPE_UNKNOWN;
     __evalution_in_feet = 0;
-    _icao_code_ = "";
-    _name_ = "";
-    _viewpoint_ = viewpoint_t();
+    __icao_code = "";
+    __name = "";
+    __viewpoint = viewpoint_t();
 
     // Атрибуты аэропорта.
-    _city_ = "";
-    _country_ = "";
-    _datum_lon_ = 0.0;
-    _datum_lat_ = 0.0;
-    _gui_label_ = "";
-    _iata_code_ = "";
-    _region_code_ = "";
-    _state_ = "";
-    _transition_alt_ = "";
-    _transition_level_ = "";
-    _faa_code_ = "";
-    _flatten_ = 0;
-    _drive_on_left_ = false;
-    _local_code_ = "";
+    __city = "";
+    __country = "";
+    __datum_lon = 0.0;
+    __datum_lat = 0.0;
+    __gui_label = "";
+    __iata_code = "";
+    __region_code = "";
+    __state = "";
+    __transition_alt = "";
+    __transition_level = "";
+    __faa_code = "";
+    __flatten = 0;
+    __drive_on_left = false;
+    __local_code = "";
 
     // Объекты внутри аэропорта.
 
-    _land_runways = vector< land_runway_t >();
-    _water_runways = vector< water_runway_t >();
-    _helipad_runways = vector< helipad_runway_t >();
-    _startup_locations_ = map< string, startup_location_t >();
-    _truck_parkings_ = vector< truck_parking_t >();
-    _truck_destinations_ = vector< truck_destination_t >();
+    __land_runways = vector< land_runway_t >();
+    __water_runways = vector< water_runway_t >();
+    __helipad_runways = vector< helipad_runway_t >();
+    __startup_locations = map< string, startup_location_t >();
+    __truck_parkings = vector< truck_parking_t >();
+    __truck_destinations = vector< truck_destination_t >();
 
     // Объекты-контейнеры нодов внутри аэропорта.
-    _light_beacons_ = vector< light_beacon_t >();
-    _frequencies_ = vector< frequency_t >();
-    _windsocks_ = vector< windsock_t >();
-    _signs_ = vector< sign_t >();
-    _lighting_objects_ = vector< lighting_objects_t >();
-    _taxiways_ = vector< taxiway_t >();
-    _linear_features_ = vector< linear_feature_t >();
-    _boundaries_ = vector< boundary_t >();
+    __light_beacons = vector< light_beacon_t >();
+    __frequencies = vector< frequency_t >();
+    __windsocks = vector< windsock_t >();
+    __signs = vector< sign_t >();
+    __lighting_objects = vector< lighting_objects_t >();
+    __taxiways = vector< taxiway_t >();
+    __linear_features = vector< linear_feature_t >();
+    __boundaries = vector< boundary_t >();
 
     // traffic rules flow
-    _traffic_flow_ = vector< traffic_flow_t >();
+    __traffic_flow = vector< traffic_flow_t >();
 
     // "Осиротевшесть" аэропорта.
-    _orphanded = true;
+    __orphanded = true;
 }
 
 // *********************************************************************************************************************
@@ -186,26 +186,26 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 // Если у нас уже что-то было насчитано, то аэропорт надо поместить в массив результата.
                 // Потому что начался следующий. При этом если элемент уже есть, то надо попытаться
                 // сохранить его атрибуты (1302 которые).
-                if ( startup_location ) apt->_put_startup_location( & startup_location );
-                if ( node_container ) apt->_put_node_container( & node_container );
-                if ( traffic_flow ) apt->_put_traffic_flow( & traffic_flow );
-                Airport::_put_airport( & apt );
+                if ( startup_location ) apt->__put_startup_location( & startup_location );
+                if ( node_container ) apt->__put_node_container( & node_container );
+                if ( traffic_flow ) apt->__put_traffic_flow( & traffic_flow );
+                Airport::__put_airport( & apt );
             }
             apt = new Airport();
             // Начальное заполнение того, что уже должно быть - элементы
             // одни и те же для всех аэропортов данного файла (поскольку
             // в одном файле может быть - несколько аэропортов).
-            apt->_origin_ = origin;
-            apt->_version_ = version;
+            apt->__origin = origin;
+            apt->__version = version;
             apt->__full_path_to_apt_dat = full_path_to_apt_dat;
             // Здесь же - элементы этой самой начальной строки.
-            apt->_ap_type_ = i_type;
+            apt->__ap_type = i_type;
             apt->__evalution_in_feet = stoi(contents.at(1));
-            apt->_icao_code_ = contents.at(4);
-            pos = line.find( apt->_icao_code_ );
-            pos += apt->_icao_code_.length();
-            apt->_name_ = line.substr(pos);
-            while (apt->_name_.at(0) == ' ') apt->_name_.erase( 0, 1 );
+            apt->__icao_code = contents.at(4);
+            pos = line.find( apt->__icao_code );
+            pos += apt->__icao_code.length();
+            apt->__name = line.substr(pos);
+            while (apt->__name.at(0) == ' ') apt->__name.erase( 0, 1 );
             continue;
         }
 
@@ -220,7 +220,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // С 5ой позиции начиная и там их может быть много с пробелами.
             pos = line.find(contents[5]);
             vp.name = line.substr( pos );
-            apt->_viewpoint_ = vp;
+            apt->__viewpoint = vp;
             continue;
         }
 
@@ -229,7 +229,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             if ( ! apt ) throw runtime_error(
                     "got startup location but apt is empty. line=" + to_string(lines_count)
                 );
-            if ( startup_location ) apt->_put_startup_location( & startup_location );
+            if ( startup_location ) apt->__put_startup_location( & startup_location );
             startup_location = new startup_location_t();
 
             // Структура локации, содержащая высоту. Иначе у нас
@@ -257,7 +257,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 pos = line.find( contents[4] );
                 lb.name = line.substr( pos );
             }
-            apt->_light_beacons_.push_back(lb);
+            apt->__light_beacons.push_back(lb);
             continue;
         }
 
@@ -272,7 +272,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 pos = line.find(contents[4]);
                 ws.name = line.substr(pos);
             }
-            apt->_windsocks_.push_back( ws );
+            apt->__windsocks.push_back( ws );
             continue;
         }
 
@@ -286,7 +286,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             // 4 - в данный момент не используется.
             sign.size_code = stoi( contents[5] );
             sign.label = contents[6];
-            apt->_signs_.push_back(sign);
+            apt->__signs.push_back(sign);
             continue;
         }
 
@@ -302,7 +302,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             lo.runway_number = contents[6];
             // description is optional.
             if ( contents.size() >= 8 ) lo.description = contents[7];
-            apt->_lighting_objects_.push_back( lo );
+            apt->__lighting_objects.push_back( lo );
             continue;
         }
 
@@ -319,7 +319,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 pos = line.find(contents[2]);
                 freq.description = line.substr(pos);
             }
-            apt->_frequencies_.push_back( freq );
+            apt->__frequencies.push_back( freq );
             continue;
         }
 
@@ -347,7 +347,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             if ( contents.size() >= 15 ) rwy.approach_ligth = stoi( contents[14] );
             if ( contents.size() >= 16 ) rwy.tdz_ligth = stoi( contents[15] );
             if ( contents.size() >= 17 ) rwy.reil_light = stoi( contents[16] );
-            apt->_land_runways.push_back( rwy );
+            apt->__land_runways.push_back( rwy );
             continue;
         }
 
@@ -364,7 +364,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             if ( contents.size() >= 4 ) rwy.runway_number = contents[3];
             if ( contents.size() >= 5 ) rwy.latitude = stod( contents[4] );
             if ( contents.size() >= 6 ) rwy.longitude = stod( contents[5] );
-            apt->_water_runways.push_back( rwy );
+            apt->__water_runways.push_back( rwy );
             continue;
         }
 
@@ -388,7 +388,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 rwy.smoothness = stof( contents[ 10 ] );
                 if ( contents.size() >= 12 ) rwy.edge_light = stoi( contents[ 11 ] );
             }
-            apt->_helipad_runways.push_back( rwy );
+            apt->__helipad_runways.push_back( rwy );
             continue;
         }
 
@@ -397,7 +397,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             if ( ! apt ) throw runtime_error(
                 "got taxiway while apt is none, line=" + to_string( lines_count )
             );
-            if ( node_container ) apt->_put_node_container( & node_container );
+            if ( node_container ) apt->__put_node_container( & node_container );
             node_container = new taxiway_t();
             auto * twy = ( taxiway_t * ) node_container;
             twy->container_type = CONTAINER_TAXIWAY;
@@ -414,7 +414,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
 
         if ( i_type == CONTAINER_LINEAR_FEATURE ) {
             if ( ! apt ) throw runtime_error("got linear feature while apt is none, line=" + to_string(lines_count));
-            if ( node_container ) apt->_put_node_container( & node_container );
+            if ( node_container ) apt->__put_node_container( & node_container );
             node_container = new linear_feature_t();
             auto * lft = ( linear_feature_t * ) node_container;
             lft->container_type = CONTAINER_LINEAR_FEATURE;
@@ -428,7 +428,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             if ( ! apt ) throw runtime_error(
                 "got boundary element when apt is none, line=" + to_string( lines_count )
             );
-            if ( node_container ) apt->_put_node_container( & node_container );
+            if ( node_container ) apt->__put_node_container( & node_container );
             node_container = new boundary_t();
             auto * bdy = ( boundary_t * ) node_container;
             bdy->container_type = CONTAINER_BOUNDARY;
@@ -467,7 +467,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
         if ( i_type == 1000 ) {
             // traffic_flow
             if ( ! apt ) throw runtime_error("Got traffic flow while apt is empty, line=" + to_string( lines_count ));
-            if ( traffic_flow ) apt->_put_traffic_flow( & traffic_flow );
+            if ( traffic_flow ) apt->__put_traffic_flow( & traffic_flow );
             traffic_flow = new traffic_flow_t();
             pos = line.find( contents[1] );
             traffic_flow->name = line.substr( pos );
@@ -597,7 +597,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             if ( ! apt ) throw runtime_error(
                 "got startup location but apt is empty. line=" + to_string(lines_count)
             );
-            if ( startup_location ) apt->_put_startup_location( & startup_location );
+            if ( startup_location ) apt->__put_startup_location( & startup_location );
             startup_location = new startup_location_t();
 
             // Структура локации с учетом высоты, чтобы самолеты
@@ -641,21 +641,21 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             );
 
             if ( contents.size() >= 3 ) {
-                if ( contents[ 1 ] == "city" ) apt->_city_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "country" ) apt->_country_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "datum_lat" ) apt->_datum_lat_ = stod( contents[ 2 ] );
-                else if ( contents[ 1 ] == "datum_lon" ) apt->_datum_lon_ = stod( contents[ 2 ] );
-                else if ( contents[ 1 ] == "gui_label" ) apt->_gui_label_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "iata_code" ) apt->_iata_code_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "region_code" ) apt->_region_code_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "state" ) apt->_state_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "transition_alt" ) apt->_transition_alt_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "transition_level" ) apt->_transition_level_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "faa_code" ) apt->_faa_code_ = contents[ 2 ];
-                else if ( contents[ 1 ] == "flatten" ) apt->_flatten_ = stoi( contents[ 2 ] );
+                if ( contents[ 1 ] == "city" ) apt->__city = contents[ 2 ];
+                else if ( contents[ 1 ] == "country" ) apt->__country = contents[ 2 ];
+                else if ( contents[ 1 ] == "datum_lat" ) apt->__datum_lat = stod( contents[ 2 ] );
+                else if ( contents[ 1 ] == "datum_lon" ) apt->__datum_lon = stod( contents[ 2 ] );
+                else if ( contents[ 1 ] == "gui_label" ) apt->__gui_label = contents[ 2 ];
+                else if ( contents[ 1 ] == "iata_code" ) apt->__iata_code = contents[ 2 ];
+                else if ( contents[ 1 ] == "region_code" ) apt->__region_code = contents[ 2 ];
+                else if ( contents[ 1 ] == "state" ) apt->__state = contents[ 2 ];
+                else if ( contents[ 1 ] == "transition_alt" ) apt->__transition_alt = contents[ 2 ];
+                else if ( contents[ 1 ] == "transition_level" ) apt->__transition_level = contents[ 2 ];
+                else if ( contents[ 1 ] == "faa_code" ) apt->__faa_code = contents[ 2 ];
+                else if ( contents[ 1 ] == "flatten" ) apt->__flatten = stoi( contents[ 2 ] );
                 else if (( contents[ 1 ] == "drive_on_left" ) && ( contents[ 2 ].find( '1' ) >= 0 ))
-                    apt->_drive_on_left_ = true;
-                else if ( contents[ 1 ] == "local_code" ) apt->_local_code_ = contents[ 2 ];
+                    apt->__drive_on_left = true;
+                else if ( contents[ 1 ] == "local_code" ) apt->__local_code = contents[ 2 ];
 
                     // Они уже есть в основных свойствах, незачем вроде дублировать.
                 else if (
@@ -680,7 +680,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 pos = line.find( contents[6]);
                 tp.name = line.substr( pos );
             }
-            apt->_truck_parkings_.push_back( tp );
+            apt->__truck_parkings.push_back( tp );
             continue;
         }
 
@@ -697,7 +697,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 pos = line.find( contents[5] );
                 dest.name = line.substr( pos );
             }
-            apt->_truck_destinations_.push_back( dest );
+            apt->__truck_destinations.push_back( dest );
 
             continue;
         }
@@ -714,12 +714,12 @@ void Airport::read( const string & full_path_to_apt_dat ) {
     // Вышли из цикла. Если кто-то из динамических
     // указателей остался живой, то надо его учесть.
     if ( apt ) {
-        if ( startup_location ) apt->_put_startup_location( & startup_location );
-        if ( node_container ) apt->_put_node_container( & node_container );
-        if ( traffic_flow ) apt->_put_traffic_flow( & traffic_flow );
+        if ( startup_location ) apt->__put_startup_location( & startup_location );
+        if ( node_container ) apt->__put_node_container( & node_container );
+        if ( traffic_flow ) apt->__put_traffic_flow( & traffic_flow );
         // if ( taxi_network ) apt->_put_taxi_network( & taxi_network );
         // Сам аэропорт идет последним.
-        Airport::_put_airport( & apt );
+        Airport::__put_airport( & apt );
     }
 
 }
@@ -730,35 +730,35 @@ void Airport::read( const string & full_path_to_apt_dat ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void Airport::_put_airport(Airport **ptr_airport) {
+void Airport::__put_airport(Airport **ptr_airport) {
     auto apt = * ptr_airport;
-    string icao_code = apt->_icao_code_;
+    string icao_code = apt->__icao_code;
 
-    if ( Airport::_airports_.contains( apt->_icao_code_ )) {
+    if ( Airport::__airports.contains( apt->__icao_code )) {
         // Замещение старого элемента аэропорта - более новым.
-        Airport old = Airport::_airports_[ apt->_icao_code_ ];
-        if ( apt->_city_.empty()) apt->_city_ = old._city_;
-        if ( apt->_country_.empty() ) apt->_country_ = old._country_;
-        if ( apt->_datum_lon_ == 0.0) apt->_datum_lon_ = old._datum_lon_;
-        if ( apt->_datum_lat_ == 0.0 ) apt->_datum_lat_ = old._datum_lat_;
-        if ( apt->_gui_label_.empty()) apt->_gui_label_ = old._gui_label_;
-        if ( apt->_iata_code_.empty()) apt->_iata_code_ = old._iata_code_;
-        if ( apt->_region_code_.empty()) apt->_region_code_ = old._region_code_;
-        if ( apt->_state_.empty()) apt->_state_ = old._state_;
-        if ( apt->_transition_alt_.empty() ) apt->_transition_alt_ = old._transition_alt_;
-        if ( apt->_transition_level_.empty() ) apt->_transition_level_ = old._transition_level_;
-        if ( apt->_faa_code_.empty()) apt->_faa_code_ = old._faa_code_;
-        if ( apt->_flatten_ == 0 ) apt->_flatten_ = old._flatten_;
-        if ( ! apt->_drive_on_left_ ) apt->_drive_on_left_ = old._drive_on_left_;
-        if ( apt->_local_code_.empty() ) apt->_local_code_ = old._local_code_;
+        Airport old = Airport::__airports[ apt->__icao_code ];
+        if ( apt->__city.empty()) apt->__city = old.__city;
+        if ( apt->__country.empty() ) apt->__country = old.__country;
+        if ( apt->__datum_lon == 0.0) apt->__datum_lon = old.__datum_lon;
+        if ( apt->__datum_lat == 0.0 ) apt->__datum_lat = old.__datum_lat;
+        if ( apt->__gui_label.empty()) apt->__gui_label = old.__gui_label;
+        if ( apt->__iata_code.empty()) apt->__iata_code = old.__iata_code;
+        if ( apt->__region_code.empty()) apt->__region_code = old.__region_code;
+        if ( apt->__state.empty()) apt->__state = old.__state;
+        if ( apt->__transition_alt.empty() ) apt->__transition_alt = old.__transition_alt;
+        if ( apt->__transition_level.empty() ) apt->__transition_level = old.__transition_level;
+        if ( apt->__faa_code.empty()) apt->__faa_code = old.__faa_code;
+        if ( apt->__flatten == 0 ) apt->__flatten = old.__flatten;
+        if ( ! apt->__drive_on_left ) apt->__drive_on_left = old.__drive_on_left;
+        if ( apt->__local_code.empty() ) apt->__local_code = old.__local_code;
     }
     // "Полнота" ВПП заполняется в тот момент, когда аэропорт складывается в коллекцию.
-    apt->_check_runway_fullness();
-    Airport::_airports_[ apt->_icao_code_ ] = * apt;
+    apt->__check_runway_fullness();
+    Airport::__airports[ apt->__icao_code ] = * apt;
     delete( apt );
     * ptr_airport = nullptr;
     // Если есть реактор на распарзенный аэропорт, то вызываем его.
-    if ( Airport::_has_been_parsed_ ) _has_been_parsed_(icao_code);
+    if ( Airport::__has_been_parsed ) __has_been_parsed(icao_code);
 }
 
 // *********************************************************************************************************************
@@ -767,7 +767,7 @@ void Airport::_put_airport(Airport **ptr_airport) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void Airport::_check_runway_fullness() {
+void Airport::__check_runway_fullness() {
 
     vector<string> rwy_names = __routes.get_names_for( AirportNetwork::WAY_RUNWAY );
     for ( auto & rwy_name : rwy_names ) {
@@ -790,8 +790,8 @@ void Airport::_check_runway_fullness() {
 
             bool found = false;
 
-            for ( int i=0; i< _land_runways.size(); i++ ) {
-                land_runway_t & rwy = _land_runways.at( i );
+            for ( int i=0; i< __land_runways.size(); i++ ) {
+                land_runway_t & rwy = __land_runways.at( i );
                 if ( rwy.runway_number == runway_number ) {
                     // Взлетка - существует.
                     found = true;
@@ -840,7 +840,7 @@ void Airport::_check_runway_fullness() {
             rwy.nearest_end_location = far_away.location;
             rwy.farest_end_location = nearest_founded_node.location;
             
-            _land_runways.push_back( rwy );
+            __land_runways.push_back( rwy );
         }
 
     }
@@ -852,10 +852,10 @@ void Airport::_check_runway_fullness() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void Airport::_put_traffic_flow( traffic_flow_t ** ptr_traffic ) {
+void Airport::__put_traffic_flow( traffic_flow_t ** ptr_traffic ) {
     traffic_flow_t * p_trafic = * ptr_traffic;
     if ( ! p_trafic ) return;
-    _traffic_flow_.push_back( * p_trafic );
+    __traffic_flow.push_back( * p_trafic );
     delete( p_trafic );
     * ptr_traffic = nullptr;
 }
@@ -867,10 +867,10 @@ void Airport::_put_traffic_flow( traffic_flow_t ** ptr_traffic ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void Airport::_put_startup_location( startup_location_t ** ptr_startup_location ) {
+void Airport::__put_startup_location( startup_location_t ** ptr_startup_location ) {
     auto pst = ( startup_location_t * ) * ptr_startup_location;
     if ( ! pst ) return;
-    _startup_locations_[pst->name] = * pst;
+    __startup_locations[pst->name] = * pst;
     delete( pst );
     * ptr_startup_location = nullptr;
 }
@@ -895,24 +895,24 @@ void Airport::_put_taxi_network( taxi_network_t ** ptr_taxi ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void Airport::_put_node_container( node_container_t ** ptr_container ) {
+void Airport::__put_node_container( node_container_t ** ptr_container ) {
     auto container = * ptr_container;
     if ( ! container ) return;
     switch ( container->container_type ) {
 
         case CONTAINER_TAXIWAY: {
             auto ptwy = ( taxiway_t * ) container;
-            _taxiways_.push_back( * ptwy );
+            __taxiways.push_back( * ptwy );
         } break;
 
         case CONTAINER_LINEAR_FEATURE: {
             auto lft = ( linear_feature_t * ) container;
-            _linear_features_.push_back( * lft );
+            __linear_features.push_back( * lft );
         } break;
 
         case CONTAINER_BOUNDARY: {
             auto bdy = ( boundary_t * ) container;
-            _boundaries_.push_back( * bdy );
+            __boundaries.push_back( * bdy );
         } break;
 
         default: throw runtime_error(
@@ -1002,7 +1002,7 @@ void Airport::read_all() {
     // Устанавливаем флаг того, что аэропорты были прочитаны.
     // Это - единственное место, где происходит установка данного флага.
     // Во всех остальных случаях он только читается.
-    Airport::_airports_was_readed_ = true;
+    Airport::__airports_was_readed = true;
 
 }
 
@@ -1013,9 +1013,9 @@ void Airport::read_all() {
 // *********************************************************************************************************************
 
 xenon::Airport & Airport::get_by_icao( const string & icao_code ) {
-    if (( ! Airport::_airports_.empty() ) && ( Airport::_airports_.contains(icao_code) ))
-        return Airport::_airports_[icao_code];
-    return Airport::_fake_airport_;
+    if (( ! Airport::__airports.empty() ) && ( Airport::__airports.contains(icao_code) ))
+        return Airport::__airports[icao_code];
+    return Airport::__fake_airport;
 }
 
 // *********************************************************************************************************************
@@ -1049,7 +1049,7 @@ Airport::land_runway_t Airport::get_runway_for( const runway_used_t & use ) {
     land_runway_t result;
     for (const auto & rwy : rwys_in_use ) {
         if (( rwy.used == use ) || ( rwy.used == RUNWAY_USED_BOTH )) {
-            for ( const auto & er: _land_runways ) {
+            for ( const auto & er: __land_runways ) {
                 if (er.runway_number == rwy.name) {
                     result = er;
                     break;

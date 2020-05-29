@@ -42,43 +42,52 @@ add_definitions(-DDEBUG)
 # Define platform macros.
 add_definitions(-DAPL=$<BOOL:${APPLE}> -DIBM=$<BOOL:${WIN32}> -DLIN=$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>)
 
+set(COMMON ../../../common)
+set(NETWORK ${COMMON}/network)
+set(NETCMD ${NETWORK}/commands)
+set(CONTROL ${COMMON}/control)
+
 ########################################################################################################################
 #                                              Source Files
 ########################################################################################################################
 add_library(xenon MODULE
-        ../../../common/network/commands/cmd_hello.cpp
-        ../../../common/network/abstract_command.cpp
-        ../../../common/network/Ambient.cpp
-        ../../../common/network/CommandSet.cpp
-        ../../../common/network/command_parser.cpp
-        ../../../common/network/connected_communicator.cpp
-        ../../../common/network/CommandAutopilotState.cpp
-        ../../../common/jsonable.cpp
-        # Управление. Пока что в этом же директории, на потом надо будет перенести в common.
-        control/abstract_aircrafter.cpp
-        control/aircraft_abstract_action.cpp
-        control/aircraft_abstract_state.cpp 
-        control/aircraft_does_flying.cpp
-        control/aircraft_does_landing.cpp
-        control/aircraft_does_lining_up.cpp
-        control/aircraft_does_nothing.cpp
-        control/aircraft_does_push_back.cpp
-        control/aircraft_does_runway_leaving.cpp
-        control/aircraft_does_slow_taxing.cpp
-        control/aircraft_does_take_off.cpp
-        control/aircraft_does_taxing.cpp
-        control/aircraft_state_airborned.cpp
-        control/aircraft_state_graph.cpp
-        control/aircraft_state_parking.cpp
-        control/aircraft_state_on_final.cpp
-        control/aircraft_state_on_hp.cpp
-        control/aircraft_state_ready_for_take_off.cpp
-        control/aircraft_state_ready_for_taxing.cpp
-        control/aircraft_state_runway_leaved.cpp
-        # Основной каталог.
-        abstract_aircraft.cpp
-        abstract_vehicle.cpp
-        bimbo_aircraft.cpp
+        ${COMMON}/jsonable.cpp
+        ${COMMON}/abstract_aircraft.cpp
+        ${COMMON}/abstract_vehicle.cpp
+        ${COMMON}/bimbo_aircraft.cpp
+        
+        ${NETCMD}/cmd_hello.cpp
+        
+        ${NETWORK}/abstract_command.cpp
+        ${NETWORK}/Ambient.cpp
+        ${NETWORK}/CommandSet.cpp
+        ${NETWORK}/command_parser.cpp
+        ${NETWORK}/connected_communicator.cpp
+        ${NETWORK}/CommandAutopilotState.cpp
+        
+        # Управление. 
+        ${CONTROL}/abstract_aircrafter.cpp
+        ${CONTROL}/aircraft_abstract_action.cpp
+        ${CONTROL}/aircraft_abstract_state.cpp 
+        ${CONTROL}/aircraft_does_flying.cpp
+        ${CONTROL}/aircraft_does_landing.cpp
+        ${CONTROL}/aircraft_does_lining_up.cpp
+        ${CONTROL}/aircraft_does_nothing.cpp
+        ${CONTROL}/aircraft_does_push_back.cpp
+        ${CONTROL}/aircraft_does_runway_leaving.cpp
+        ${CONTROL}/aircraft_does_slow_taxing.cpp
+        ${CONTROL}/aircraft_does_take_off.cpp
+        ${CONTROL}/aircraft_does_taxing.cpp
+        ${CONTROL}/aircraft_state_airborned.cpp
+        ${CONTROL}/aircraft_state_graph.cpp
+        ${CONTROL}/aircraft_state_parking.cpp
+        ${CONTROL}/aircraft_state_on_final.cpp
+        ${CONTROL}/aircraft_state_on_hp.cpp
+        ${CONTROL}/aircraft_state_ready_for_take_off.cpp
+        ${CONTROL}/aircraft_state_ready_for_taxing.cpp
+        ${CONTROL}/aircraft_state_runway_leaved.cpp
+        
+        # Основной каталог.        
         main_plugin.cpp
         user_aircraft.cpp
         windll_main.cpp
@@ -95,12 +104,12 @@ set_property(TARGET xenon PROPERTY CXX_STANDARD 20)
 
 target_include_directories(xenon PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    control
     3dparty/libXPMP2/include
     ../XPSDK301/CHeaders/XPLM
-    ../../../common
-    ../../../common/network
-    ../../../common/network/commands
+    ${COMMON}
+    ${NETWORK}
+    ${NETCMD}
+    ${CONTROL}
     ../../../3dparty
     ../../../3dparty/nlohmann
 )

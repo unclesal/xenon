@@ -17,11 +17,9 @@
 // XPMP2 includes
 #include "XPMPAircraft.h"
 
+#include "xplane.hpp"
+
 using namespace XPMP2;
-
-#else
-
-#include "external_aircraft.h"
 
 #endif // INSIDE_XPLANE
 
@@ -30,15 +28,12 @@ using namespace XPMP2;
 #include "constants.h"
 #include "aircraft_state_graph.h"
 #include "abstract_aircraft.h"
-#include "xplane.hpp"
 
 namespace xenon {
 
     class BimboAircraft : public AbstractAircraft
 #ifdef INSIDE_XPLANE
         , public XPMP2::Aircraft
-#else
-        , public ExternalAircraft
 #endif
     {
 
@@ -65,10 +60,26 @@ namespace xenon {
             ~BimboAircraft() override = default;
 
 #ifdef INSIDE_XPLANE
+            // Мы находимся внутри плагина X-Plane.
             position_t get_position() override;
             position_with_angles_t get_position_with_angles();
             void set_position( const position_t & position ) override;
-#endif
+#else
+            // Мы находимся - не внутри X-Plane. Перекрытие имен 
+            // и функций таким образом, чтобы оно тоже работало.
+            std::string acIcaoType;
+            std::string acIcaoAirline;
+            std::string acLivery;
+            
+            // Имена сохранены таким образом, чтобы их можно было использовать везде.
+            float GetPitch () const         { return vcl_condition.rotation.pitch;   };
+            void  SetPitch (float _deg)     { vcl_condition.rotation.pitch = _deg;   };
+            float GetHeading () const       { return vcl_condition.rotation.heading; };
+            void  SetHeading (float _deg)   { vcl_condition.rotation.heading = _deg; };
+            float GetRoll () const          { return vcl_condition.rotation.roll;    };
+            void  SetRoll (float _deg)      { vcl_condition.rotation.roll = _deg;    };
+
+#endif // INSIDE_XPLANE
 
             rotation_t get_rotation() override;
             void set_rotation( const rotation_t & rotation ) override;
@@ -76,51 +87,89 @@ namespace xenon {
             /**
              * @short Перекрытая функция XPMP2::Aircraft / ExternalAircraft
              */
-            void UpdatePosition(float elapsed_since_last_call, int fl_counter) override;
+            void UpdatePosition(float elapsed_since_last_call, int fl_counter) 
+#ifdef INSIDE_XPLANE
+            // Если внутри X-Plane, то она перекрывает XPMP2::Aircraft. Если 
+            // снаружи - то ничего не перекрывает. Но должна быть все равно.
+            override 
+#endif
+            ;
 
             // Освещение вкл-выкл
             void set_taxi_lites(bool on) override {
+#ifdef INSIDE_XPLANE
                 on ? v[ V_CONTROLS_TAXI_LITES_ON ] = 1.0 : v[ V_CONTROLS_TAXI_LITES_ON ] = 0.0;
+#endif
+                acf_condition.is_taxi_lites_on = on;
+
             };
             
             void set_landing_lites(bool on) override {
+#ifdef INSIDE_XPLANE                
                 on ? v[ V_CONTROLS_LANDING_LITES_ON ] = 1.0 : v[ V_CONTROLS_LANDING_LITES_ON ] = 0.0;
+#endif
+                acf_condition.is_landing_lites_on = on;
             };
             
             void set_beacon_lites(bool on) override {
+#ifdef INSIDE_XPLANE
                 on ? v[ V_CONTROLS_BEACON_LITES_ON ] = 1.0 : v[ V_CONTROLS_BEACON_LITES_ON ] = 0.0;    
+#endif
+                acf_condition.is_beacon_lites_on = on;
             };
             
             void set_strobe_lites(bool on) override {
-                on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;    
+#ifdef INSIDE_XPLANE
+                on ? v[ V_CONTROLS_STROBE_LITES_ON ] = 1.0 : v[ V_CONTROLS_STROBE_LITES_ON ] = 0.0;
+#endif
+                acf_condition.is_strobe_lites_on = on;
             };
+
             void set_nav_lites(bool on) override {
+#ifdef INSIDE_XPLANE
                 on ? v[ V_CONTROLS_NAV_LITES_ON ] = 1.0 : v[ V_CONTROLS_NAV_LITES_ON ] = 0.0;
+#endif
+                acf_condition.is_nav_lites_on = on;
             };
             
             void set_gear_down( bool down ) override {
+#ifdef INSIDE_XPLANE                
                 down ? __actuators[ V_CONTROLS_GEAR_RATIO ].endpoint = 1.0 : __actuators[ V_CONTROLS_GEAR_RATIO ].endpoint = 0.0;
                 __actuators[  V_CONTROLS_GEAR_RATIO ].requested = true;
+#endif
+                acf_condition.is_gear_down = down;
             };
             
             void set_reverse_on( bool on ) override { 
+#ifdef INSIDE_XPLANE
                 on ? __actuators[ V_CONTROLS_THRUST_REVERS ].endpoint = 1.0 : __actuators[ V_CONTROLS_THRUST_REVERS ].endpoint = 0.0;
                 __actuators[ V_CONTROLS_THRUST_REVERS ].requested = true;
+#endif
+                acf_condition.is_reverse_on = on;
             };
             
             void set_flaps_position( const float & position ) override {
+#ifdef INSIDE_XPLANE
                 __actuators[ V_CONTROLS_FLAP_RATIO ].endpoint = position;
                 __actuators[ V_CONTROLS_FLAP_RATIO ].requested = true;
+#endif
+                acf_condition.flaps_position = position;
             };
             
             void set_speed_brake_position( const float & position ) override {
+#ifdef INSIDE_XPLANE
                 __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].endpoint = position;
                 __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].requested = true;
+#endif
+                acf_condition.speed_brake_position = position;
             };
             
-            void set_thrust_value( const float & value ) override {                
+            void set_thrust_value( const float & value ) override {
+#ifdef INSIDE_XPLANE
                 __actuators[ V_CONTROLS_THRUST_RATIO ].endpoint = value;
                 __actuators[ V_CONTROLS_THRUST_RATIO ].requested = true;
+#endif
+                acf_condition.thrust_position = value;
             };
                         
             // Расположить самолет на данной стоянке.
@@ -177,7 +226,6 @@ namespace xenon {
             
         private:
 
-            actuator_motion_t __actuators[ V_COUNT ];
             
             // Граф состояний самолета.
             AircraftStateGraph * __graph;
@@ -185,8 +233,11 @@ namespace xenon {
             bool __taxing_prepared;
 
             void __acf_parameters_correction();
-            
+
+#ifdef INSIDE_XPLANE            
+            actuator_motion_t __actuators[ V_COUNT ];            
             void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
+#endif
             
             void __start_fp0_action();                 
             

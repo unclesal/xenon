@@ -82,7 +82,7 @@ namespace xenon {
                     aircraft_state_graph::edge_t edge = __graph[ ed ];
                     return edge;
                 } catch ( const std::range_error & re ) {
-                    XPlane::log("ERROR: AircraftStateGraph::get_edge_for( edge_descriptor & ), invalid descriptor");
+                    Logger::log("ERROR: AircraftStateGraph::get_edge_for( edge_descriptor & ), invalid descriptor");
                     return aircraft_state_graph::edge_t();
                 };
             };
@@ -116,7 +116,7 @@ namespace xenon {
             AircraftAbstractState * __current_state;
             AircraftAbstractAction * __current_action;
             
-            action_parameters_t __previous_action_params;
+            // action_parameters_t __previous_action_params;
             
             // Добавить узел графа (состояние) и класс реализации этого состояния.
             template < class T >

@@ -33,9 +33,13 @@ BimboAircraft::BimboAircraft(
 )
     : AbstractAircraft()
 #ifdef INSIDE_XPLANE
-, XPMP2::Aircraft(icao_type, icao_airline, livery )
+    // Находимся - внутри X-Plane, наследуемся от XPMP2::Aircraft
+    , XPMP2::Aircraft(icao_type, icao_airline, livery )
 #else
-, ExternalAircraft( icao_type, icao_airline, livery )
+    // Находимся - снаружи X-Plane.
+    , acIcaoType( icao_type )
+    , acIcaoAirline( icao_airline )
+    , acLivery( livery )
 #endif
 {
 
@@ -68,7 +72,7 @@ BimboAircraft::BimboAircraft(
 void BimboAircraft::__start_fp0_action() {
     
     if ( _flight_plan.empty() ) {
-        XPlane::log("ERROR: BimboAircraft::__start_fp0_action called, but flight plan is empty");
+        Logger::log("ERROR: BimboAircraft::__start_fp0_action called, but flight plan is empty");
     };
     
     // Проверки на индексы здесь не выполняется, т.к. она сделана
@@ -81,13 +85,13 @@ void BimboAircraft::__start_fp0_action() {
             = __graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
             
         if ( action == fake ) {
-            XPlane::log("ERROR: __start_fp0_action got fake edge descriptor");
+            Logger::log("ERROR: __start_fp0_action got fake edge descriptor");
             return;
         }
         __graph->set_active_action( action );
 
     } catch ( const std::range_error & re ) {
-        XPlane::log(
+        Logger::log(
             "ERROR: __start_fp0_action, invalid descriptor for action type " 
             + to_string( next_wp.action_to_achieve ) 
             + ", message=" + string( re.what() )
@@ -110,7 +114,7 @@ void BimboAircraft::choose_next_action() {
         auto node = __graph->get_node_for( current_state );
         current_state_name = node.name;
     }
-    XPlane::log("choose_next_action(), state=" + current_state_name + ", fp size=" + to_string( _flight_plan.size() ) );
+    Logger::log("choose_next_action(), state=" + current_state_name + ", fp size=" + to_string( _flight_plan.size() ) );
     
     if (
         ( __graph->current_state_is( ACF_STATE_PARKING )) 
@@ -159,7 +163,7 @@ void BimboAircraft::choose_next_action() {
         return;
     }
     
-    XPlane::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
+    Logger::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
 
 // *********************************************************************************************************************
@@ -172,7 +176,7 @@ void BimboAircraft::_action_finished( void * action ) {
     
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
     aircraft_state_graph::edge_t edge = __graph->get_edge_for( ptr_abstract_action );
-    XPlane::log("Action " + edge.name + " finished");
+    Logger::log("Action " + edge.name + " finished");
     __graph->action_finished( ptr_abstract_action );
     choose_next_action();
     
@@ -285,12 +289,14 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     rotation_t rotation;
     rotation.heading = ramp.heading;
     // Первоначальная, грубая установка позиции.
-    place_on_ground(position, rotation);
+    place_on_ground(position, rotation);    
 #else
     set_location( ramp.location );
     SetHeading( ramp.heading );
-    v[ V_CONTROLS_GEAR_RATIO ] = 1.0;
+    
 #endif
+    // Здесь уже все равно, внутри X-Plane или нет.
+    set_gear_down( true);
 
     // Сдвиг относительно начала стоянки
     move( shift_from_ramp() );    
@@ -340,14 +346,16 @@ void BimboAircraft::__acf_parameters_correction() {
         _params.flaps_take_off_position = 0.35;
         _params.flaps_take_off_speed = 200.0;
         _params.flaps_landing_speed = 170.0;
-        
+
+#ifdef INSIDE_XPLANE        
         __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
         __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
         __actuators[ V_CONTROLS_THRUST_RATIO ].full_time = 30.0;
         __actuators[ V_CONTROLS_THRUST_REVERS ].full_time = 5.0;
         __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].full_time = 5.0;
+#endif
         
-    } else XPlane::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
+    } else Logger::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
 }
 
 // *********************************************************************************************************************
@@ -374,7 +382,7 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     
     // Если самолет не на стоянке, то это ошибка.
     if ( ! __graph->current_state_is( ACF_STATE_PARKING ) ) {
-        XPlane::log("ERROR: BimboAircraft::prepare_for_take_off, but aircraft is not parked.");
+        Logger::log("ERROR: BimboAircraft::prepare_for_take_off, but aircraft is not parked.");
         return;
     }
         
@@ -433,6 +441,7 @@ position_with_angles_t BimboAircraft::get_position_with_angles() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOLINT(bugprone-reserved-identifier)
     for ( auto i=0; i<V_COUNT; i++ ) {
         if ( __actuators[i].requested ) {
@@ -470,6 +479,7 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
         }
     }
 };
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -478,11 +488,14 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 // *********************************************************************************************************************
 
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
-    __update_actuators(elapsed_since_last_call);
+    
     __graph->update( elapsed_since_last_call );
+
 #ifdef INSIDE_XPLANE
+    __update_actuators(elapsed_since_last_call);
     if ( is_clamped_to_ground ) clamp_to_ground();
 #endif
+
 }
 
 // *********************************************************************************************************************
@@ -574,7 +587,7 @@ void BimboAircraft::test__place_on_hp() {
     }
     
     if ( wp.action_to_achieve != ACF_DOES_LINING_UP ) {
-        XPlane::log("ERROR: impossible starting from HP due FP content");
+        Logger::log("ERROR: impossible starting from HP due FP content");
         return;
     };
     
@@ -602,20 +615,20 @@ void BimboAircraft::test__place_on_rwy_end() {
             ( wp.type == WAYPOINT_RUNWAY ) 
             && ( wp.action_to_achieve == ACF_DOES_TAKE_OFF ) 
         ) {
-            XPlane::log("Found WP at index " + to_string(i));
+            Logger::log("Found WP at index " + to_string(i));
             break;
         }
     }
     
     if ( i >= _flight_plan.size() ) {
-        XPlane::log("ERROR: end point of RWY can not does not exists in FP");
+        Logger::log("ERROR: end point of RWY can not does not exists in FP");
         return;
     };
     
     for ( int k=0; k<i; k++ ) _flight_plan.pop_front();    
     auto wp = _flight_plan.front();
     if ( ( wp.type != WAYPOINT_RUNWAY ) || ( wp.action_to_achieve != ACF_DOES_TAKE_OFF ) ) {
-        XPlane::log("ERROR: waypoint for end runway was not found");
+        Logger::log("ERROR: waypoint for end runway was not found");
         return;
     }
     

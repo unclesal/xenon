@@ -9,8 +9,8 @@
 #include <boost/property_map/function_property_map.hpp>
 
 #include "constants.h"
+#include "utils.hpp"
 #include "airport_network.h"
-#include "xplane.hpp"
 
 using namespace xenon;
 using namespace std;
@@ -119,13 +119,13 @@ void AirportNetwork::add_apt_dat_active_zone( const string &line, const vector<s
     try {
         __graph[ __last_added_direct_edge ].active_zones.push_back( az );
     } catch ( std::range_error const & re ) {
-        XPlane::log("AirportNetwork::add_active_zone, range error for direct arc.");
+        Logger::log("AirportNetwork::add_active_zone, range error for direct arc.");
     }
 
     try {
         __graph[ __last_added_reverse_edge ].active_zones.push_back( az );
     } catch ( std::range_error const & re ) {
-        XPlane::log("AirportNetwork::add_active_zone, range error for reverse zone.");
+        Logger::log("AirportNetwork::add_active_zone, range error for reverse zone.");
     }
 
 }
@@ -263,7 +263,7 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::get_sho
                 predecessor_map( predmap ).
                 weight_map( custom_distance )
         );
-        XPlane::log("AirportNetwork::shortest_path: path not found.");
+        Logger::log("AirportNetwork::shortest_path: path not found.");
 
     } catch ( dij_visitor_t::done const & ) {
 

@@ -13,7 +13,8 @@
 #include <lemon/list_graph.h>
 
 #include "structures.h"
-#include "xplane.hpp"
+// Здесь он действительно нужен, не для журнализации.
+#include "../simulators/xplane/xenon/xplane.hpp"
 #include "utils.hpp"
 #include "airport_network.h"
 
@@ -437,7 +438,7 @@ namespace xenon {
              * @return
              */
             static int count() {
-                return Airport::_airports_.size();
+                return Airport::__airports.size();
             };
 
             /**
@@ -445,11 +446,11 @@ namespace xenon {
              * @return
              */
             static bool airports_was_readed() {
-                return _airports_was_readed_;
+                return __airports_was_readed;
             };
 
             string icao_code() {
-                return _icao_code_;
+                return __icao_code;
             };
 
             /**
@@ -457,7 +458,7 @@ namespace xenon {
              * @param reaction
              */
             static void set_has_been_parsed( void ( * reaction )( string & icao_code ) ){
-                Airport::_has_been_parsed_ = reaction;
+                Airport::__has_been_parsed = reaction;
             }
 
             /**
@@ -467,7 +468,7 @@ namespace xenon {
              */
 
             bool is_orphanded() {
-                return _orphanded;
+                return __orphanded;
             }
 
             const xenon::AirportNetwork & routes() {
@@ -487,7 +488,7 @@ namespace xenon {
              */
 
             map< string, startup_location_t > & get_startup_locations() {
-                return _startup_locations_;
+                return __startup_locations;
             }
 
             /**
@@ -517,37 +518,37 @@ namespace xenon {
 
             // Общая кучка прочитанных аэропортов. Ключом является код аэропорта,
             // таким образом, более поздние замещают более ранних.
-            static map<string, Airport> _airports_;
-            static bool _airports_was_readed_;
+            static map<string, Airport> __airports;
+            static bool __airports_was_readed;
             // Пустышка. Ссылка на нее выдается в том случае,
             // если не был найден запрошенный аэропорт.
-            static xenon::Airport _fake_airport_;
+            static xenon::Airport __fake_airport;
 
             // На всякий случай запоминается полный путь к исходному распарзенному файлу.
             string __full_path_to_apt_dat;
-            string _origin_;
-            int _version_;
-            int _ap_type_;
+            string __origin;
+            int __version;
+            int __ap_type;
             int __evalution_in_feet;
-            string _icao_code_;
-            string _name_;
-            viewpoint_t _viewpoint_;
+            string __icao_code;
+            string __name;
+            viewpoint_t __viewpoint;
 
             // Атрибуты аэропорта. Могут быть, а могут не быть.
-            string _city_;
-            string _country_;
-            double _datum_lon_;
-            double _datum_lat_;
-            string _gui_label_;
-            string _iata_code_;
-            string _region_code_;
-            string _state_;
-            string _transition_alt_;
-            string _transition_level_;
-            string _faa_code_;
-            int _flatten_;
-            bool _drive_on_left_;
-            string _local_code_;
+            string __city;
+            string __country;
+            double __datum_lon;
+            double __datum_lat;
+            string __gui_label;
+            string __iata_code;
+            string __region_code;
+            string __state;
+            string __transition_alt;
+            string __transition_level;
+            string __faa_code;
+            int __flatten;
+            bool __drive_on_left;
+            string __local_code;
 
             /**
              * @short "Осиротевшесть" аэропорта внутри X-Plane.
@@ -555,41 +556,41 @@ namespace xenon {
              * который общается с X-Plane через сервер или P2P. Если внешний агент недоступен,
              * то аэропорт внутри X-Plane - "осиротел" и действует сам по себе.
              */
-            bool _orphanded;
+            bool __orphanded;
 
             // Реакция на парзинг одного аэропорта.
-            static void ( * _has_been_parsed_ )( string & icao_code );
+            static void ( * __has_been_parsed )( string & icao_code );
 
             // Граф taxi network внутри объекта аэропорта.
             xenon::AirportNetwork __routes;
 
             // Объекты внутри аэропорта.
-            vector< land_runway_t > _land_runways;
-            vector< water_runway_t > _water_runways;
-            vector< helipad_runway_t > _helipad_runways;
+            vector< land_runway_t > __land_runways;
+            vector< water_runway_t > __water_runways;
+            vector< helipad_runway_t > __helipad_runways;
             // Ключ - имя стоянки. Элемент - сама стоянка.
-            map< string, startup_location_t > _startup_locations_;
-            vector< truck_parking_t > _truck_parkings_;
-            vector< truck_destination_t > _truck_destinations_;
+            map< string, startup_location_t > __startup_locations;
+            vector< truck_parking_t > __truck_parkings;
+            vector< truck_destination_t > __truck_destinations;
 
             // node container's
-            vector< light_beacon_t > _light_beacons_;
-            vector< frequency_t > _frequencies_;
-            vector< windsock_t > _windsocks_;
-            vector< sign_t > _signs_;
-            vector< lighting_objects_t > _lighting_objects_;
-            vector< taxiway_t > _taxiways_;
-            vector< linear_feature_t > _linear_features_;
-            vector< boundary_t > _boundaries_;
+            vector< light_beacon_t > __light_beacons;
+            vector< frequency_t > __frequencies;
+            vector< windsock_t > __windsocks;
+            vector< sign_t > __signs;
+            vector< lighting_objects_t > __lighting_objects;
+            vector< taxiway_t > __taxiways;
+            vector< linear_feature_t > __linear_features;
+            vector< boundary_t > __boundaries;
 
             // Traffic flow rules
-            vector <traffic_flow_t> _traffic_flow_;
+            vector <traffic_flow_t> __traffic_flow;
 
             // Положить насчитанный контейнер в аэропорт и освободить динамически созданный блок в памяти.
-            void _put_node_container( node_container_t ** ptr_container );
-            void _put_traffic_flow( traffic_flow_t ** ptr_traffic );
-            void _put_startup_location( startup_location_t ** ptr_startup_location );
-            static void _put_airport( Airport ** ptr_airport );
+            void __put_node_container( node_container_t ** ptr_container );
+            void __put_traffic_flow( traffic_flow_t ** ptr_traffic );
+            void __put_startup_location( startup_location_t ** ptr_startup_location );
+            static void __put_airport( Airport ** ptr_airport );
 
             /**
              * @short Проверить "полноту" заполнения ВПП.
@@ -597,7 +598,7 @@ namespace xenon {
              * второй нужно вычислять по taxi network. Функция дополняет ВПП аэропорта, если их не хватает.
              */
 
-            void _check_runway_fullness();
+            void __check_runway_fullness();
 
     };
 

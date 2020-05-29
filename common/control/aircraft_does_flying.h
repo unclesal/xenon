@@ -7,7 +7,6 @@
 
 #include "aircraft_abstract_action.h"
 
-
 namespace xenon {
 
     class AircraftDoesFlying : public AircraftAbstractAction {        

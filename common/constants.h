@@ -45,8 +45,8 @@ namespace xenon {
     const float TAXI_NORMAL_ACCELERATION = 1.0;
     
     // "Рывок" (производная от ускорения) при рулении или остановке.
-    const float TAXI_SLOW_TUG = 0.01;
-    const float TAXI_NORMAL_TUG = 0.1;
+    // const float TAXI_SLOW_TUG = 0.01;
+    // const float TAXI_NORMAL_TUG = 0.1;
 
     // Время подъема/опускания стоек шасси.
     constexpr float TIME_FOR_GEAR_MOTION        = 10.0;

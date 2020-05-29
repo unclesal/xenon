@@ -17,53 +17,60 @@ add_definitions(-DINSIDE_AGENT)
 # С отладкой или без нее. Без отладки - сразу же уйдет в fork().
 add_definitions(-DDEBUG)
 
-set(PDIR ../../simulators/xplane/xenon/)
+set(COMMON ../../common)
+set(CONTROL ${COMMON}/control)
+set(NET ${COMMON}/network)
+set(NETCMD ${NET}/commands)
 
 include_directories(
-    ${PDIR}
-    ${PDIR}/control/
     ../../3dparty/
-    ../../common/
-    ../../common/network/
-    ../../common/network/commands/
+    ${COMMON}
+    ${NET}
+    ${NETCMD}
+    ${CONTROL}
     ../
     ${CMAKE_SOURCE_DIR}
 )
 
 set(SOURCES 
-    ../../common/jsonable.cpp
-    ../../common/network/commands/cmd_hello.cpp
-    ../../common/network/abstract_command.cpp
-    ../../common/network/command_parser.cpp
-    ../../common/network/connected_communicator.cpp
+    ${COMMON}/jsonable.cpp
+    ${COMMON}/logger.cpp
+    ${COMMON}/abstract_vehicle.cpp
+    ${COMMON}/abstract_aircraft.cpp
+    ${COMMON}/bimbo_aircraft.cpp
+    
+    ${NET}/abstract_command.cpp
+    ${NET}/command_parser.cpp
+    ${NET}/connected_communicator.cpp
+    
+    ${NETCMD}/cmd_hello.cpp        
+
+    ${CONTROL}/abstract_aircrafter.cpp
+    ${CONTROL}/aircraft_abstract_action.cpp
+    ${CONTROL}/aircraft_abstract_state.cpp
+    ${CONTROL}/aircraft_does_flying.cpp
+    ${CONTROL}/aircraft_does_landing.cpp
+    ${CONTROL}/aircraft_does_lining_up.cpp
+    ${CONTROL}/aircraft_does_nothing.cpp
+    ${CONTROL}/aircraft_does_push_back.cpp
+    ${CONTROL}/aircraft_does_runway_leaving.cpp
+    ${CONTROL}/aircraft_does_slow_taxing.cpp
+    ${CONTROL}/aircraft_does_take_off.cpp
+    ${CONTROL}/aircraft_does_taxing.cpp
+    ${CONTROL}/aircraft_state_airborned.cpp
+    ${CONTROL}/aircraft_state_graph.cpp
+    ${CONTROL}/aircraft_state_on_final.cpp
+    ${CONTROL}/aircraft_state_on_hp.cpp
+    ${CONTROL}/aircraft_state_parking.cpp
+    ${CONTROL}/aircraft_state_ready_for_take_off.cpp
+    ${CONTROL}/aircraft_state_ready_for_taxing.cpp
+    ${CONTROL}/aircraft_state_runway_leaved.cpp
+
     ../airport_network.cpp
     ../airport.cpp
     ../abstract_agent.cpp
-    ${PDIR}/abstract_vehicle.cpp
-    ${PDIR}/abstract_aircraft.cpp
-    ${PDIR}/bimbo_aircraft.cpp
-    ${PDIR}/control/abstract_aircrafter.cpp
-    ${PDIR}/control/aircraft_abstract_action.cpp
-    ${PDIR}/control/aircraft_abstract_state.cpp
-    ${PDIR}/control/aircraft_does_flying.cpp
-    ${PDIR}/control/aircraft_does_landing.cpp
-    ${PDIR}/control/aircraft_does_lining_up.cpp
-    ${PDIR}/control/aircraft_does_nothing.cpp
-    ${PDIR}/control/aircraft_does_push_back.cpp
-    ${PDIR}/control/aircraft_does_runway_leaving.cpp
-    ${PDIR}/control/aircraft_does_slow_taxing.cpp
-    ${PDIR}/control/aircraft_does_take_off.cpp
-    ${PDIR}/control/aircraft_does_taxing.cpp
-    ${PDIR}/control/aircraft_state_airborned.cpp
-    ${PDIR}/control/aircraft_state_graph.cpp
-    ${PDIR}/control/aircraft_state_on_final.cpp
-    ${PDIR}/control/aircraft_state_on_hp.cpp
-    ${PDIR}/control/aircraft_state_parking.cpp
-    ${PDIR}/control/aircraft_state_ready_for_take_off.cpp
-    ${PDIR}/control/aircraft_state_ready_for_taxing.cpp
-    ${PDIR}/control/aircraft_state_runway_leaved.cpp
+
     agent_aircraft.cpp
-    external_aircraft.cpp
     main.cpp
 )
 

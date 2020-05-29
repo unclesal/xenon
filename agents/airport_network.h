@@ -13,6 +13,7 @@
 #include <boost/geometry/geometries/geometries.hpp>
 
 #include "structures.h"
+#include "logger.h"
 
 using namespace std;
 

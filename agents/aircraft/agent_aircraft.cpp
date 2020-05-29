@@ -16,6 +16,20 @@ using namespace std;
 
 AgentAircraft::AgentAircraft ( const std::string & uuid )
     : AbstractAgent( uuid, AGENT_AIRCRAFT ) {
+
+    if ( uuid == "4204f982a17811eaaf3794de807942f4" ) {        
+        
+        __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
+        
+        if ( ! Airport::airports_was_readed() ) {
+            cerr << "Airports was not readed, exit." << endl;
+            return;        
+        } else {
+        
+        }
+        
+    }        
+        
 }
 
 // *********************************************************************************************************************
@@ -25,9 +39,15 @@ AgentAircraft::AgentAircraft ( const std::string & uuid )
 // *********************************************************************************************************************
 
 void AgentAircraft::run() {
+     
+    if ( ! __ptr_acf ) {
+        cerr << "AgentAircraft::run(): acf pointer is none. Exit." << endl;
+        return;
+    }
     
     for (;;) {
-        sleep(5);        
+        sleep(100);
+        __step();
     }
 
 }
@@ -41,12 +61,20 @@ void AgentAircraft::run() {
 void AgentAircraft::on_connect() {
 
     cout << "AgentAircraft connected!" << endl;
-    location_t location;
-    location.latitude=56.749406;
-    location.longitude=60.797907;
-    CmdHello * hello = new CmdHello( location );
-    _communicator->request( hello );
+    if ( __ptr_acf ) {
+        CmdHello * hello = new CmdHello( __ptr_acf->get_location() );
+        _communicator->request( hello );
+    }
 
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                                  Один "шаг"                                                       *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__step() {
 }
 
 // *********************************************************************************************************************

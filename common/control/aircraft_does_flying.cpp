@@ -32,31 +32,30 @@ void AircraftDoesFlying::_internal_start() {
     
     auto wp = _get_front_wp();
     if ( wp.type == WAYPOINT_UNKNOWN ) {
-        XPlane::log("AircraftDoesFlying::_internal_start(), WP0 have UNKNOWN type.");
+        Logger::log("AircraftDoesFlying::_internal_start(), WP0 have UNKNOWN type.");
         return;
     };
     
     if ( wp.location.altitude != 0.0f ) __phase = PHASE_WAYPOINT_CONTROLLED;
     else __phase = PHASE_CLIMBING;
     
-    XPlane::log("FLYING start, name=" + wp.name + ", alt=" + to_string(wp.location.altitude) + ", phase=" + to_string( __phase ));
+    Logger::log("FLYING start, name=" + wp.name + ", alt=" + to_string(wp.location.altitude) + ", phase=" + to_string( __phase ));
     
     // Контроль скорости будет осуществляться в данном действии 
     // автоматически, поэтому существующие значения - обнуляем.
-    _params.tug = 0.0;
-    _params.acceleration = 0.0;
+    _ptr_acf->vcl_condition.acceleration = 0.0;
     
-    // -----------------------------------------------------------------------
-    // TODO: убрать потом. Для отладки: какие-то похожие на правду скорости.
-    _params.tug = 0.4;
-    _params.acceleration = 0.0;
-    _params.target_acceleration = 2.0;
-    _params.target_speed = 102.889; // 200 kph
-    _params.speed = 100.0;
-    
-    _params.vertical_acceleration = 0.6f;
-    _params.target_vertical_speed = feet_per_min_to_meters_per_second( _get_acf_parameters().vertical_climb_speed );
-    // -----------------------------------------------------------------------
+//     -----------------------------------------------------------------------
+//     TODO: убрать потом. Для отладки: какие-то похожие на правду скорости.
+//     _params.tug = 0.4;
+//     _params.acceleration = 0.0;
+//     _params.target_acceleration = 2.0;
+//     _params.target_speed = 102.889; // 200 kph
+//     _params.speed = 100.0;
+//     
+//     _params.vertical_acceleration = 0.6f;
+//     _params.target_vertical_speed = feet_per_min_to_meters_per_second( _get_acf_parameters().vertical_climb_speed );
+//     -----------------------------------------------------------------------
 
 };
 
@@ -79,7 +78,7 @@ void AircraftDoesFlying::__control_of_altitude(
                     
     } else {
         // Либо фаза не та, либо у данной контрольной точки нет высоты.
-        XPlane::log(
+        Logger::log(
             "UNRELEASED: AircraftDoesFlying::__control_of_altitude(), phase=" + to_string( __phase ) 
             + ", wp.altitude=" + to_string( waypoint.location.altitude ) 
         );
@@ -103,7 +102,7 @@ void AircraftDoesFlying::__control_of_speed (
         _speed_adjustment( target_speed, time_to_achieve );
         
     } else {
-        XPlane::log(
+        Logger::log(
             "UNRELEASED: AircraftDoesFlying::__control_of_speed(), phase=" + to_string( __phase )
             + ", wp speed=" + to_string( waypoint.speed )
         );
@@ -121,25 +120,25 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
     auto wp = _get_front_wp();
     _head_bearing( wp );
     
-    // XPlane::log("After bearing phase=" + to_string( __phase ) );    
+    // Logger::log("After bearing phase=" + to_string( __phase ) );    
     
     auto distance = xenon::distance2d( _get_acf_location(), wp.location );
         
-    // XPlane::log( "after distance phase=" + to_string( __phase ) + ", distance=" + to_string(distance) );
+    // Logger::log( "after distance phase=" + to_string( __phase ) + ", distance=" + to_string(distance) );
     
     if ( distance <= 1000.0 ) {
-        XPlane::log("Does FLYING, " + wp.name + " reached, distance=" + to_string( distance ) );
+        Logger::log("Does FLYING, " + wp.name + " reached, distance=" + to_string( distance ) );
         _front_wp_reached();
         
         // Следующая точка полетного плана для определения, что делать дальше.
         wp = _get_front_wp();
-        XPlane::log(
+        Logger::log(
             "Does FLYING, next wp: " + wp.name + ", alt=" + to_string( wp.location.altitude ) 
             + ", type=" + to_string( wp.type ) + ", action=" + to_string( wp.action_to_achieve )
         );
         
         if ( wp.type == WAYPOINT_UNKNOWN ) {
-            XPlane::log("ERROR: AircraftDoesFlying::_internal_step(), after WP reached next WP type is UNKNOWN.");
+            Logger::log("ERROR: AircraftDoesFlying::_internal_step(), after WP reached next WP type is UNKNOWN.");
             return;
         };
         
@@ -153,13 +152,13 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         // Переставляем фазу в зависимости от полученной следующей точки.
         if ( wp.location.altitude != 0.0f ) __phase = PHASE_WAYPOINT_CONTROLLED;
         else {
-            // TODO: Самостоятельная установка фаз в зависимости от высоты            
-            XPlane::log("UNRELEASED: set next phase for flying.");
+            // TODO: Самостоятельная установка фаз в зависимости от высоты
+            Logger::log("UNRELEASED: set next phase for flying.");
         };        
     };
     
     float time_to_achieve = 0.0;
-    if ( _params.speed ) time_to_achieve = distance / _params.speed;
+    if ( _ptr_acf->vcl_condition.speed ) time_to_achieve = distance / _ptr_acf->vcl_condition.speed;
     
     __control_of_altitude( wp, time_to_achieve );
     __control_of_speed( wp, time_to_achieve );

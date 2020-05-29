@@ -29,20 +29,21 @@ AircraftDoesPushBack::AircraftDoesPushBack(
 
 void AircraftDoesPushBack::_internal_start() {
     
-    _ptr_acf->is_clamped_to_ground = true;
+    _ptr_acf->vcl_condition.is_clamped_to_ground = true;
     
     _ptr_acf->set_nav_lites( true );
-    _params.tug = - TAXI_SLOW_TUG;
-    _params.target_acceleration = -TAXI_SLOW_ACCELERATION;
-    _params.target_speed = PUSH_BACK_SPEED;
+    // _params.tug = - TAXI_SLOW_TUG;
+    // _ptr_acf->vcl_condition.target_acceleration = -TAXI_SLOW_ACCELERATION;
+    
+    _ptr_acf->vcl_condition.target_speed = PUSH_BACK_SPEED;
     __current_phase = PHASE_STRAIGHT;
     
     // Угловое положение самолета надо зафиксировать на текущее.
     // Иначе он начнет поворачиваться, т.к. по умолчанию у него
     // целевой курс равен 0 градусов.
     
-    _params.heading_acceleration = 0.0;
-    _params.target_heading = _ptr_acf->get_rotation().heading;
+    _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+    _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;
 
 }
 
@@ -109,17 +110,17 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
     
     if ( (delta >= 360 - threshold ) || ( delta <= threshold ) ) {
         
-        _params.target_heading = _ptr_acf->get_rotation().heading;
-        _params.heading_acceleration = 0.0;
+        _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;
+        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
         
         // Останавливаемся. Знаки будут положительными, т.к. мы ехали назад.
         // Он чо-т шибко долго останавливается визуально-то. Поэтому увеличил.
-        _params.tug = TAXI_SLOW_TUG * 5.0; 
-        _params.target_acceleration = TAXI_SLOW_ACCELERATION * 3.0;
+        // _params.tug = TAXI_SLOW_TUG * 5.0; 
+        // _ptr_acf->vcl_condition.target_acceleration = TAXI_SLOW_ACCELERATION * 3.0;
 
         // Это надо обнулить с предыдущей фазы.
-        _params.acceleration = 0.0;        
-        _params.target_speed = 0.0;
+        _ptr_acf->vcl_condition.acceleration = 0.0;        
+        _ptr_acf->vcl_condition.target_speed = 0.0;
                 
         __current_phase = PHASE_STOP;
     }
@@ -133,7 +134,7 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
 
 void AircraftDoesPushBack::__internal_step__phase_stop() {
     
-    if ( abs( _params.speed ) < 0.2 ) {
+    if ( abs( _ptr_acf->vcl_condition.speed ) < 0.2 ) {
         // Завершено полностью.
         _front_wp_reached();        
         _finish();        

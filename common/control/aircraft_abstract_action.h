@@ -7,6 +7,7 @@
 
 #include "aircraft_state_graph_definition.h"
 #include "abstract_aircrafter.h"
+#include "logger.h"
 
 #define PREVIOUS_ARRAY_SIZE 50
 
@@ -34,22 +35,11 @@ namespace xenon {
             aircraft_state_graph::graph_t::edge_descriptor edge_d() {
                 return _edge_d;
             };
-            
-            inline action_parameters_t get_parameters() {
-                return _params;
-            };
-            
-            inline void set_parameters( const action_parameters_t & params ) {
-                _params = params;
-            };
-            
+
         
         protected:
             
-            aircraft_state_graph::graph_t::edge_descriptor _edge_d;            
-            
-            action_parameters_t _params;
-            
+            aircraft_state_graph::graph_t::edge_descriptor _edge_d;                        
             
             virtual void _internal_step( const float & elapsed_since_last_call ) = 0;
             virtual void _internal_start() = 0;

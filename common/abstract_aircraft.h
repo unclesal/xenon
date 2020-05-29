@@ -11,7 +11,6 @@
 #include <deque>
 
 // My own includes.
-#include "xplane.hpp"
 #include "abstract_vehicle.h"
 
 using namespace std;
@@ -45,6 +44,8 @@ namespace xenon {
             virtual void set_speed_brake_position( const float & value ) {};
             
             virtual void move( float meters ) {};
+            
+            aircraft_condition_t acf_condition;
             
         protected:
             

@@ -148,7 +148,7 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
         __current_state = ( AircraftAbstractState * ) __graph[ nd ].ptr_state_class;
         if ( __current_state ) __current_state->__activate();
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
+        Logger::log("ERROR: AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
     }
 };
 
@@ -176,7 +176,7 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
     try {
 
 #ifdef DEBUG        
-        XPlane::log("AircraftStateGraph::set_active_action " + __graph[ ed ].name );
+        Logger::log("AircraftStateGraph::set_active_action " + __graph[ ed ].name );
 #endif        
         __graph[ ed ].current_action = true;
         __current_action = (AircraftAbstractAction * ) __graph[ ed ].ptr_does_class;
@@ -186,7 +186,7 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
         if ( __current_action ) __current_action->__start();
 
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: AircraftStateGraph::set_active_action() called with invalid edge descriptor.");
+        Logger::log("ERROR: AircraftStateGraph::set_active_action() called with invalid edge descriptor.");
     }
 
 };
@@ -223,7 +223,7 @@ void AircraftStateGraph::place_on_parking() {
         auto action = get_action_for( node_d, node_d, ACF_DOES_NOTHING );
         set_active_action( action );
     } catch ( const std::range_error & re ) {
-        XPlane::log("AircraftStateGraph::place_on_parking, incorrect node_d was found");
+        Logger::log("AircraftStateGraph::place_on_parking, incorrect node_d was found");
         return;
     }
     
@@ -253,7 +253,7 @@ bool AircraftStateGraph::current_action_is( const xenon::aircraft_action_t & act
         auto edge = __graph[ __current_action->edge_d() ];
         return ( edge.action == action );
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: AircraftStateGraph::current_action_is(), invalid edge descriptor");
+        Logger::log("ERROR: AircraftStateGraph::current_action_is(), invalid edge descriptor");
     }
     
     return false;
@@ -273,7 +273,7 @@ bool AircraftStateGraph::current_state_is( const xenon::aircraft_state_t & state
         auto node = __graph[ __current_state->node_d() ];
         return node.state == state;
     } catch ( const std::range_error & e ) {
-        XPlane::log( "ERROR: AircraftStateGraph::current_state_is(), invalid node descriptor");
+        Logger::log( "ERROR: AircraftStateGraph::current_state_is(), invalid node descriptor");
     }
     
     return false;
@@ -367,10 +367,10 @@ aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_ou
             }
         }    
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: get_action_outgoing_from_current_state, " + string( re.what() ) );
+        Logger::log("ERROR: get_action_outgoing_from_current_state, " + string( re.what() ) );
     };
     
-    XPlane::log("ERROR: no outgoing action was found from current state with type=" + to_string( action ));
+    Logger::log("ERROR: no outgoing action was found from current state with type=" + to_string( action ));
     return fake;
 
 }
@@ -387,7 +387,7 @@ aircraft_state_graph::node_t AircraftStateGraph::get_node_for( AircraftAbstractS
         try {
             result = __graph[ state->node_d() ];
         } catch ( const std::range_error & re ) {
-            XPlane::log("ERROR: AircraftStateGraph::get_node_for( AircraftAbstractState * ), invalid descriptor");
+            Logger::log("ERROR: AircraftStateGraph::get_node_for( AircraftAbstractState * ), invalid descriptor");
         }
     }
     return result;
@@ -403,14 +403,14 @@ aircraft_state_graph::edge_t AircraftStateGraph::get_edge_for( AircraftAbstractA
 
     aircraft_state_graph::edge_t result;
     if ( ! action ) {
-        XPlane::log("ERROR: AircraftStateGraph::get_edge_for() called with null action pointer");
+        Logger::log("ERROR: AircraftStateGraph::get_edge_for() called with null action pointer");
         return result;
     }
     
     try {
         result = __graph[ action->edge_d() ];
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: AircraftStateGraph::get_edge_for( AircraftAbstractAction * ), invalid edge descriptor");
+        Logger::log("ERROR: AircraftStateGraph::get_edge_for( AircraftAbstractAction * ), invalid edge descriptor");
     }
     
     return result;
@@ -432,18 +432,18 @@ void AircraftStateGraph::action_finished( xenon::AircraftAbstractAction * ptr_ac
     clear_states_activity();
     
     if ( ! ptr_action ) {
-        XPlane::log("ERROR: AircraftStateGraph::action_finished called with null action pointer.");
+        Logger::log("ERROR: AircraftStateGraph::action_finished called with null action pointer.");
         return;
     }
     
     // Запоминаем параметры для обеспечения плавности перехода между действиями.
-    __previous_action_params = ptr_action->get_parameters();
+    // __previous_action_params = ptr_action->get_parameters();
     // Переход на следующее состояние, здесь он абсолютно однозначен.
-    auto next_state = boost::target( ptr_action->edge_d(), __graph );
+    // auto next_state = boost::target( ptr_action->edge_d(), __graph );
     
     try {
         set_active_state( next_state );
     } catch ( const std::range_error & re ) {
-        XPlane::log("ERROR: AircraftStateGraph::action_finished, invalid descriptor " + to_string( next_state ));
+        Logger::log("ERROR: AircraftStateGraph::action_finished, invalid descriptor " + to_string( next_state ));
     }
 }

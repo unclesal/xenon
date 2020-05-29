@@ -5,7 +5,10 @@
 // *********************************************************************************************************************
 
 #include "abstract_vehicle.h"
+
+#ifdef INSIDE_XPLANE
 #include "xplane.hpp"
+#endif
 
 using namespace xenon;
 
@@ -16,7 +19,7 @@ using namespace xenon;
 // *********************************************************************************************************************
 AbstractVehicle::AbstractVehicle() {
 
-    is_clamped_to_ground = false;
+    vcl_condition.is_clamped_to_ground = true; // Пока что - для машинки же, она на плоскости.
     
 #ifdef INSIDE_XPLANE    
    __terrain_ref = XPLMCreateProbe( xplm_ProbeY );

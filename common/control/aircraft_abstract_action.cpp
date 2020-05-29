@@ -67,60 +67,60 @@ void AircraftAbstractAction::__start() {
 
 void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_last_call ) {
     
-    if ( _params.tug != 0.0 ) {
-        if ( abs( _params.acceleration ) != abs( _params.target_acceleration )) {
-            _params.acceleration += _params.tug * elapsed_since_last_call;
-            if ( _params.tug < 0.0 ) {
-                // "Рывок" - ниже нуля. Ускорение может стать - меньше заданного.
-                if ( _params.acceleration < _params.target_acceleration ) 
-                    _params.acceleration = _params.target_acceleration;
-            } else {
-                // "Рывок" - больше нуля. Ускорение может стать - больше заданного.
-                if ( _params.acceleration > _params.target_acceleration ) 
-                    _params.acceleration = _params.target_acceleration;
-            };
-        }
-    }
+//     if ( _params.tug != 0.0 ) {
+//         if ( abs( _params.acceleration ) != abs( _params.target_acceleration )) {
+//             _params.acceleration += _params.tug * elapsed_since_last_call;
+//             if ( _params.tug < 0.0 ) {
+//                 "Рывок" - ниже нуля. Ускорение может стать - меньше заданного.
+//                 if ( _params.acceleration < _params.target_acceleration ) 
+//                     _params.acceleration = _params.target_acceleration;
+//             } else {
+//                 "Рывок" - больше нуля. Ускорение может стать - больше заданного.
+//                 if ( _params.acceleration > _params.target_acceleration ) 
+//                     _params.acceleration = _params.target_acceleration;
+//             };
+//         }
+//     }
     
-    if ( abs( _params.speed ) != abs( _params.target_speed ) ) {
-        _params.speed += _params.acceleration * elapsed_since_last_call;
+    if ( ( abs( _ptr_acf->vcl_condition.speed ) != abs( _ptr_acf->vcl_condition.target_speed ) ) && ( _ptr_acf->vcl_condition.acceleration != 0.0 ) ) {
+        _ptr_acf->vcl_condition.speed += _ptr_acf->vcl_condition.acceleration * elapsed_since_last_call;
         
-        if ( _params.acceleration < 0.0 ) {
+        if ( _ptr_acf->vcl_condition.acceleration < 0.0 ) {
             // Ускорение - меньше нуля. Скорость может стать - ниже заданной.
-            if ( _params.speed < _params.target_speed ) _params.speed = _params.target_speed;
+            if ( _ptr_acf->vcl_condition.speed < _ptr_acf->vcl_condition.target_speed ) _ptr_acf->vcl_condition.speed = _ptr_acf->vcl_condition.target_speed;
         } else {
             // Ускорение - больше нуля. Скорость может стать - выше заданной.
-            if ( _params.speed > _params.target_speed ) _params.speed = _params.target_speed;
+            if ( _ptr_acf->vcl_condition.speed > _ptr_acf->vcl_condition.target_speed ) _ptr_acf->vcl_condition.speed = _ptr_acf->vcl_condition.target_speed;
         }        
     }
     
     // После вычисления скорости происходит ее запоминание в морских миль в час
-    _params.speed_kts = meters_per_second_to_knots( _params.speed ); 
+    _ptr_acf->vcl_condition.speed_kts = meters_per_second_to_knots( _ptr_acf->vcl_condition.speed ); 
     
     // Вертикальная скорость и достижение ею целевого показателя.
     bool changed = false; // Оно здесь не нужно, но нужно в параметрах - ок.
     
     __control_of_one_value( 
-        elapsed_since_last_call, _params.vertical_acceleration,
-        _params.target_vertical_speed, _params.vertical_speed,
+        elapsed_since_last_call, _ptr_acf->acf_condition.vertical_acceleration,
+        _ptr_acf->acf_condition.target_vertical_speed, _ptr_acf->acf_condition.vertical_speed,
         changed
     );
     
     // Смещение самолета по вертикальной оси, если оно нужно.
-    if ( _params.vertical_speed != 0.0 ) {
+    if ( _ptr_acf->acf_condition.vertical_speed != 0.0 ) {
 #ifdef INSIDE_XPLANE
         auto position = _ptr_acf->get_position();
-        position.y += _params.vertical_speed * elapsed_since_last_call;
+        position.y += _ptr_acf->acf_condition.vertical_speed * elapsed_since_last_call;
         _ptr_acf->set_position( position );
 #else
         auto location = _ptr_acf->get_location();
-        location.altitude += _params.vertical_speed * elapsed_since_last_call;
+        location.altitude += _ptr_acf->acf_condition.vertical_speed * elapsed_since_last_call;
         _ptr_acf->set_location( location );
 #endif
     }
     
     // После вычисления вертикальной скорости запоминаем значение в футах в минуту.
-    _params.vertical_speed_fpm = meters_per_seconds_to_feet_per_min( _params.vertical_speed );
+    _ptr_acf->acf_condition.vertical_speed_fpm = meters_per_seconds_to_feet_per_min( _ptr_acf->acf_condition.vertical_speed );
     
 }
 
@@ -132,11 +132,12 @@ void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_la
 
 void AircraftAbstractAction::__move_straight( const float & elapsed_since_last_call ) {
     
-    double distance = _params.speed * elapsed_since_last_call;
+    double distance = _ptr_acf->vcl_condition.speed * elapsed_since_last_call;
     _ptr_acf->move( distance );
     
     // Пройденная дистанция в любом случае увеличивается, даже если
     // самолет при этом двигается назад (при его выталкивании).
+
     __total_distance += abs(distance);
     
 }
@@ -182,7 +183,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
                 
     // Углы подравниваем только в том случае, если есть хоть какая-то скорость.
     // Чтобы избежать вращения самолета на месте.
-    if ( abs( _params.speed ) >= 0.8 ) {
+    if ( abs( _ptr_acf->vcl_condition.speed ) >= 0.8 ) {
         
         auto rotation = _ptr_acf->get_rotation();
         bool changed = false;
@@ -190,9 +191,9 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
         // У абстрактного действия нет контроля за конечной точкой положения по курсу.
         // Это позволяет внутри реального действия осуществлять автоматическое подруливание.
         
-        if ( _params.heading_acceleration != 0.0 ) {                
+        if ( _ptr_acf->vcl_condition.heading_acceleration != 0.0 ) {
             double heading = rotation.heading;
-            heading += _params.heading_acceleration * elapsed_since_last_call;
+            heading += _ptr_acf->vcl_condition.heading_acceleration * elapsed_since_last_call;
             normalize_degrees( heading );
             rotation.heading = heading;
             changed = true;            
@@ -203,13 +204,13 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
         // ускорение - и больше не проверять его, самолет сам со временем
         // встанет в нужное угловое положение.
         __control_of_one_value( 
-                elapsed_since_last_call, _params.pitch_acceleration, 
-                _params.target_pitch, rotation.pitch, 
+                elapsed_since_last_call, _ptr_acf->acf_condition.pitch_acceleration, 
+                _ptr_acf->acf_condition.target_pitch, rotation.pitch, 
                 changed 
         );
         __control_of_one_value( 
-                elapsed_since_last_call, _params.roll_acceleration, 
-                _params.target_roll, rotation.roll, 
+                elapsed_since_last_call, _ptr_acf->acf_condition.roll_acceleration, 
+                _ptr_acf->acf_condition.target_roll, rotation.roll, 
                 changed 
         );
                 
@@ -257,7 +258,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
 void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, double kp ) {
 
     if ( _is_flight_plan_empty() ) {
-        XPlane::log("ERROR: AircraftAbstractAction::_head_steering, but FP is empty");
+        Logger::log("ERROR: AircraftAbstractAction::_head_steering, but FP is empty");
         return;
     };
     
@@ -265,8 +266,8 @@ void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, doub
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading;        
-    _params.target_heading = bearing;
-    _params.heading_acceleration = kp * delta * elapsed_since_last_call;
+    _ptr_acf->vcl_condition.target_heading = bearing;
+    _ptr_acf->vcl_condition.heading_acceleration = kp * delta * elapsed_since_last_call;
 
 }
 
@@ -281,7 +282,7 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
     auto rotation = _get_acf_rotation();
     
     if ( wp.type == WAYPOINT_UNKNOWN ) {
-        XPlane::log("ERROR: AircraftDoesFlying::__head_bearing(), type of front FP waypoint is UNKNOWN...");
+        Logger::log("ERROR: AircraftDoesFlying::__head_bearing(), type of front FP waypoint is UNKNOWN...");
         return;
     };
     
@@ -316,8 +317,8 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
     if ( regulator_out >= 25.0 ) regulator_out = 25.0;
     if ( regulator_out <= -25.0 ) regulator_out = -25.0;
         
-    _params.target_roll = regulator_out;
-    delta < 0 ? _params.roll_acceleration = -3.0 : _params.roll_acceleration = 3.0;
+    _ptr_acf->acf_condition.target_roll = regulator_out;
+    delta < 0 ? _ptr_acf->acf_condition.roll_acceleration = -3.0 : _ptr_acf->acf_condition.roll_acceleration = 3.0;
         
     // Чтобы считать синусы-косинусы - надо иметь сдвинутый угол.
     // Повернутость угла влияет на знак, но он и так учитывается дальше.
@@ -326,16 +327,16 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
     double dh = cos( radians );
     
     // Этот коэффициент не сильно важен. Важно, чтобы курс изменился.
-    _params.target_heading = heading + dh * 10;
+    _ptr_acf->vcl_condition.target_heading = heading + dh * 10;
     
     // А этот коэффициент определяет скорость вращения в воздухе.
     // Подобран исходя из правдоподобности зрительного восприятия картинки.
-    _params.heading_acceleration = 11.5 * dh;
+    _ptr_acf->vcl_condition.heading_acceleration = 11.5 * dh;
 
     for (int i = PREVIOUS_ARRAY_SIZE - 2 ; i >= 0; -- i ) {
         __previous_heading_delta[i+1] = __previous_heading_delta[i];
     };
-    __previous_heading_delta[0] = delta;    
+    __previous_heading_delta[0] = delta;
     
 }
 
@@ -355,40 +356,40 @@ void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude
     
     // Сначала обнуляем параметры изменения высоты, т.к. пока еще непонятно,
     // в каком положении мы сейчас находимся, выше или ниже целевого значения.
-    _params.pitch_acceleration = 0.0;
-    _params.target_pitch = 0.0;
+    _ptr_acf->acf_condition.pitch_acceleration = 0.0;
+    _ptr_acf->acf_condition.target_pitch = 0.0;
     
-    _params.vertical_acceleration = 0.0;
-    _params.target_vertical_speed = 0.0;
+    _ptr_acf->acf_condition.vertical_acceleration = 0.0;
+    _ptr_acf->acf_condition.target_vertical_speed = 0.0;
     
     // Вертикальная скорость выбирается таким образом, чтобы достигнуть нужной нам высоты прямо на 
     // точке привода. Несколько "не кошерно" в том плане, что вертикальная скорость может измениться 
     // рывком. Но видно этого не будет при любом раскладе событий, так что - вполне допустимо.
     
-    _params.vertical_speed = 0.0;
-    if ( time_to_achieve ) _params.vertical_speed = da / time_to_achieve;
+    _ptr_acf->acf_condition.vertical_speed = 0.0;
+    if ( time_to_achieve ) _ptr_acf->acf_condition.vertical_speed = da / time_to_achieve;
     
     // Если ему просто взять и поставить некий градус, скажем, 5, то выглядит не 
     // реалистично. Угол тангажа надо ставить в зависимости от вертикальной скорости.
     
     float degrees = 1.0;
-    if ( abs(_params.vertical_speed) > 7.0 ) degrees = 10.0;
-    else if ( abs(_params.vertical_speed) > 5.0 ) degrees = 5.0;
-    else if ( abs(_params.vertical_speed) > 2.0 ) degrees = 2.0;
+    if ( abs(_ptr_acf->acf_condition.vertical_speed) > 7.0 ) degrees = 10.0;
+    else if ( abs(_ptr_acf->acf_condition.vertical_speed) > 5.0 ) degrees = 5.0;
+    else if ( abs(_ptr_acf->acf_condition.vertical_speed) > 2.0 ) degrees = 2.0;
     
     // Целевое значение тангажа.
     if ( da > 0.0 ) {
         // Мы находимся - ниже, надо подниматься.
-        _params.target_pitch = degrees;
+        _ptr_acf->acf_condition.target_pitch = degrees;
     } else if ( da < 0.0 ) {            
         // Мы находимся - выше, надо опускаться.            
-        _params.target_pitch = -degrees;                        
+        _ptr_acf->acf_condition.target_pitch = -degrees;                        
     }
     
     // Изменение тангажа. А вот тангаж можно увидеть. 
     // Соответственно, резко изменяться он не может.
-    if ( acf_rotation.pitch > _params.target_pitch ) _params.pitch_acceleration = -1.0f;
-    else _params.pitch_acceleration = 1.0f;
+    if ( acf_rotation.pitch > _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = -1.0f;
+    else _ptr_acf->acf_condition.pitch_acceleration = 1.0f;
     
 //     XPlane::log(
 //         "target=" + to_string( target_altitude )
@@ -407,10 +408,10 @@ void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude
 // *********************************************************************************************************************
 
 void xenon::AircraftAbstractAction::_speed_adjustment( const float & target_speed, const float & time_to_achieve) {
-    auto ds = target_speed - _params.speed;
-    _params.target_speed = target_speed;
-    _params.acceleration = 0.0;
-    if ( time_to_achieve != 0.0 ) _params.acceleration = ds / time_to_achieve;
+    auto ds = target_speed - _ptr_acf->vcl_condition.speed;
+    _ptr_acf->vcl_condition.target_speed = target_speed;
+    _ptr_acf->vcl_condition.acceleration = 0.0;
+    if ( time_to_achieve != 0.0 ) _ptr_acf->vcl_condition.acceleration = ds / time_to_achieve;
         
 //         XPlane::log(
 //             "Speed=" + to_string(_params.speed) + ", target=" + to_string( target_speed )

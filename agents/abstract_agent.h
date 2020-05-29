@@ -5,11 +5,15 @@
 // *********************************************************************************************************************
 #pragma once
 
+#include <unistd.h>
+
 #include <string>
+#include <iostream>
 
 #include "structures.h"
 #include "connected_communicator.h"
 #include "connected_communicator_reactor.h"
+#include "airport.h"
 
 namespace xenon {
     
@@ -25,6 +29,10 @@ namespace xenon {
         protected:
             
             ConnectedCommunicator * _communicator;
+            
+            /**
+             * @short callback на чтение аэропортов по умолчанию.
+             */
             
         private:
             

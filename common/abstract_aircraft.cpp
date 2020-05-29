@@ -1,41 +1,43 @@
 // *********************************************************************************************************************
-// *                                                   Ничегонеделание                                                 *
+// *                                       An abstract aircraft internal of X-Plane simulator.                         *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 may 2020 at 18:26 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 mar 2019 at 15:47 *
 // *********************************************************************************************************************
-#include "aircraft_does_nothing.h"
+
+#include "abstract_aircraft.h"
 
 using namespace xenon;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                                    Конструктор.                                                   *
+// *                                                   The constructor                                                 *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AircraftDoesNothing::AircraftDoesNothing(
-    AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
-) : AircraftAbstractAction( ptr_acf, edge_d ) 
+AbstractAircraft::AbstractAircraft()
+    : AbstractVehicle()
 {
+    // Это уже для самолета. Он по умолчанию к земле - не прижат.
+    vcl_condition.is_clamped_to_ground = true;
 }
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                         Перекрытая функция старта действия                                        *
+// *                                           Преобразование объекта в JSON                                           *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
-void AircraftDoesNothing::_internal_start() {
-    _ptr_acf->is_clamped_to_ground = true;
-};
-
+/*
+void AbstractAircraft::to_json( JSON & json ) {
+    AircraftState::to_json( json );
+}
+*/
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                   Перекрытая функция "внутреннего шага" действия                                  *
+// *                                          Преобразование из JSONа в объект.                                        *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
-void AircraftDoesNothing::_internal_step( const float & elapsed_since_last_call ) {
-    
-};
-
+/*
+void AbstractAircraft::from_json( JSON & json) {
+    AircraftState::from_json( json );
+}
+*/

@@ -7,6 +7,7 @@
 #include "abstract_agent.h"
 
 using namespace xenon;
+using namespace std;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -15,7 +16,18 @@ using namespace xenon;
 // *********************************************************************************************************************
 
 AbstractAgent::AbstractAgent( const std::string & uuid, const agent_t & agent_type ) {
+
     _communicator = new ConnectedCommunicator( this, agent_type, uuid );
+    if ( ! Airport::airports_was_readed() ) {        
+        Airport::read_all();
+    }
+
+    // Ждем, пока аэропорт не вычитает свои данные.
+    cout << "Waiting airports readed..." << endl;
+    while ( ! Airport::airports_was_readed() ) {
+        usleep(50);
+    }
+    cout << "apts readed, ok." << endl;
 }
 
 // *********************************************************************************************************************

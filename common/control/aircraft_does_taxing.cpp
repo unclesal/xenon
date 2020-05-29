@@ -58,7 +58,7 @@ void AircraftDoesTaxing::__choose_speed() {
     auto distance_to_turn = _calculate_distance_to_turn();    
     if (( distance_to_turn > 150.0 ) && ( _params.target_speed != TAXI_NORMAL_SPEED )) {
         
-        XPlane::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_params.target_speed));
+        Logger::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_params.target_speed));
         _params.tug = TAXI_NORMAL_TUG;
         _params.acceleration = 0.0;
         _params.target_acceleration = TAXI_NORMAL_ACCELERATION;
@@ -76,7 +76,7 @@ void AircraftDoesTaxing::__choose_speed() {
             
         } else if ( _params.speed < TAXI_SLOW_SPEED ) {
             
-            XPlane::log("Speed up to taxi slow speed.");
+            Logger::log("Speed up to taxi slow speed.");
             // Текущая скорость низкая, можно подразогнаться до TAXI_SLOW_SPEED
             _params.tug = TAXI_SLOW_TUG;
             _params.acceleration = 0.0;
@@ -106,7 +106,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         // Дальше будет меняться ускорение и его обнулять здесь будет уже нельзя.
 
         if ( _params.target_speed != 0.0 ) {
-            XPlane::log("Stopping before HP");
+            Logger::log("Stopping before HP");
             _params.tug = -0.1;
             _params.target_acceleration = -1.0;
             _params.acceleration = 0.0;
@@ -115,8 +115,8 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         }
         
         if ( abs(_params.speed) <= 0.2 ) {
-            XPlane::log("Full stop on HP. Distance=" + to_string(distance_to_rwy));
-            XPlane::log(
+            Logger::log("Full stop on HP. Distance=" + to_string(distance_to_rwy));
+            Logger::log(
                 "Lat=" + to_string( _get_acf_location().latitude ) 
                 + ", lon=" + to_string( _get_acf_location().longitude ) 
                 + ", heading=" + to_string( _get_acf_rotation().heading )

@@ -35,7 +35,7 @@ void AircraftDoesLanding::_internal_start() {
     __phase = PHASE_UNKNOWN;
     auto wp0 = _get_front_wp();
     if ( ( wp0.type != WAYPOINT_RUNWAY ) || ( wp0.action_to_achieve != ACF_DOES_LANDING ) ) {
-        XPlane::log(
+        Logger::log(
             "ERROR: incorrect WP for landing, type=" + to_string( wp0.type ) 
             + ", action to achieve=" + to_string( wp0.action_to_achieve ) 
         );
@@ -57,7 +57,7 @@ void AircraftDoesLanding::_internal_start() {
     __flaps_to_take_off_position = false;
     __flaps_to_landing_position = false;
         
-    _ptr_acf->is_clamped_to_ground = false;
+    _ptr_acf->vcl_condition.is_clamped_to_ground = false;
     
 #ifdef INSIDE_XPLANE
     
@@ -85,8 +85,8 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     auto acf_rotation = _get_acf_rotation();
     
     auto distance = xenon::distance2d( acf_location, wp.location );
-    if ( _params.speed != 0.0 ) {
-        auto time_to_achieve = distance / _params.speed;
+    if ( _ptr_acf->vcl_condition.speed != 0.0 ) {
+        auto time_to_achieve = distance / _ptr_acf->vcl_condition.speed;
         _altitude_adjustment( wp.location.altitude, time_to_achieve );
         _speed_adjustment( 
             xenon::knots_to_merets_per_second( acf_parameters.landing_speed ), time_to_achieve 
@@ -95,21 +95,21 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     
     // При достижении определенной скорости закрылки выпускаем во взлетное положение.
     if ( 
-        ( _params.speed <= xenon::knots_to_merets_per_second( acf_parameters.flaps_take_off_speed ))
+        ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_parameters.flaps_take_off_speed ))
         && ( ! __flaps_to_take_off_position )
     ) {
         __flaps_to_take_off_position = true;
         _ptr_acf->set_flaps_position( acf_parameters.flaps_take_off_position );
-        XPlane::log("Flaps to TO position");
+        Logger::log("Flaps to TO position");
     }
     
     // Если скорость еще снизилась, то закрылки выпускаем в посадочное положение 
     
     if (
-        ( _params.speed <= xenon::knots_to_merets_per_second( acf_parameters.flaps_landing_speed ))
+        ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_parameters.flaps_landing_speed ))
         && ( ! __flaps_to_landing_position )
     ) {
-        XPlane::log("Flaps to LAND position");
+        Logger::log("Flaps to LAND position");
         __flaps_to_landing_position = true;
         _ptr_acf->set_flaps_position( 1.0 );
         _ptr_acf->set_gear_down( true );                        
@@ -122,14 +122,14 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
         // уже достаточно медленно. Поэтому выравнивается на положительный тангаж.
         // При этом будут перекрываться установки по тангажу _altitude_adjustment.
         
-        _params.target_pitch = 5.0;
+        _ptr_acf->acf_condition.target_pitch = 5.0;
         
         // Нос пошел вверх не спеша. Торопиться некуда: это все происходит довольно далеко от ВПП.
         
-        if ( acf_rotation.pitch > _params.target_pitch ) 
-            _params.pitch_acceleration = -0.2f;
+        if ( acf_rotation.pitch > _ptr_acf->acf_condition.target_pitch ) 
+            _ptr_acf->acf_condition.pitch_acceleration = -0.2f;
         else
-            _params.pitch_acceleration = 0.2f;
+            _ptr_acf->acf_condition.pitch_acceleration = 0.2f;
     }
     
 
@@ -140,22 +140,22 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
 
         // Переход в фазу выравнивания.
 
-        XPlane::log( "jump to ALIGNMENT" );
+        Logger::log( "jump to ALIGNMENT" );
         
         _front_wp_reached();
         __phase = PHASE_ALIGNMENT;
         
         // Убираем имеющиеся ускорения. Фаза выравнивания будет подруливать сама.
         
-        _params.tug = 0.0;
-        _params.acceleration = 0.0;        
+        // _params.tug = 0.0;
+        _ptr_acf->vcl_condition.acceleration = 0.0;        
         
-        _params.target_vertical_speed = -1.0;
-        if ( _params.vertical_speed > _params.target_vertical_speed ) _params.vertical_acceleration = -2.0f;
-        else _params.vertical_acceleration = 2.0f;
+        _ptr_acf->acf_condition.target_vertical_speed = -1.0;
+        if ( _ptr_acf->acf_condition.vertical_speed > _ptr_acf->acf_condition.target_vertical_speed ) _ptr_acf->acf_condition.vertical_acceleration = -2.0f;
+        else _ptr_acf->acf_condition.vertical_acceleration = 2.0f;
                 
         // По крену - насмерть. Как есть - так и есть.
-        _params.roll_acceleration = 0.0;
+        _ptr_acf->acf_condition.roll_acceleration = 0.0;
 
         // Курс - оставляем. В фазе выравнивания тоже будет подруливание.
         // _params.heading_acceleration = 0.0;
@@ -164,10 +164,10 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
         
         // Целевой угол, на который мы должны выйти - это достаточно большой 
         // угол, но такой, при котором хвост еще не касается земли.
-        _params.target_pitch = _get_acf_parameters().take_off_angle;
+        _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().take_off_angle;
         
-        if ( acf_rotation.pitch < _params.target_pitch ) _params.pitch_acceleration = 2.0f;
-         else _params.pitch_acceleration = 2.0f;
+        if ( acf_rotation.pitch < _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = 2.0f;
+         else _ptr_acf->acf_condition.pitch_acceleration = 2.0f;
         
         return;
     };    
@@ -205,9 +205,9 @@ void AircraftDoesLanding::__step__alignment(
     
     if ( height <= 0.5 ) {
         
-        XPlane::log("Touch down!!!");
+        Logger::log("Touch down!!!");
         // Сели. Самолет прижимаем к земле.
-        _ptr_acf->is_clamped_to_ground = true;
+        _ptr_acf->vcl_condition.is_clamped_to_ground = true;
         // Переходим в фазу торможения.
         __phase = PHASE_BREAKING;
         
@@ -215,15 +215,15 @@ void AircraftDoesLanding::__step__alignment(
         
         // При переходе в торможение сразу устанавливаем 
         // нужное нам положение тангажа и опускаем нос.
-        _params.target_pitch = _get_acf_parameters().taxing_pitch;
-        if ( rotation.pitch > _params.target_pitch ) _params.pitch_acceleration = -0.9f;
-        else _params.pitch_acceleration = 0.9f;
+        _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().taxing_pitch;
+        if ( rotation.pitch > _params.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = -0.9f;
+        else _ptr_acf->acf_condition.pitch_acceleration = 0.9f;
         
         // Торможение.
-        _params.tug = 0;
-        _params.target_acceleration = 0.0;
-        _params.acceleration = -3.6f;
-        _params.target_speed = 0.0;
+        // _params.tug = 0;
+        _ptr_acf->vcl_condition.target_acceleration = 0.0;
+        _ptr_acf->vcl_condition.acceleration = -3.6f;
+        _ptr_acf->vcl_condition.target_speed = 0.0;
         
         // Включение реверса.
         _ptr_acf->set_reverse_on( true );
@@ -232,14 +232,14 @@ void AircraftDoesLanding::__step__alignment(
             
     } else if ( height <= 2.5 ) {
         
-        _params.target_vertical_speed = -0.5f;
-        if ( _params.vertical_speed < _params.target_vertical_speed ) _params.vertical_acceleration = 2.0f;
-        else _params.vertical_acceleration = -2.0f;
+        _ptr_acf->acf_condition.target_vertical_speed = -0.5f;
+        if ( _ptr_acf->acf_condition.vertical_speed < _ptr_acf->acf_condition.target_vertical_speed ) _ptr_acf->acf_condition.vertical_acceleration = 2.0f;
+        else _ptr_acf->acf_condition.vertical_acceleration = -2.0f;
         
     }
     
 #else
-    XPlane::log("ERROR: AircraftDoesLanding outside of X-Plane not released!");
+    Logger::log("ERROR: AircraftDoesLanding outside of X-Plane not released!");
 #endif
     
 };
@@ -252,8 +252,8 @@ void AircraftDoesLanding::__step__alignment(
 
 void AircraftDoesLanding::__step__breaking() {
     
-    if ( _params.speed < 0.5 ) {
-        XPlane::log("DONE");
+    if ( _ptr_acf->vcl_condition.speed < 0.5 ) {
+        Logger::log("DONE");
         // Точка, на которую "целились", т.е. конечная 
         // точка ВПП в плане полета - нам больше не нужна.
         _front_wp_reached();
@@ -278,7 +278,7 @@ void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call 
         case PHASE_DESCENDING: __step__descending( wp, acf_parameters ); break;
         case PHASE_ALIGNMENT: __step__alignment( wp, acf_parameters, elapsed_since_last_call ); break;
         case PHASE_BREAKING: __step__breaking(); break;
-        default: XPlane::log("UNRELEASED: does landing with phase " + to_string( __phase ) );
+        default: Logger::log("UNRELEASED: does landing with phase " + to_string( __phase ) );
     };
 
 }

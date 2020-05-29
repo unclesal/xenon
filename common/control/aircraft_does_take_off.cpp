@@ -119,7 +119,7 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     auto wp = _get_front_wp();
     auto distance = xenon::distance2d( _get_acf_location(), wp.location );
     if ( distance < 100.0 ) {
-        XPlane::log("Take off done");
+        Logger::log("Take off done");
         __phase = PHASE_NOTHING;
         _finish();
         return;
@@ -156,7 +156,7 @@ void AircraftDoesTakeOff::_internal_step( const float & elapsed_since_last_call 
         case PHASE_RUN_UP: __step__run_up( elapsed_since_last_call ); break;
         case PHASE_BREAK_AWAY: __step__break_away( elapsed_since_last_call ); break;
         case PHASE_CLIMBING: __step__climbing( elapsed_since_last_call ); break;
-        default: XPlane::log("ERROR: AircraftDoesTakeOff::_internal_step(), unhandled phase " + to_string( __phase ) );
+        default: Logger::log("ERROR: AircraftDoesTakeOff::_internal_step(), unhandled phase " + to_string( __phase ) );
     };
 }
 

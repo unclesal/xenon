@@ -10,6 +10,7 @@
 #include <string>
 
 #include "abstract_agent.h"
+#include "bimbo_aircraft.h"
 
 namespace xenon {
     
@@ -27,9 +28,12 @@ namespace xenon {
             void on_received( AbstractCommand * cmd ) override;
             void on_error( std::string message ) override;
             
-        protected:
+        protected:                        
             
         private:
+
+            BimboAircraft * __ptr_acf;
+            void __step();
             
     };
     
