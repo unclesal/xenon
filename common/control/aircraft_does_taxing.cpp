@@ -28,7 +28,7 @@ AircraftDoesTaxing::AircraftDoesTaxing(
 
 void AircraftDoesTaxing::_internal_start() {
     
-    _ptr_acf->is_clamped_to_ground = true;
+    _ptr_acf->vcl_condition.is_clamped_to_ground = true;
     _ptr_acf->set_taxi_lites( true );
     _ptr_acf->set_landing_lites( true );
     _ptr_acf->set_beacon_lites( true );
@@ -47,41 +47,47 @@ void AircraftDoesTaxing::__choose_speed() {
     auto front_wp = _get_front_wp();
     
     if ( front_wp.type == WAYPOINT_RUNWAY ) {
-        if ( _params.target_speed != TAXI_SLOW_SPEED ) {
-            _params.acceleration = 0.0;
-            _params.tug = TAXI_SLOW_TUG;
-            _params.target_acceleration = TAXI_SLOW_ACCELERATION;
+        if ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED ) {
+            
+            // _params.tug = TAXI_SLOW_TUG;
+            // _params.target_acceleration = TAXI_SLOW_ACCELERATION;
+            
+            _ptr_acf->vcl_condition.acceleration = 0.0;
+            
         }
         return;
     };
     
     auto distance_to_turn = _calculate_distance_to_turn();    
-    if (( distance_to_turn > 150.0 ) && ( _params.target_speed != TAXI_NORMAL_SPEED )) {
+    if (( distance_to_turn > 150.0 ) && ( _ptr_acf->vcl_condition.target_speed != TAXI_NORMAL_SPEED )) {
         
-        Logger::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_params.target_speed));
-        _params.tug = TAXI_NORMAL_TUG;
-        _params.acceleration = 0.0;
-        _params.target_acceleration = TAXI_NORMAL_ACCELERATION;
-        _params.target_speed = TAXI_NORMAL_SPEED;
+        Logger::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_ptr_acf->vcl_condition.target_speed));
+        // _params.tug = TAXI_NORMAL_TUG;
+        // _params.target_acceleration = TAXI_NORMAL_ACCELERATION;        
+        
+        _ptr_acf->vcl_condition.acceleration = 0.0;        
+        _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
         
     } else if ( distance_to_turn <= 150.0 ) {
         
-        if ( ( _params.speed > TAXI_SLOW_SPEED ) && ( _params.target_speed != TAXI_SLOW_SPEED ) ) {
+        if ( ( _ptr_acf->vcl_condition.speed > TAXI_SLOW_SPEED ) && ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED ) ) {
             
             // Скорость - высокая. Тормозим. 
-            _params.tug = -0.25;
-            _params.target_acceleration = -5.0;
-            _params.acceleration = 0.0; // target_accel;
-            _params.target_speed = TAXI_SLOW_SPEED;
+            // _params.tug = -0.25;
+            // _params.target_acceleration = -5.0;
             
-        } else if ( _params.speed < TAXI_SLOW_SPEED ) {
+            _ptr_acf->vcl_condition.acceleration = 0.0; // target_accel;
+            _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
+            
+        } else if ( _ptr_acf->vcl_condition.speed < TAXI_SLOW_SPEED ) {
             
             Logger::log("Speed up to taxi slow speed.");
             // Текущая скорость низкая, можно подразогнаться до TAXI_SLOW_SPEED
-            _params.tug = TAXI_SLOW_TUG;
-            _params.acceleration = 0.0;
-            _params.target_acceleration = TAXI_SLOW_ACCELERATION;
-            _params.target_speed = TAXI_SLOW_SPEED;
+            // _params.tug = TAXI_SLOW_TUG;
+            // _params.target_acceleration = TAXI_SLOW_ACCELERATION;
+            
+            _ptr_acf->vcl_condition.acceleration = 0.0;            
+            _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
         }
     }
 }
@@ -105,27 +111,29 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         // Проверка на "целевую скорость" - чтобы войти в режим торможения только один раз.
         // Дальше будет меняться ускорение и его обнулять здесь будет уже нельзя.
 
-        if ( _params.target_speed != 0.0 ) {
+        if ( _ptr_acf->vcl_condition.target_speed != 0.0 ) {
             Logger::log("Stopping before HP");
-            _params.tug = -0.1;
-            _params.target_acceleration = -1.0;
-            _params.acceleration = 0.0;
-            _params.target_speed = 0.0;
-            _params.heading_acceleration = 0.0;
+            // _params.tug = -0.1;
+            // _params.target_acceleration = -1.0;
+            
+            _ptr_acf->vcl_condition.acceleration = 0.0;
+            _ptr_acf->vcl_condition.target_speed = 0.0;
+            _ptr_acf->vcl_condition.heading_acceleration = 0.0;
         }
         
-        if ( abs(_params.speed) <= 0.2 ) {
+        if ( abs(_ptr_acf->vcl_condition.speed) <= 0.2 ) {
             Logger::log("Full stop on HP. Distance=" + to_string(distance_to_rwy));
             Logger::log(
                 "Lat=" + to_string( _get_acf_location().latitude ) 
                 + ", lon=" + to_string( _get_acf_location().longitude ) 
                 + ", heading=" + to_string( _get_acf_rotation().heading )
             );
-            _params.speed = 0.0;
-            _params.tug = 0.0;
-            _params.acceleration = 0.0;
-            _params.target_acceleration = 0.0;
-            _params.heading_acceleration = 0.0;
+            // _params.tug = 0.0;
+            // _params.target_acceleration = 0.0;
+            
+            _ptr_acf->vcl_condition.speed = 0.0;            
+            _ptr_acf->vcl_condition.acceleration = 0.0;            
+            _ptr_acf->vcl_condition.heading_acceleration = 0.0;
             // Действие было полностью выполнено, выходим.
             auto wp = _get_front_wp();
             while ( wp.type == WAYPOINT_TAXING ) {
@@ -142,8 +150,8 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading;        
-    _params.target_heading = bearing;
-    _params.heading_acceleration = 25.0 * delta * elapsed_since_last_call;
+    _ptr_acf->vcl_condition.target_heading = bearing;
+    _ptr_acf->vcl_condition.heading_acceleration = 25.0 * delta * elapsed_since_last_call;
     
     double distance = _calculate_distance_to_wp( wp );    
 

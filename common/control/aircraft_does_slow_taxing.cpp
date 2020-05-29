@@ -27,7 +27,7 @@ AircraftDoesSlowTaxing::AircraftDoesSlowTaxing (
 // *********************************************************************************************************************
 
 void AircraftDoesSlowTaxing::_internal_start() {
-    _ptr_acf->is_clamped_to_ground = true;
+    _ptr_acf->vcl_condition.is_clamped_to_ground = true;
 };
 
 // *********************************************************************************************************************

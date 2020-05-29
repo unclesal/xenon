@@ -216,12 +216,13 @@ void AircraftDoesLanding::__step__alignment(
         // При переходе в торможение сразу устанавливаем 
         // нужное нам положение тангажа и опускаем нос.
         _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().taxing_pitch;
-        if ( rotation.pitch > _params.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = -0.9f;
+        if ( rotation.pitch > _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = -0.9f;
         else _ptr_acf->acf_condition.pitch_acceleration = 0.9f;
         
         // Торможение.
         // _params.tug = 0;
-        _ptr_acf->vcl_condition.target_acceleration = 0.0;
+        // _ptr_acf->vcl_condition.target_acceleration = 0.0;
+
         _ptr_acf->vcl_condition.acceleration = -3.6f;
         _ptr_acf->vcl_condition.target_speed = 0.0;
         

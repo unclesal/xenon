@@ -181,7 +181,6 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
         __graph[ ed ].current_action = true;
         __current_action = (AircraftAbstractAction * ) __graph[ ed ].ptr_does_class;
 
-        __current_action->set_parameters( __previous_action_params );
         // Это единственное место, где должен вызываться старт. Поэтому сам старт сделан приватным.
         if ( __current_action ) __current_action->__start();
 
@@ -436,10 +435,8 @@ void AircraftStateGraph::action_finished( xenon::AircraftAbstractAction * ptr_ac
         return;
     }
     
-    // Запоминаем параметры для обеспечения плавности перехода между действиями.
-    // __previous_action_params = ptr_action->get_parameters();
     // Переход на следующее состояние, здесь он абсолютно однозначен.
-    // auto next_state = boost::target( ptr_action->edge_d(), __graph );
+    auto next_state = boost::target( ptr_action->edge_d(), __graph );
     
     try {
         set_active_state( next_state );

@@ -8,13 +8,13 @@ namespace xenon {
 
     const double PI = 3.1415926535897932384626433832795028841971693993751;
     
-    /// Convert feet to meters, e.g. for altitude calculations
-    const float M_per_FT   = 0.3048;   // meter per 1 foot
-    
-    /// Convert nautical miles to meters
-    const float M_per_NM      = 1852.0;
-
-    // Радиус Земли в метрах.
+//     / Convert feet to meters, e.g. for altitude calculations
+//     const float M_per_FT   = 0.3048;   // meter per 1 foot
+//     
+//     / Convert nautical miles to meters
+//     const float M_per_NM      = 1852.0;
+// 
+    // Радиус Земли в метрах. Нужен для приблизительных вычислений внутри X-Plane.
     const double EARTH_RADIUS = 6371.0 * 1000.0;
     
     // Сильно большая константа, используется, когда ищем минимум.

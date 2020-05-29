@@ -493,7 +493,7 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused
 
 #ifdef INSIDE_XPLANE
     __update_actuators(elapsed_since_last_call);
-    if ( is_clamped_to_ground ) clamp_to_ground();
+    if ( vcl_condition.is_clamped_to_ground ) clamp_to_ground();
 #endif
 
 }
@@ -636,7 +636,7 @@ void BimboAircraft::test__place_on_rwy_end() {
     position.y = 170.0 + 200.0;
     rotation_t rotation;
     rotation.heading = wp.incomming_heading;
-    is_clamped_to_ground = true;
+    vcl_condition.is_clamped_to_ground = true;
     place_on_ground( position, rotation, false );    
     
 }
@@ -761,7 +761,7 @@ void BimboAircraft::test__fly() {
         
     // Для теста встаем на последнюю точку ВПП по горизонтали,
     // но - в небе, типа только что взлетели.
-    is_clamped_to_ground = false;
+    vcl_condition.is_clamped_to_ground = false;
     
 //     location_t start_point = {
 //         .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
