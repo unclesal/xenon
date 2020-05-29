@@ -59,10 +59,12 @@ namespace xenon {
                 return _ptr_acf->get_location();                
             };
             
+#ifdef INSIDE_XPLANE
             inline position_t _get_acf_position() {
                 auto location = _get_acf_location();
                 return XPlane::location_to_position(location);
             };
+#endif
 
             inline rotation_t _get_acf_rotation() {
                 return _ptr_acf->get_rotation();
@@ -90,7 +92,7 @@ namespace xenon {
             inline double _calculate_distance_to_turn() {
     
                 auto location = _get_acf_location();
-                for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
+                for ( int i=0; i < ( (int) _ptr_acf->_flight_plan.size() ); i++ ) {
                     auto wp = _ptr_acf->_flight_plan.at(i);
                     double change = wp.incomming_heading - wp.outgoing_heading;
                     if ( change >= 20.0 ) {

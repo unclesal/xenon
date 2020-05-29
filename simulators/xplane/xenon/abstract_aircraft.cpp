@@ -4,7 +4,6 @@
 // * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 15 mar 2019 at 15:47 *
 // *********************************************************************************************************************
 
-#include "XPLMGraphics.h"
 #include "abstract_aircraft.h"
 
 using namespace xenon;

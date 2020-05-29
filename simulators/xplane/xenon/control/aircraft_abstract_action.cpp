@@ -101,16 +101,22 @@ void AircraftAbstractAction::__control_of_speeds( const float & elapsed_since_la
     bool changed = false; // Оно здесь не нужно, но нужно в параметрах - ок.
     
     __control_of_one_value( 
-            elapsed_since_last_call, _params.vertical_acceleration, 
-            _params.target_vertical_speed, _params.vertical_speed, 
-            changed         
+        elapsed_since_last_call, _params.vertical_acceleration,
+        _params.target_vertical_speed, _params.vertical_speed,
+        changed
     );
     
     // Смещение самолета по вертикальной оси, если оно нужно.
     if ( _params.vertical_speed != 0.0 ) {
+#ifdef INSIDE_XPLANE
         auto position = _ptr_acf->get_position();
         position.y += _params.vertical_speed * elapsed_since_last_call;
         _ptr_acf->set_position( position );
+#else
+        auto location = _ptr_acf->get_location();
+        location.altitude += _params.vertical_speed * elapsed_since_last_call;
+        _ptr_acf->set_location( location );
+#endif
     }
     
     // После вычисления вертикальной скорости запоминаем значение в футах в минуту.

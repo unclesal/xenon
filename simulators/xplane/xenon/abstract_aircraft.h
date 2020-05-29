@@ -12,7 +12,6 @@
 
 // My own includes.
 #include "xplane.hpp"
-#include "CommandSet.h"
 #include "abstract_vehicle.h"
 
 using namespace std;

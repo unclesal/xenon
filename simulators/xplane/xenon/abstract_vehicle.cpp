@@ -31,8 +31,12 @@ AbstractVehicle::AbstractVehicle() {
 // *********************************************************************************************************************
 
 location_t AbstractVehicle::get_location() {
+#ifdef INSIDE_XPLANE
     position_t position = get_position();
     return XPlane::position_to_location(position);
+#else
+    return _location;
+#endif
 };
 
 // *********************************************************************************************************************
@@ -40,9 +44,9 @@ location_t AbstractVehicle::get_location() {
 // *                                Установить высоту позиции - на земле в данной точке                                *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-void AbstractVehicle::hit_to_ground( position_t & position ) {  
 
 #ifdef INSIDE_XPLANE
+void AbstractVehicle::hit_to_ground( position_t & position ) {  
     
    if ( ! __terrain_ref ) return;
    
@@ -62,9 +66,8 @@ void AbstractVehicle::hit_to_ground( position_t & position ) {
        );
    };
    
-#endif
-    
 }    
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -72,13 +75,13 @@ void AbstractVehicle::hit_to_ground( position_t & position ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void AbstractVehicle::hit_to_ground( location_t & location ) {
-    
    auto position = XPlane::location_to_position( location );
    hit_to_ground( position );
    location = XPlane::position_to_location( position );
-    
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -86,11 +89,15 @@ void AbstractVehicle::hit_to_ground( location_t & location ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void AbstractVehicle::clamp_to_ground() {
+
     auto pos = get_position();
     hit_to_ground( pos );
     set_position( pos );
+
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -99,8 +106,12 @@ void AbstractVehicle::clamp_to_ground() {
 // *********************************************************************************************************************
 
 void AbstractVehicle::set_location( const location_t & location ) {
+#ifdef INSIDE_XPLANE
     position_t position = XPlane::location_to_position( location );
     set_position( position );
+#else
+    _location = location;
+#endif
 }
 
 // *********************************************************************************************************************

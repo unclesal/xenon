@@ -23,12 +23,14 @@ namespace xenon {
         double b = 0;
     };
 
+#ifdef INSIDE_XPLANE
     // Позиция в 3D игровом пространстве (OGL).
     struct position_t {
         double x = 0.0;
         double y = 0.0;
         double z = 0.0;
     };
+#endif
 
 //    // boost-style location
 //    typedef boost::geometry::model::point<
@@ -63,10 +65,12 @@ namespace xenon {
         float roll = 0.0;
     };
 
+#ifdef INSIDE_XPLANE
     struct position_with_angles_t {
         position_t position;
         rotation_t rotation;
     };
+#endif
     
     // Одна точка маршрута.
     struct waypoint_t {
@@ -99,10 +103,14 @@ namespace xenon {
      * @short Элемент аэропорта - стоянка.
      */
     struct startup_location_t { // code = 1300, 1301
+
+        location_t location;
+
         // Latitude of location in decimal degrees Eight decimal places supported
-        double latitude = 0.0;
+        // double latitude = 0.0;
         // Longitude of location in decimal degrees Eight decimal places supported
-        double longitude = 0.0;
+        // double longitude = 0.0;
+
         // Heading (true) of airplane positioned at this location Decimal degrees, true heading
         float heading = 0.0;
         // Type of location “gate”, “hangar”, “misc” or “tie-down”

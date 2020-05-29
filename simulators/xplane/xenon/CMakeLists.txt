@@ -10,13 +10,15 @@ set(CMAKE_BUILD_TYPE MATCHES "Release")
 set(DISTRIB_DIR_EXISTS FALSE)
 if (EXISTS "$ENV{DISTRIB_DIR}")
      set(DISTRIB_DIR_EXISTS TRUE)
+     set(DISTRIB_DIR "$ENV{DISTRIB_DIR}")
 endif()
 
 # DISTRIB_DIR - это то место, куда складываем саму сгенерированную библиотеку.
 # Поэтому если его нет, то это - фатально, выдаем ошибку.
 
 if (NOT ${DISTRIB_DIR_EXISTS})
-    message(FATAL_ERROR "Environment variable DISTRIB_DIR was not exported. Or directory \"$ENV{DISTRIB_DIR}\" does not exists.")
+    message("Environment variable DISTRIB_DIR was not exported. Or directory \"$ENV{DISTRIB_DIR}\" does not exists.")
+    set(DISTRIB_DIR ../../../distrib/xplane_plugin_dir/xenon)
 endif()
 
 # PLUGIN_DIR - это для make install. Если его нет, то 
@@ -76,8 +78,6 @@ add_library(xenon MODULE
         # Основной каталог.
         abstract_aircraft.cpp
         abstract_vehicle.cpp
-        airport.cpp
-        airport_network.cpp
         bimbo_aircraft.cpp
         main_plugin.cpp
         user_aircraft.cpp
@@ -94,7 +94,6 @@ set_property(TARGET xenon PROPERTY CXX_STANDARD_REQUIRED 20)
 set_property(TARGET xenon PROPERTY CXX_STANDARD 20)
 
 target_include_directories(xenon PUBLIC
-    /usr/local/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     control
     3dparty/libXPMP2/include
@@ -108,11 +107,10 @@ target_include_directories(xenon PUBLIC
 
 target_link_libraries(xenon
     ${CMAKE_SOURCE_DIR}/3dparty/libXPMP2/libXPMP2.a
-    /usr/local/lib/libGeographic.a
 )
 
 
-set_target_properties(xenon PROPERTIES LIBRARY_OUTPUT_DIRECTORY "$ENV{DISTRIB_DIR}")
+set_target_properties(xenon PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${DISTRIB_DIR})
 set_target_properties(xenon
     PROPERTIES
     PREFIX ""

@@ -17,7 +17,6 @@
 // My own includes
 #include "XNetworking.h"
 #include "abstract_vehicle.h"
-#include "airport.h"
 #include "user_aircraft.h"
 #include "bimbo_aircraft.h"
 #include "XAmbient.h"

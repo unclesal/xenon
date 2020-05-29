@@ -94,8 +94,13 @@ void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_c
         _params.target_vertical_speed = feet_per_min_to_meters_per_second( _get_acf_parameters().vertical_climb_speed );
         
         // Высота, на которой включим уборку шасси.
+#ifdef INSIDE_XPLANE
         auto position = _get_acf_position();
         __gear_up_altitude = position.y + 10.0;
+#else
+        auto location = _get_acf_location();
+        __gear_up_altitude = location.altitude + 10.0;
+#endif
         
     }
 }
@@ -122,8 +127,12 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     
     // Если фаза еще не закончилась, то может быть надо убрать шасси.
     if ( __gear_up_altitude != 0.0 ) {
-        auto position = _get_acf_position();
-        if ( position.y >= __gear_up_altitude ) {
+#ifdef INSIDE_XPLANE
+        auto current_altitude = _get_acf_position().y;
+#else
+        auto current_altitude = _get_acf_location().altitude;
+#endif
+        if ( current_altitude >= __gear_up_altitude ) {
             // Поднимаем шасси и запоминаем, что мы его подняли,
             // чтобы больше не заходить в этот кусок кода и не проверять.
             _ptr_acf->set_gear_down( false );

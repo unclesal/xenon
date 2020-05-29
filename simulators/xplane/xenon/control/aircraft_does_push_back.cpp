@@ -57,6 +57,7 @@ void AircraftDoesPushBack::__internal_step__phase_straight() {
     waypoint_t wp = _get_front_wp();
     auto wp1 = _get_first_wp();
 
+    /*
     auto wp_position = XPlane::location_to_position( wp.location );        
     
     // Описатель "целевой рулежной дорожки", куда мы собрались приехать.
@@ -89,6 +90,7 @@ void AircraftDoesPushBack::__internal_step__phase_straight() {
         _params.target_heading = wp.outgoing_heading;
             
     }
+    */
 
 }
 

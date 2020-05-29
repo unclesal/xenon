@@ -9,16 +9,17 @@
 #include <string>
 #include <array>
 #include <vector>
-
-#include <GeographicLib/Geodesic.hpp>
-
 #include "constants.h"
 #include "settings.h"
 #include "structures.h"
 
 using namespace std;
 using namespace xenon;
+
+#ifndef INSIDE_XPLANE
+#include <GeographicLib/Geodesic.hpp>
 using namespace GeographicLib;
+#endif
 
 namespace xenon {
 
@@ -147,6 +148,7 @@ namespace xenon {
         return brng;
     };
 
+#ifndef INSIDE_XPLANE
     inline location_t shift( const location_t & from, const double & meters, const float & heading ) {
 
         const Geodesic & geod = GeographicLib::Geodesic::WGS84();
@@ -163,6 +165,7 @@ namespace xenon {
 
         return to;
     };
+#endif
 
     /**
      * @brief Расстояние от точки до линии, определенной двумя другими точками.

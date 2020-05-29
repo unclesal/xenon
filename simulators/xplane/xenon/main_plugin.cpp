@@ -80,17 +80,6 @@ PLUGIN_API int XPluginStart( char * outName, char * outSig, char * outDesc ) {
     xenon::XPlane::log( "The Xenon plugin starded successfully in ** DEBUG ** mode." );
 #endif
 
-    // Чтение и парзинг файлов аэропортов.
-    // Происходит в отдельном потоке.
-    XPlane::log("Init airports...");
-    // auto func = []() {
-        Airport::set_has_been_parsed( nullptr );
-        Airport::read_all();
-        XPlane::log("Init airports done, " + to_string(Airport::count()) + " airports");
-    // };
-    // std::thread apt_reader( func );
-    // apt_reader.detach();
-
     // The return's value of XPluginStart is logical result, Yes or No.
     return 1;
 

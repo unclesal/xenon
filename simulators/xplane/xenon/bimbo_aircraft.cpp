@@ -5,14 +5,20 @@
 // *********************************************************************************************************************
 #include <math.h>
 
+#ifdef INSIDE_XPLANE
 #include "XPLMScenery.h"
+#endif
+
 #include "bimbo_aircraft.h"
 #include "constants.h"
 #include "utils.hpp"
 #include "structures.h"
 
 using namespace xenon;
+
+#ifdef INSIDE_XPLANE
 using namespace XPMP2;
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -21,11 +27,19 @@ using namespace XPMP2;
 // *********************************************************************************************************************
 
 BimboAircraft::BimboAircraft(
-    const std::string & icao_type, const std::string & icao_airline,
+    const std::string & icao_type,
+    const std::string & icao_airline,
     const std::string & livery
 )
-    : AbstractAircraft(), XPMP2::Aircraft(icao_type, icao_airline, livery )
+    : AbstractAircraft()
+#ifdef INSIDE_XPLANE
+, XPMP2::Aircraft(icao_type, icao_airline, livery )
+#else
+, ExternalAircraft( icao_type, icao_airline, livery )
+#endif
 {
+
+#ifdef INSIDE_XPLANE
 
     bClampToGround = false;
     for (auto i=0; i<XPMP2::V_COUNT; i++ ) {
@@ -35,6 +49,8 @@ BimboAircraft::BimboAircraft(
     // Времена полной отработки механизмов.
     __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = TIME_FOR_GEAR_MOTION;
     
+#endif
+
     __graph = new AircraftStateGraph( this );
     __taxing_prepared = false;
     
@@ -168,6 +184,7 @@ void BimboAircraft::_action_finished( void * action ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void BimboAircraft::hit_to_ground( position_t & position ) {
     
     AbstractVehicle::hit_to_ground( position );
@@ -175,6 +192,7 @@ void BimboAircraft::hit_to_ground( position_t & position ) {
     position.y += _params.on_ground_offset;
 
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -201,7 +219,7 @@ void BimboAircraft::control( float elapsed_since_last_call ) {
 // *                               Перекрытый метод получения внутриигровой позиции.                                   *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+#ifdef INSIDE_XPLANE
 position_t BimboAircraft::get_position() {
     position_t position;
     position.x = drawInfo.x;
@@ -209,18 +227,20 @@ position_t BimboAircraft::get_position() {
     position.z = drawInfo.z;
     return position;
 }
-
+#endif
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                        Установка внутриигровой позиции инстанции - от структуры position_t.                       *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void BimboAircraft::set_position( const position_t & position ) {
     drawInfo.x = position.x;
     drawInfo.y = position.y;
     drawInfo.z = position.z;
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -229,9 +249,9 @@ void BimboAircraft::set_position( const position_t & position ) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_rotation( const rotation_t & rotation ) {
-    drawInfo.pitch = rotation.pitch;
-    drawInfo.heading = rotation.heading;
-    drawInfo.roll = rotation.roll;
+    SetPitch( rotation.pitch );
+    SetHeading( rotation.heading );
+    SetRoll( rotation.roll );
 }
 
 // *********************************************************************************************************************
@@ -240,13 +260,15 @@ void BimboAircraft::set_rotation( const rotation_t & rotation ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::place_on_ground( const position_t & position, rotation_t & rotation, bool clamp ) {
+#ifdef INSIDE_XPLANE
+void BimboAircraft::place_on_ground( const position_t & position, rotation_t & rotation, bool clamp ) {    
     set_position( position );
     rotation.pitch = _params.taxing_pitch;
     set_rotation( rotation );
     // Если самолет на земле, то шасси-то у него точно выпущены же.
     v[ V_CONTROLS_GEAR_RATIO ] = 1.0;
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -255,21 +277,23 @@ void BimboAircraft::place_on_ground( const position_t & position, rotation_t & r
 // *********************************************************************************************************************
 
 void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
-    location_t loc;
-    loc.latitude = ramp.latitude;
-    loc.longitude = ramp.longitude;
-    loc.altitude = 10.0; // Просто так, чтобы что-нибудь там было.
+
+#ifdef INSIDE_XPLANE
     // Переводим геолокацию в OGL игровые координаты.
-    position_t position = XPlane::location_to_position( loc );
+    position_t position = XPlane::location_to_position( ramp.location );
     // Угловое положение самолета.
     rotation_t rotation;
     rotation.heading = ramp.heading;
     // Первоначальная, грубая установка позиции.
     place_on_ground(position, rotation);
+#else
+    set_location( ramp.location );
+    SetHeading( ramp.heading );
+    v[ V_CONTROLS_GEAR_RATIO ] = 1.0;
+#endif
 
     // Сдвиг относительно начала стоянки
-    move( shift_from_ramp() );
-    
+    move( shift_from_ramp() );    
     // В графе состояний отмечаем, что мы встали на стоянку.
     __graph->place_on_parking();
 
@@ -285,10 +309,10 @@ rotation_t BimboAircraft::get_rotation() {
     // У "имитационного" самолета нет разницы между
     // истинными и магнитным курсом, выдаем один к одному.
     rotation_t rotation;
-    rotation.pitch = drawInfo.pitch;
-    rotation.heading = drawInfo.heading;    
-    rotation.roll = drawInfo.roll;
-    return rotation;    
+    rotation.pitch = GetPitch();
+    rotation.heading = GetHeading();
+    rotation.roll = GetRoll();
+    return rotation;
 }
 
 // *********************************************************************************************************************
@@ -395,14 +419,14 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
 // *                               Вернуть позицию самолета в игровом пространстве                                     *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+#ifdef INSIDE_XPLANE
 position_with_angles_t BimboAircraft::get_position_with_angles() {
     position_with_angles_t pos;
     pos.position = get_position();
     pos.rotation = get_rotation();
     return pos;
 }
-
+#endif
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                         Изменение положения актуаторов (управляющих поверхностей)                                 *
@@ -410,7 +434,7 @@ position_with_angles_t BimboAircraft::get_position_with_angles() {
 // *********************************************************************************************************************
 
 void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOLINT(bugprone-reserved-identifier)
-    for ( auto i=0; i<XPMP2::V_COUNT; i++ ) {
+    for ( auto i=0; i<V_COUNT; i++ ) {
         if ( __actuators[i].requested ) {
             
             float current_value = v[i];
@@ -456,7 +480,9 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
     __update_actuators(elapsed_since_last_call);
     __graph->update( elapsed_since_last_call );
+#ifdef INSIDE_XPLANE
     if ( is_clamped_to_ground ) clamp_to_ground();
+#endif
 }
 
 // *********************************************************************************************************************
@@ -479,8 +505,9 @@ void BimboAircraft::move( float meters ) {
 #else
 
     auto location = get_location();
-    auto dest = xenon::shift( location, meters, drawInfo.heading );
+    auto dest = xenon::shift( location, meters, GetHeading() );
     set_location( dest );
+
 #endif
 
 }
@@ -521,6 +548,7 @@ void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp, const float 
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void BimboAircraft::test__place_on_hp() {
     location_t location;
     rotation_t rotation;
@@ -556,6 +584,7 @@ void BimboAircraft::test__place_on_hp() {
     __start_fp0_action();
     
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -563,6 +592,7 @@ void BimboAircraft::test__place_on_hp() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void BimboAircraft::test__place_on_rwy_end() {
     
     int i = 0;
@@ -597,6 +627,7 @@ void BimboAircraft::test__place_on_rwy_end() {
     place_on_ground( position, rotation, false );    
     
 }
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -604,6 +635,7 @@ void BimboAircraft::test__place_on_rwy_end() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_XPLANE
 void BimboAircraft::test__fly() {
     
     deque< waypoint_t > fp;
@@ -739,3 +771,4 @@ void BimboAircraft::test__fly() {
     __graph->set_active_state( ACF_STATE_AIRBORNED );    
     
 }
+#endif

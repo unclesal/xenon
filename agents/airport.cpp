@@ -231,13 +231,19 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 );
             if ( startup_location ) apt->_put_startup_location( & startup_location );
             startup_location = new startup_location_t();
-            startup_location->latitude = stod( contents[1] );
-            startup_location->longitude = stod( contents[2] );
+
+            // Структура локации, содержащая высоту. Иначе у нас
+            // самолеты вне X-Plane будут ползать под землей.
+            startup_location->location.latitude = stod( contents[1] );
+            startup_location->location.longitude = stod( contents[2] );
+            startup_location->location.altitude = apt->evalution_in_meters();
+
             startup_location->heading = stof( contents[3] );
             // Имя - это вся строка до конца.
             pos = line.rfind( contents[4] );
             startup_location->name = line.substr( pos );
             continue;
+
         }
 
         if ( i_type == 18 ) {
@@ -450,7 +456,7 @@ void Airport::read( const string & full_path_to_apt_dat ) {
                 node.bezier_point_latitude = stod( contents[ next_elem ++ ] );
                 node.bezier_point_longitude = stod( contents[ next_elem ++ ] );
             }
-            if ( contents.size() >= next_elem + 2) {
+            if ( ((int) contents.size()) >= next_elem + 2) {
                 node.line_type_code = stoi( contents[ next_elem ++ ] );
                 node.lighting_type_code = stoi( contents[next_elem] );
             }
@@ -593,8 +599,13 @@ void Airport::read( const string & full_path_to_apt_dat ) {
             );
             if ( startup_location ) apt->_put_startup_location( & startup_location );
             startup_location = new startup_location_t();
-            startup_location->latitude = stod( contents[1] );
-            startup_location->longitude = stod( contents[2] );
+
+            // Структура локации с учетом высоты, чтобы самолеты
+            // вне X-Plane не зарывались под землю.
+            startup_location->location.latitude = stod( contents[1] );
+            startup_location->location.longitude = stod( contents[2] );
+            startup_location->location.altitude = apt->evalution_in_meters();
+
             startup_location->heading = stof( contents[3] );
             startup_location->startup_type = contents[4];
             startup_location->airplane_types = contents[5];

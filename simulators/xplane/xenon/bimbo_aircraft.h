@@ -8,12 +8,22 @@
 #include <string>
 #include <deque>
 
+#ifdef INSIDE_XPLANE
+
 // X-Plane includes
 #include "XPLMScenery.h"
 #include "XPLMInstance.h"
 
 // XPMP2 includes
 #include "XPMPAircraft.h"
+
+using namespace XPMP2;
+
+#else
+
+#include "external_aircraft.h"
+
+#endif // INSIDE_XPLANE
 
 // My own includes
 #include "structures.h"
@@ -22,11 +32,15 @@
 #include "abstract_aircraft.h"
 #include "xplane.hpp"
 
-using namespace XPMP2;
-
 namespace xenon {
 
-    class BimboAircraft : public AbstractAircraft, public XPMP2::Aircraft {
+    class BimboAircraft : public AbstractAircraft
+#ifdef INSIDE_XPLANE
+        , public XPMP2::Aircraft
+#else
+        , public ExternalAircraft
+#endif
+    {
 
         public:
 
@@ -50,14 +64,19 @@ namespace xenon {
 
             ~BimboAircraft() override = default;
 
+#ifdef INSIDE_XPLANE
             position_t get_position() override;
             position_with_angles_t get_position_with_angles();
             void set_position( const position_t & position ) override;
+#endif
+
             rotation_t get_rotation() override;
             void set_rotation( const rotation_t & rotation ) override;
 
-            // Перекрытая функция XPMP2::Aircraft
-            void UpdatePosition(float elapsed_since_last_call, int fl_counter) override ;
+            /**
+             * @short Перекрытая функция XPMP2::Aircraft / ExternalAircraft
+             */
+            void UpdatePosition(float elapsed_since_last_call, int fl_counter) override;
 
             // Освещение вкл-выкл
             void set_taxi_lites(bool on) override {
@@ -106,9 +125,12 @@ namespace xenon {
                         
             // Расположить самолет на данной стоянке.
             void place_on_ground( const startup_location_t & ramp );
+
+#ifdef INSIDE_XPLANE
             void place_on_ground(
                 const position_t & position, rotation_t & rotation, bool clamp_to_ground = true
             );
+#endif
 
             // Переместить самолет на определенное количество
             // метров согласно его курсу (heading)
@@ -132,16 +154,19 @@ namespace xenon {
             void prepare_flight_plan( deque<waypoint_t> & fp, const float & cruise_altitude );
             
             void choose_next_action();
-            
+
+#ifdef INSIDE_XPLANE
             void test__place_on_hp();
             void test__place_on_rwy_end();
             void test__fly();
+#endif
             
+#ifdef INSIDE_XPLANE
             /**
              * @short Перекрытая функция "касания земли" с учетом высоты самолета.
              */
             void hit_to_ground( position_t & position ) override;
-
+#endif
 
         protected:
             
@@ -152,7 +177,7 @@ namespace xenon {
             
         private:
 
-            actuator_motion_t __actuators[ XPMP2::V_COUNT ];
+            actuator_motion_t __actuators[ V_COUNT ];
             
             // Граф состояний самолета.
             AircraftStateGraph * __graph;

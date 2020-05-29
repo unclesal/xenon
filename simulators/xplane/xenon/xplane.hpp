@@ -138,24 +138,26 @@ namespace xenon {
 #endif
             };
 
+
+#ifdef INSIDE_XPLANE
             /**
              * @short Перевод координат из 3D OGL игровых - в гео-формат.
              * @param position
              * @return
              */
             static location_t position_to_location( const position_t & position ) {
-#ifdef INSIDE_XPLANE
+
                 location_t location;
                 XPLMLocalToWorld(
                     position.x, position.y, position.z,
                     & location.latitude, & location.longitude, & location.altitude
                 );
-                return location;
-#else
-                return location_t();
-#endif
-            };
+                return location;                
 
+            };
+#endif
+
+#ifdef INSIDE_XPLANE
             /**
              * @short Перевод координат из гео-формата в локальную 3D OGL форму.
              * @param location
@@ -163,53 +165,61 @@ namespace xenon {
              */
             static position_t location_to_position( const location_t & location ) {
 
-#ifdef INSIDE_XPLANE
+
                 position_t position;
                 XPLMWorldToLocal(
                     location.latitude, location.longitude, location.altitude,
                     & position.x, & position.y, &position.z
                 );
                 return position;
-#else
-                return position_t();
-#endif
-            };
 
+            };
+#endif
+
+#ifdef INSIDE_XPLANE
             static double bearing( const position_t & position_from, const position_t & position_to ) {
                 auto location_from = position_to_location( position_from );
                 auto location_to = position_to_location( position_to );
                 return xenon::bearing( location_from, location_to );
             };
+#endif
 
+#ifdef INSIDE_XPLANE
             /**
              * @short Дистанция между двумя точками - в "плоском" ее смысле, без учета высоты.
              */
-            static double distance_2d(const position_t & p1, const position_t & p2 ) {
+            static double distance2d(const position_t & p1, const position_t & p2 ) {
                 return sqrt( pow(( p1.x - p2.x ), 2) + pow(( p1.z - p2.z ), 2));
             };
+#endif
 
+#ifdef INSIDE_XPLANE
             /**
              * @short Дистанция в "плоском" смысле между точкой и прямой линией.
              * https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D1%81%D1%81%D1%82%D0%BE%D1%8F%D0%BD%D0%B8%D0%B5_%D0%BE%D1%82_%D1%82%D0%BE%D1%87%D0%BA%D0%B8_%D0%B4%D0%BE_%D0%BF%D1%80%D1%8F%D0%BC%D0%BE%D0%B9_%D0%BD%D0%B0_%D0%BF%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D1%81%D1%82%D0%B8
              */
-            static double distance_2d( const position_t & pos, line_descriptor_t & l ) {
+            static double distance2d( const position_t & pos, line_descriptor_t & l ) {
                 // Точка, в которой пересекаются прямые l и перпендикуляр к ней, проходящий через точку pos.
                 position_t pos2;
                 pos2.x = ( pos.x + l.k * pos.z - l.k * l.b ) / ( pow(l.k, 2 ) + 1 );
                 pos2.z = l.k * pos2.x + l.b;
-                return distance_2d(pos, pos2);
+                return distance2d(pos, pos2);
             };
+#endif
 
+#ifdef INSIDE_XPLANE
             /**
              * @short Полная дистанция, с учетом высоты.
              */
 
-            static double distance_3d(const position_t & p1, const position_t & p2 ) {
+            static double distance3d(const position_t & p1, const position_t & p2 ) {
                 return sqrt(
                     pow(( p1.x - p2.x ), 2) + pow((p1.y - p2.y), 2) + pow((p1.z - p2.z), 2)
                 );
             };
+#endif
 
+#ifdef INSIDE_XPLANE
             /**
              * @short Математическое описание линии, проходящей через заданную точку и имеющей данный курс.
              */
@@ -229,6 +239,7 @@ namespace xenon {
 
                 return result;
             };
+#endif
             
     }; // class XPlane
 }; // namespace xenon

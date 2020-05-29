@@ -2,6 +2,10 @@
 
 # XENON
 
+Multi-agent modeling of air traffic and airports operations.
+
+# How to compile and / or install
+
 Please do not compile nor install it, because this project still does not do anything useful.
 
 # Terms and agreements
@@ -25,11 +29,6 @@ subdirectory - they will be needed.
 You can also download it from [Google Disk])(https://drive.google.com/drive/folders/0B8hGoqCV5Z5AcTM4ZWhIX2RZT2M), if this 
 method is more convenient for you. It is important that the **X-Plane ROOT/Resources/plugins/xenon** directory has a subdirectory
 **Resources/CSL** with the specified models.
-
-5. [Boost](https://www.boost.org/), a set of modern C++ portable libraries, for working with graphs and various coordinate systems.
-It also does not need to be specially installed, because most of it is included in the program itself during compilation.
-
-6. [nlohmann](https://github.com/nlohmann/json) modern C++ JSON realization (not need to be installed separately)
 
 # movies
 
