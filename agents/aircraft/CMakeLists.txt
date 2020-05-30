@@ -46,7 +46,9 @@ set(SOURCES
     ${NET}/command_parser.cpp
     ${NET}/connected_communicator.cpp
     
-    ${NETCMD}/cmd_hello.cpp        
+    ${NETCMD}/cmd_hello.cpp
+    ${NETCMD}/cmd_vehicle_condition.cpp
+    ${NETCMD}/cmd_aircraft_condition.cpp
 
     ${CONTROL}/abstract_aircrafter.cpp
     ${CONTROL}/aircraft_abstract_action.cpp

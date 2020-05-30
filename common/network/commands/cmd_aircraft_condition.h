@@ -10,7 +10,7 @@
 namespace xenon {
     
     class CmdAircraftCondition : public CmdVehicleCondition {
-    
+        
         public:
             
             CmdAircraftCondition();
@@ -22,6 +22,11 @@ namespace xenon {
             
             void to_json( JSON & json ) override;
             void from_json( JSON & json ) override;
+            
+#ifdef SERVER_SIDE
+            void execute_on_server( ConnectedClientListener * client, ClientsListener * server ) override;
+#endif
+            
             
         protected:
             

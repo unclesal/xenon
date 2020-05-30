@@ -20,6 +20,11 @@ namespace xenon {
             virtual void to_json( JSON & json ) override;
             virtual void from_json( JSON & json ) override;
             
+#ifdef SERVER_SIDE
+            virtual void execute_on_server( ConnectedClientListener * client, ClientsListener * server ) override;
+#endif
+
+            
         protected:
             
             vehicle_condition_t _vcl_condition;

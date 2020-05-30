@@ -9,6 +9,17 @@
 
 using namespace xenon;
 
+// Чутка поэкономить на сетевом трафике.
+
+constexpr uint16_t TAXI_LITES        = 1 << 0;
+constexpr uint16_t LANDING_LITES     = 1 << 1;
+constexpr uint16_t BEACON_LITES      = 1 << 2;
+constexpr uint16_t STROBE_LITES      = 1 << 3;
+constexpr uint16_t NAV_LITES         = 1 << 4;
+constexpr uint16_t GEAR_DOWN         = 1 << 5;
+constexpr uint16_t REVERSE_ON        = 1 << 6;
+
+
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                                 Пустой конструктор                                                *
@@ -57,17 +68,20 @@ void CmdAircraftCondition::to_json( JSON & json ) {
     json[ "target_roll" ] = _acf_condition.target_roll;
     
     // Положение и состояние актуаторов.
-    json[ "is_taxi_lites_on" ] = _acf_condition.is_taxi_lites_on;
-    json[ "is_landing_lites_on" ] = _acf_condition.is_landing_lites_on;
-    json[ "is_beacon_lites_on" ] = _acf_condition.is_beacon_lites_on;
-    json[ "is_strobe_lites_on" ] = _acf_condition.is_strobe_lites_on;
+    uint16_t actuators = 0;
+    if ( _acf_condition.is_taxi_lites_on ) actuators &= TAXI_LITES;
+    if ( _acf_condition.is_landing_lites_on ) actuators &= LANDING_LITES;
+    if ( _acf_condition.is_beacon_lites_on ) actuators &= BEACON_LITES;
+    if ( _acf_condition.is_strobe_lites_on ) actuators &= STROBE_LITES;
+    if ( _acf_condition.is_nav_lites_on ) actuators &= NAV_LITES;
+    if ( _acf_condition.is_gear_down ) actuators &= GEAR_DOWN;
+    if ( _acf_condition.is_reverse_on ) actuators &= REVERSE_ON;
+    json[ "actuators" ] = actuators;
     
-//     bool is_nav_lites_on = false;
-//     bool is_gear_down = false;
-//     bool is_reverse_on = false;
-//     float flaps_position = 0.0;
-//     float speed_brake_position = 0.0;
-//     float thrust_position = 0.0;
+    // Пропорциональные актуаторы.
+    json[ "flaps_position" ] = _acf_condition.flaps_position;
+    json[ "speed_brake_position" ] = _acf_condition.speed_brake_position;
+    json[ "thrust_position" ] = _acf_condition.thrust_position;
 
 }
 
@@ -93,13 +107,34 @@ void CmdAircraftCondition::from_json( JSON & json ) {
     _acf_condition.target_roll = json.value( "target_roll", 0.0 );
     
     // Положение и состояние актуаторов.
-    _acf_condition.is_taxi_lites_on = json.value( "is_taxi_lites_on", false );
-    _acf_condition.is_landing_lites_on = json.value( "is_landing_lites_on", false );
-    _acf_condition.is_beacon_lites_on = json.value( "is_beacon_lites_on", false );
-    _acf_condition.is_strobe_lites_on = json.value( "is_strobe_lites_on", false );
+    
+    uint16_t actuators = json.value( "actuators", 0 );    
+    _acf_condition.is_taxi_lites_on = actuators & TAXI_LITES;
+    _acf_condition.is_landing_lites_on = actuators & LANDING_LITES;
+    _acf_condition.is_beacon_lites_on = actuators & BEACON_LITES;
+    _acf_condition.is_strobe_lites_on = actuators & STROBE_LITES;
+    _acf_condition.is_nav_lites_on = actuators & NAV_LITES;
+    _acf_condition.is_gear_down = actuators & GEAR_DOWN;
+    _acf_condition.is_reverse_on = actuators & REVERSE_ON;
+    
+    // Пропорциональные актуаторы.
+    
+    _acf_condition.flaps_position = json.value( "flaps_position", 0.0 );
+    _acf_condition.speed_brake_position = json.value( "speed_brake_position", 0.0 );
+    _acf_condition.thrust_position = json.value( "thrust_position", 0.0 );
     
     // Считается на приемной стороне.
     _acf_condition.vertical_speed_fpm = xenon::meters_per_seconds_to_feet_per_min( _acf_condition.vertical_speed );
     
 };
 
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                 Метод выполнения команды на сервере (в коммуникаторе)                             *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+#ifdef SERVER_SIDE
+void CmdAircraftCondition::execute_on_server( ConnectedClientListener * client, ClientsListener * server ) {
+};
+#endif
