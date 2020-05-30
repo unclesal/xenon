@@ -4,6 +4,7 @@
 // * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 27 may 2020 at 08:49 *
 // *********************************************************************************************************************
 #include "agent_aircraft.h"
+#include "tested_agents.h"
 
 using namespace xenon;
 using namespace std;
@@ -17,9 +18,11 @@ using namespace std;
 AgentAircraft::AgentAircraft ( const std::string & uuid )
     : AbstractAgent( uuid, AGENT_AIRCRAFT ) {
 
-    if ( uuid == "4204f982a17811eaaf3794de807942f4" ) {        
+    if ( uuid == BOEING_1 ) {        
         
         __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
+
+        _communicator->set_agent_name("Boeing 738");
         
         if ( ! Airport::airports_was_readed() ) {
             cerr << "Airports was not readed, exit." << endl;
@@ -27,9 +30,10 @@ AgentAircraft::AgentAircraft ( const std::string & uuid )
         } else {
         
         }
-        
-    }        
-        
+    }
+    
+    if ( ! __ptr_acf ) Logger::log("AgentAircraft::AgentAircraft() UUID " + uuid + " not handled");
+    
 }
 
 // *********************************************************************************************************************

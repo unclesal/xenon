@@ -15,9 +15,14 @@ using namespace std;
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AbstractAgent::AbstractAgent( const std::string & uuid, const agent_t & agent_type ) {
+AbstractAgent::AbstractAgent( 
+    const std::string & uuid, 
+    const agent_t & agent_type, 
+    const std::string & agent_name 
+) {
 
-    _communicator = new ConnectedCommunicator( this, agent_type, uuid );
+    _communicator = new ConnectedCommunicator( this, agent_type, uuid, agent_name );
+
     if ( ! Airport::airports_was_readed() ) {        
         Airport::read_all();
     }

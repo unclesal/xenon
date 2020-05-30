@@ -18,7 +18,10 @@ namespace xenon {
         
         public:
             
-            AgentAircraft(const std::string & uuid);
+            AgentAircraft( 
+                const std::string & uuid
+            );
+
             ~AgentAircraft() override = default;
             
             void run() override;

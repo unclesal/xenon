@@ -38,6 +38,7 @@ namespace xenon {
             unsigned int __packet_number;
             std::string __agent_uuid;
             agent_t __agent_type;
+            std::string __agent_name;
             
     }; // AbstractCommand
     

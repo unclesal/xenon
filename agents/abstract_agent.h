@@ -21,18 +21,16 @@ namespace xenon {
         
         public:
             
-            AbstractAgent( const std::string & uuid, const agent_t & agent_type );
+            AbstractAgent( 
+                const std::string & uuid, const agent_t & agent_type, const std::string & agent_name = ""
+            );
             virtual ~AbstractAgent();
             
             virtual void run() = 0;
             
         protected:
             
-            ConnectedCommunicator * _communicator;
-            
-            /**
-             * @short callback на чтение аэропортов по умолчанию.
-             */
+            ConnectedCommunicator * _communicator;            
             
         private:
             

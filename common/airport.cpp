@@ -1003,6 +1003,7 @@ void Airport::read_all() {
     // Это - единственное место, где происходит установка данного флага.
     // Во всех остальных случаях он только читается.
     Airport::__airports_was_readed = true;
+    Logger::log("Airport::read_all(): All airports (" + to_string( __airports.size() ) + ") has been readed.");
 
 }
 

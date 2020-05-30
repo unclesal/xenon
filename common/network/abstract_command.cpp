@@ -29,6 +29,7 @@ void AbstractCommand::to_json ( JSON & json ) {
     json["packet_number"] = __packet_number;
     json["agent_uuid"] = __agent_uuid;
     json["agent_type"] = ( int ) __agent_type;
+    json["agent_name"] = __agent_name;
 }
 
 // *********************************************************************************************************************
@@ -42,5 +43,6 @@ void AbstractCommand::from_json ( JSON & json ) {
     __packet_number = json.value( "packet_number", 0 );
     __agent_uuid = json.value("agent_uuid", "");
     __agent_type = ( agent_t ) json.value("agent_type", (int)AGENT_UNKNOWN );
+    __agent_name = json.value("agent_name", "UNKNOWN");
 }
 

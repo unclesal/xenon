@@ -18,12 +18,14 @@ unsigned int ConnectedCommunicator::__packet_number = 0;
 // *********************************************************************************************************************
 
 ConnectedCommunicator::ConnectedCommunicator( 
-    ConnectedCommunicatorReactor * reactor, const agent_t & agent_type, const std::string & agent_uuid
+    ConnectedCommunicatorReactor * reactor, const agent_t & agent_type, 
+    const std::string & agent_uuid, const std::string & agent_name
 ) {
     
     __reactor = reactor;
     __agent_type = agent_type;
     __agent_uuid = agent_uuid;
+    __agent_name = agent_name;
     __socket = -1;
     __remote_communicator = nullptr;
     __connected = false;
@@ -161,6 +163,7 @@ void ConnectedCommunicator::request( AbstractCommand * cmd ) {
     // Идентификатор и тип агента.
     cmd->__agent_uuid = __agent_uuid;
     cmd->__agent_type = __agent_type;
+    cmd->__agent_name = __agent_name;
     
     __transmitt_mutex.lock();
     __transmitt_queue.push_back( cmd );

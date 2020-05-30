@@ -8,6 +8,8 @@
 #include <thread>
 
 #include "agent_aircraft.h"
+#include "connected_communicator.h"
+#include "tested_agents.h"
 
 using namespace std;
 using namespace xenon;
@@ -20,7 +22,7 @@ int main( int argc, char * argv[] ) {
 //     };
 //     std::string uuid(argv[1]);
     
-    std::string uuid("4204f982a17811eaaf3794de807942f4");
+    std::string uuid( BOEING_1 );    
     AgentAircraft acf( uuid );
     acf.run();
     

@@ -38,6 +38,9 @@ set(SOURCES
     ${COMMON}/abstract_vehicle.cpp
     ${COMMON}/abstract_aircraft.cpp
     ${COMMON}/bimbo_aircraft.cpp
+    ${COMMON}/airport_network.cpp
+    ${COMMON}/airport.cpp
+
     
     ${NET}/abstract_command.cpp
     ${NET}/command_parser.cpp
@@ -66,8 +69,6 @@ set(SOURCES
     ${CONTROL}/aircraft_state_ready_for_taxing.cpp
     ${CONTROL}/aircraft_state_runway_leaved.cpp
 
-    ../airport_network.cpp
-    ../airport.cpp
     ../abstract_agent.cpp
 
     agent_aircraft.cpp

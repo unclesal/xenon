@@ -201,7 +201,7 @@ namespace xenon {
      * полностью разделены (попытка поэкономить память).
      */
     struct vehicle_condition_t {
-        
+
         // Текущее местоположение.
         location_t location;
 

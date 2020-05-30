@@ -26,6 +26,8 @@ using namespace std;
 
 XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
 
+    Airport::read_all();
+    
     // Remember ID of our plugin for the future communications between plugins.
     __this_plugin_id = this_plugin_id;
     __enabled = false;
@@ -35,7 +37,7 @@ XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
     __uair_count = 0;
     __around_inited = false;
     
-    __communicator = new ConnectedCommunicator( this, AGENT_XPLANE, "" );
+    __communicator = new ConnectedCommunicator( this, AGENT_XPLANE, "44f76e0ca23811ea8f3e94de807942f4", "X-Plane" );
 
 }
 
@@ -108,8 +110,8 @@ void XPlanePlugin::__init_around() {
 
     if ( __around_inited ) return;
     
-//    // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
-//    if ( ! Airport::airports_was_readed() ) return;
+    // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
+    if ( ! Airport::airports_was_readed() ) return;
     
 //    // Порождаем самолетик для пробы.
 //    XPlane::log("Init one bimbo...");
