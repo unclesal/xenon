@@ -100,8 +100,7 @@ void ConnectedCommunicator::__try_open_socket() {
     if ( ( __socket < 0 ) || ( ! __connected ) ) {            
         
         // Попытка открытия сокеты. Причем, может быть такая ситуация, что сама сокета-то 
-        // открыта, но вот соединиться мы не смогли. Учитываем эту ситуацию.
-        sleep(10);
+        // открыта, но вот соединиться мы не смогли. Учитываем эту ситуацию.        
         __connected = false;
         if ( __socket < 0 ) __close_socket();                            
         
@@ -195,7 +194,7 @@ void ConnectedCommunicator::__read_from_socket() {
         __close_socket();
         return;
     }
-    
+        
     __reactor->on_received( cmd );
     
     delete( cmd );

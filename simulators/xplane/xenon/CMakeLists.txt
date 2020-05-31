@@ -59,7 +59,7 @@ add_library(xenon MODULE
         ${COMMON}/airport_network.cpp
         
         ${NETCMD}/cmd_aircraft_condition.cpp
-        ${NETCMD}/cmd_hello.cpp
+        ${NETCMD}/cmd_query_around.cpp
         ${NETCMD}/cmd_vehicle_condition.cpp
         
         ${NETWORK}/abstract_command.cpp

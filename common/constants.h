@@ -147,6 +147,7 @@ namespace xenon {
     // Кому адресован пакет.
     enum say_to_t {
         SAY_TO_UNKNOWN = 0,
+        SAY_TO_NOBODY,
         SAY_TO_ALL,
         SAY_TO_THIS_TYPE,
         SAY_TO_THIS_ONE        

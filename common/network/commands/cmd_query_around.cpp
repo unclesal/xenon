@@ -1,46 +1,32 @@
 // *********************************************************************************************************************
-// *         Любой внешний агент, который может общаться с коммуникатором и через него - с другими агентами            *
+// *                     Запросить у сервера всех агентов, которые может "слышать" данный агент.                       *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 27 may 2020 at 08:13 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 31 may 2020 at 14:48 *
 // *********************************************************************************************************************
 
-#include "abstract_agent.h"
+#include "cmd_query_around.h"
 
 using namespace xenon;
-using namespace std;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                                   Конструктор                                                     *
+// *                                                Пустой конструктор                                                 *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AbstractAgent::AbstractAgent( const std::string & uuid ) {
-
-    _communicator = new ConnectedCommunicator( this );
-
-    if ( ! Airport::airports_was_readed() ) {        
-        Airport::read_all();
-    }
-
-    // Ждем, пока аэропорт не вычитает свои данные.
-    Logger::log("Waiting airports readed...");
-    while ( ! Airport::airports_was_readed() ) {
-        usleep(50);
-    }
-    Logger::log("apts readed, ok.");
+CmdQueryAround::CmdQueryAround() : AbstractCommand() {
+    _command_name = "CmdQueryAround";
 }
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                                   Деструктор                                                      *
+// *                                             Конструктор от параметров                                             *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AbstractAgent::~AbstractAgent() {
-    if ( _communicator ) {
-        delete( _communicator );
-        _communicator = nullptr;
-    }
+CmdQueryAround::CmdQueryAround(const vehicle_condition_t & vcl_condition)
+    : AbstractCommand( SAY_TO_NOBODY, vcl_condition )
+{
+    _command_name = "CmdQueryAround";
 }
 

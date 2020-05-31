@@ -7,8 +7,10 @@ cmake_minimum_required(VERSION 3.17)
 project(agent_aircraft LANGUAGES C CXX)
 set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
-set(CMAKE_BUILD_TYPE MATCHES "Release")
 
+# set(CMAKE_BUILD_TYPE MATCHES "Release")
+
+message("Build type: ${CMAKE_BUILD_TYPE}")
 add_compile_options(-O3 -fPIC -Wno-deprecated-declarations)
 
 # Сборка - именно для серверной части.
@@ -40,14 +42,13 @@ set(SOURCES
     ${COMMON}/bimbo_aircraft.cpp
     ${COMMON}/airport_network.cpp
     ${COMMON}/airport.cpp
-
     
     ${NET}/abstract_command.cpp
     ${NET}/command_parser.cpp
     ${NET}/connected_communicator.cpp
     
-    ${NETCMD}/cmd_hello.cpp
     ${NETCMD}/cmd_vehicle_condition.cpp
+    ${NETCMD}/cmd_query_around.cpp
     ${NETCMD}/cmd_aircraft_condition.cpp
 
     ${CONTROL}/abstract_aircrafter.cpp
@@ -70,8 +71,6 @@ set(SOURCES
     ${CONTROL}/aircraft_state_ready_for_take_off.cpp
     ${CONTROL}/aircraft_state_ready_for_taxing.cpp
     ${CONTROL}/aircraft_state_runway_leaved.cpp
-
-    ../abstract_agent.cpp
 
     agent_aircraft.cpp
     main.cpp

@@ -7,6 +7,7 @@
 
 #include "jsonable.h"
 #include "structures.h"
+#include "logger.h"
 
 #ifdef SERVER_SIDE
 #include "connected_client_listener.h"
@@ -46,6 +47,7 @@ namespace xenon {
             };
             
             const say_to_t & sayed_to() {
+                Logger::log("AbstractCommand::sayed_to=" + to_string( _say_to ));
                 return _say_to;
             };
 
@@ -56,6 +58,7 @@ namespace xenon {
         protected:
             
             vehicle_condition_t _vcl_condition;
+            say_to_t _say_to;
             
         private:
             

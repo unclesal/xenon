@@ -27,7 +27,7 @@ namespace xenon {
                 memset( __tx_buffer, 0, sizeof( __tx_buffer ));
                 error = "";
                 JSON json;
-                cmd->to_json( json );
+                cmd->to_json( json );                
                 std::vector<std::uint8_t> trx = JSON::to_ubjson(json);
             
                 if ( trx.size() >= (sizeof( __tx_buffer ) - 2 )) {

@@ -5,6 +5,8 @@
 // *********************************************************************************************************************
 #include "agent_aircraft.h"
 #include "tested_agents.h"
+#include "cmd_query_around.h"
+#include "cmd_aircraft_condition.h"
 
 using namespace xenon;
 using namespace std;
@@ -15,8 +17,20 @@ using namespace std;
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AgentAircraft::AgentAircraft ( const std::string & uuid )
-    : AbstractAgent( uuid ) {
+AgentAircraft::AgentAircraft ( const std::string & uuid ) {
+    
+    __communicator = new ConnectedCommunicator( this );
+
+    if ( ! Airport::airports_was_readed() ) {
+        Airport::read_all();
+    }
+
+   // Ждем, пока аэропорт не вычитает свои данные.
+   Logger::log("Waiting airports readed...");
+   while ( ! Airport::airports_was_readed() ) {
+       usleep(50);
+   }
+   Logger::log("apts readed, ok.");
 
     if ( uuid == BOEING_1 ) {        
         
@@ -31,7 +45,7 @@ AgentAircraft::AgentAircraft ( const std::string & uuid )
     }
     
     if ( ! __ptr_acf ) Logger::log("AgentAircraft::AgentAircraft() UUID " + uuid + " not handled");
-    
+
 }
 
 // *********************************************************************************************************************
@@ -41,7 +55,7 @@ AgentAircraft::AgentAircraft ( const std::string & uuid )
 // *********************************************************************************************************************
 
 void AgentAircraft::run() {
-     
+    
     if ( ! __ptr_acf ) {
         cerr << "AgentAircraft::run(): acf pointer is none. Exit." << endl;
         return;
@@ -49,9 +63,9 @@ void AgentAircraft::run() {
     
     for (;;) {
         sleep(100);
-        __step();
+        // __step();
     }
-
+    
 }
 
 // *********************************************************************************************************************
@@ -63,10 +77,16 @@ void AgentAircraft::run() {
 void AgentAircraft::on_connect() {
 
     cout << "Communicator - connected!!!" << endl;
-    if ( __ptr_acf ) {
-        CmdHello * hello = new CmdHello( __ptr_acf->vcl_condition );
-        _communicator->request( hello );
-    }
+        
+    // Даем свое состояние коммуникатору.
+    CmdAircraftCondition * cmd_acf_condition = new CmdAircraftCondition(
+        __ptr_acf->vcl_condition, __ptr_acf->acf_condition
+    );
+    __communicator->request( cmd_acf_condition );
+    
+    // Спрашиваем наше окружение - тех агентов, которых мы можем "слышать".
+    CmdQueryAround * cmd_around = new CmdQueryAround( __ptr_acf->vcl_condition );
+    __communicator->request( cmd_around );    
 
 }
 
@@ -106,7 +126,7 @@ void AgentAircraft::on_error( std::string message ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::on_received( AbstractCommand * cmd ) {
-    cout << "Got command: " << cmd->command_name() << endl;
+    cout << "AgentAircraft::on_received: " << cmd->command_name() << endl;
 };
 
 

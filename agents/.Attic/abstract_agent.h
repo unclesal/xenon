@@ -17,16 +17,15 @@
 
 namespace xenon {
     
-    class AbstractAgent : public ConnectedCommunicatorReactor {
+    class AbstractAgent {
         
         public:
             
-            AbstractAgent( const std::string & uuid );
+            AbstractAgent( ConnectedCommunicatorReactor * reactor );
             virtual ~AbstractAgent();
             
             virtual void run() = 0;
 
-            
         protected:
             
             ConnectedCommunicator * _communicator;            

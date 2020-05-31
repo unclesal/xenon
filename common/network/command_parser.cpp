@@ -5,6 +5,10 @@
 // *********************************************************************************************************************
 #include "command_parser.h"
 
+#include "cmd_aircraft_condition.h"
+#include "cmd_query_around.h"
+#include "cmd_vehicle_condition.h"
+
 using namespace xenon;
 
 // *********************************************************************************************************************
@@ -14,9 +18,9 @@ using namespace xenon;
 // *********************************************************************************************************************
 
 CommandParser::CommandParser() {
-    __register< CmdHello >( "CmdHello" );
     __register< CmdVehicleCondition >( "CmdVehicleCondition" );
-    __register< CmdAircraftCondition >( "CmdAircraftCondition" );
+    __register< CmdQueryAround >( "CmdQueryAround" );
+    __register< CmdAircraftCondition >( "CmdAircraftCondition" );    
 }
 
 // *********************************************************************************************************************
@@ -37,7 +41,12 @@ AbstractCommand * CommandParser::parse( char * buffer, const ssize_t & len, std:
         
         JSON json = JSON::from_ubjson(v_ubjson);
         command_name = json.value("command_name", "");
-        return __create_instance( command_name );
+        Logger::log("Command name=" + command_name );
+        auto instance = __create_instance( command_name );
+        Logger::log("instance created");
+        if ( instance ) instance->from_json( json );
+        Logger::log("made from json");
+        return instance;
         
     } catch ( JSON::parse_error & err ) {
     } catch ( const std::runtime_error & re ) {

@@ -21,9 +21,9 @@ int main( int argc, char * argv[] ) {
 //         return -1;
 //     };
 //     std::string uuid(argv[1]);
-    
-    std::string uuid( BOEING_1 );    
+        
+    std::string uuid( BOEING_1 );  
     AgentAircraft acf( uuid );
     acf.run();
-    
+    return 0;
 };

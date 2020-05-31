@@ -12,10 +12,6 @@
 #include "jsonable.h"
 #include "abstract_command.h"
 
-#include "cmd_hello.h"
-#include "cmd_vehicle_condition.h"
-#include "cmd_aircraft_condition.h"
-
 namespace xenon {
     
     template<typename T> AbstractCommand * __create_command() { return new T; };

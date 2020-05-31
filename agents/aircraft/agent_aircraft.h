@@ -9,12 +9,14 @@
 
 #include <string>
 
-#include "abstract_agent.h"
+#include "airport.h"
+#include "connected_communicator.h"
+#include "connected_communicator_reactor.h"
 #include "bimbo_aircraft.h"
 
 namespace xenon {
     
-    class AgentAircraft : public AbstractAgent {
+    class AgentAircraft : public ConnectedCommunicatorReactor {
         
         public:
             
@@ -22,9 +24,14 @@ namespace xenon {
                 const std::string & uuid
             );
 
-            ~AgentAircraft() override = default;
+            ~AgentAircraft() {
+                if ( __communicator ) {
+                    delete ( __communicator );
+                    __communicator = nullptr;
+                };
+            };
             
-            void run() override;
+            void run();
             
             void on_connect() override;
             void on_disconnect() override;
@@ -37,6 +44,8 @@ namespace xenon {
 
             BimboAircraft * __ptr_acf;
             void __step();
+            
+            ConnectedCommunicator * __communicator;
             
     };
     

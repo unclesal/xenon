@@ -11,6 +11,8 @@ namespace xenon {
     
     class CmdAircraftCondition : public CmdVehicleCondition {
         
+        friend class ConnectedClient;
+        
         public:
             
             CmdAircraftCondition();
@@ -22,7 +24,7 @@ namespace xenon {
             
             void to_json( JSON & json ) override;
             void from_json( JSON & json ) override;
-            
+                        
         protected:
             
             aircraft_condition_t _acf_condition;
