@@ -4,6 +4,9 @@
 // * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 02 may 2020 at 10:32 *
 // *********************************************************************************************************************
 #pragma once
+
+#include <sys/time.h>
+
 #include <math.h>
 
 #include <string>
@@ -222,6 +225,13 @@ namespace xenon {
     
     inline int get_communicator_max_clients() {
         return COMMUNICATOR_MAX_CLIENTS;
-    }
+    };
+    
+    inline long int get_system_time_ms() {
+        struct timeval tp;
+        gettimeofday( & tp, nullptr );
+        long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+        return ms;
+    };
 
 }; // namespace xenon

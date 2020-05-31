@@ -13,6 +13,8 @@
 #include "abstract_command.h"
 
 #include "cmd_hello.h"
+#include "cmd_vehicle_condition.h"
+#include "cmd_aircraft_condition.h"
 
 namespace xenon {
     

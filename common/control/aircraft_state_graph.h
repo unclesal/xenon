@@ -20,7 +20,6 @@
 #include "aircraft_state_ready_for_taxing.h"
 #include "aircraft_state_runway_leaved.h"
 
-
 #include "aircraft_does_flying.h"
 #include "aircraft_does_landing.h"
 #include "aircraft_does_lining_up.h"

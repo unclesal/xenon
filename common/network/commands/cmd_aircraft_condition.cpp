@@ -29,6 +29,7 @@ constexpr uint16_t REVERSE_ON        = 1 << 6;
 CmdAircraftCondition::CmdAircraftCondition()
     : CmdVehicleCondition()
 {
+    _command_name = "CmdAircraftCondition";
 }
 
 // *********************************************************************************************************************
@@ -41,6 +42,7 @@ CmdAircraftCondition::CmdAircraftCondition(
     const vehicle_condition_t & vcl_condition, const aircraft_condition_t & acf_condition 
 )   : CmdVehicleCondition( vcl_condition ) 
 {
+    _command_name = "CmdAircraftCondition";
     _acf_condition = acf_condition;
 }
 
@@ -127,14 +129,3 @@ void CmdAircraftCondition::from_json( JSON & json ) {
     _acf_condition.vertical_speed_fpm = xenon::meters_per_seconds_to_feet_per_min( _acf_condition.vertical_speed );
     
 };
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                 Метод выполнения команды на сервере (в коммуникаторе)                             *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-#ifdef SERVER_SIDE
-void CmdAircraftCondition::execute_on_server( ConnectedClientListener * client, ClientsListener * server ) {
-};
-#endif

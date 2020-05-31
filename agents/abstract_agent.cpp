@@ -15,24 +15,20 @@ using namespace std;
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AbstractAgent::AbstractAgent( 
-    const std::string & uuid, 
-    const agent_t & agent_type, 
-    const std::string & agent_name 
-) {
+AbstractAgent::AbstractAgent( const std::string & uuid ) {
 
-    _communicator = new ConnectedCommunicator( this, agent_type, uuid, agent_name );
+    _communicator = new ConnectedCommunicator( this );
 
     if ( ! Airport::airports_was_readed() ) {        
         Airport::read_all();
     }
 
     // Ждем, пока аэропорт не вычитает свои данные.
-    cout << "Waiting airports readed..." << endl;
+    Logger::log("Waiting airports readed...");
     while ( ! Airport::airports_was_readed() ) {
         usleep(50);
     }
-    cout << "apts readed, ok." << endl;
+    Logger::log("apts readed, ok.");
 }
 
 // *********************************************************************************************************************

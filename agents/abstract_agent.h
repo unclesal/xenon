@@ -21,12 +21,11 @@ namespace xenon {
         
         public:
             
-            AbstractAgent( 
-                const std::string & uuid, const agent_t & agent_type, const std::string & agent_name = ""
-            );
+            AbstractAgent( const std::string & uuid );
             virtual ~AbstractAgent();
             
             virtual void run() = 0;
+
             
         protected:
             

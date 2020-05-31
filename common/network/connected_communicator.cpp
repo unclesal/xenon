@@ -18,14 +18,10 @@ unsigned int ConnectedCommunicator::__packet_number = 0;
 // *********************************************************************************************************************
 
 ConnectedCommunicator::ConnectedCommunicator( 
-    ConnectedCommunicatorReactor * reactor, const agent_t & agent_type, 
-    const std::string & agent_uuid, const std::string & agent_name
+    ConnectedCommunicatorReactor * reactor
 ) {
     
     __reactor = reactor;
-    __agent_type = agent_type;
-    __agent_uuid = agent_uuid;
-    __agent_name = agent_name;
     __socket = -1;
     __remote_communicator = nullptr;
     __connected = false;
@@ -53,7 +49,7 @@ void ConnectedCommunicator::__transmitt() {
             // Пока что не используем мутекс: из нулевого элемента деки выбирается все равно
             // только здесь, а передача займет какое-то время и блокировать деку - не хочется.
             
-            AbstractCommand * cmd = __transmitt_queue.at(0);
+            AbstractCommand * cmd = __transmitt_queue.at(0);                                    
             AbstractCommandTransmitter trx( __socket );
             std::string error;
             if ( ! trx.transmitt( cmd, error ) ) {
@@ -153,17 +149,19 @@ void ConnectedCommunicator::__try_open_socket() {
 // *********************************************************************************************************************
 
 void ConnectedCommunicator::request( AbstractCommand * cmd ) {
-    
+        
     // Номера передаваемых команд по порядку.
     
     ConnectedCommunicator::__packet_number ++;
     if ( ConnectedCommunicator::__packet_number >= 0xfff0 ) ConnectedCommunicator::__packet_number = 0;
     cmd->__packet_number = ConnectedCommunicator::__packet_number;
     
-    // Идентификатор и тип агента.
-    cmd->__agent_uuid = __agent_uuid;
-    cmd->__agent_type = __agent_type;
-    cmd->__agent_name = __agent_name;
+    // Системное время - на момент складывания пакета в очередь.
+    // Т.е. именно тогда, когда координаты были валидны. Задержка
+    // на нахождение в очереди перед передачей будет учтена сама собой.
+    
+    cmd->_vcl_condition.agent_system_time_ms = xenon::get_system_time_ms();
+
     
     __transmitt_mutex.lock();
     __transmitt_queue.push_back( cmd );

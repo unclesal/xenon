@@ -34,10 +34,7 @@ namespace xenon {
         public:
 
             ConnectedCommunicator( 
-                ConnectedCommunicatorReactor * reactor, 
-                const agent_t & agent_type, 
-                const std::string & agent_uuid,
-                const std::string & agent_name
+                ConnectedCommunicatorReactor * reactor
             );
             ~ConnectedCommunicator();
             
@@ -49,10 +46,6 @@ namespace xenon {
              */
             void request( AbstractCommand * cmd );
             
-            void set_agent_name( const std::string & agent_name ) {
-                __agent_name = agent_name;
-            };
-            
         protected:
             
         private:
@@ -63,11 +56,7 @@ namespace xenon {
              * max = 4 294 967 295 (0xffffffff)
              */
             static unsigned int __packet_number;
-            
-            agent_t __agent_type;
-            std::string __agent_uuid;
-            std::string __agent_name;
-            
+                        
             ConnectedCommunicatorReactor * __reactor;
             int __socket;
             char __rx_buffer[ COMMUNICATOR_MAX_PACKET_SIZE ];

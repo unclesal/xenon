@@ -18,6 +18,7 @@ using namespace xenon;
 CmdVehicleCondition::CmdVehicleCondition() 
     : AbstractCommand()
 {
+    _command_name = "CmdVehicleCondition";
 }
 
 // *********************************************************************************************************************
@@ -27,8 +28,9 @@ CmdVehicleCondition::CmdVehicleCondition()
 // *********************************************************************************************************************
 
 CmdVehicleCondition::CmdVehicleCondition(const vehicle_condition_t & vcl_condition) 
-    : CmdVehicleCondition()
+    : AbstractCommand( SAY_TO_ALL, vcl_condition )
 {
+    _command_name = "CmdVehicleCondition";
     _vcl_condition = vcl_condition;
 }
 
@@ -42,11 +44,6 @@ void CmdVehicleCondition::to_json( JSON & json) {
     
     AbstractCommand::to_json( json );
     
-    // Местоположение.
-    json[ "latitude" ] = _vcl_condition.location.latitude;
-    json[ "longitude" ] = _vcl_condition.location.longitude;
-    json[ "altitude" ] = _vcl_condition.location.altitude;
-
     // Угловое положение. 
     json[ "heading" ] = _vcl_condition.rotation.heading;
     json[ "pitch" ] = _vcl_condition.rotation.pitch;
@@ -80,11 +77,6 @@ void CmdVehicleCondition::from_json( JSON & json ) {
     
     AbstractCommand::from_json( json );
     
-    // Местоположение.
-    _vcl_condition.location.latitude = json.value( "latitude", 0.0 );
-    _vcl_condition.location.longitude = json.value( "longitude", 0.0 );
-    _vcl_condition.location.altitude = json.value( "altitude", 0.0 );
-    
     // Угловое положение.
     _vcl_condition.rotation.heading = json.value( "heading", 0.0 );
     _vcl_condition.rotation.pitch = json.value( "pitch", 0.0 );
@@ -106,13 +98,3 @@ void CmdVehicleCondition::from_json( JSON & json ) {
     _vcl_condition.speed_kts = xenon::meters_per_second_to_knots( _vcl_condition.speed );
     
 }
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                 Метод выполнения команды на сервере (в коммуникаторе)                             *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-#ifdef SERVER_SIDE
-void CmdVehicleCondition::execute_on_server( ConnectedClientListener * client, ClientsListener * server ) {
-};
-#endif

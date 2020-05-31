@@ -50,6 +50,10 @@ namespace xenon {
 
     // Время подъема/опускания стоек шасси.
     constexpr float TIME_FOR_GEAR_MOTION        = 10.0;
+    
+    // Радиус круга (в метрах), в котором два агента могут еще "слышать" друг друга.
+    // Если расстояние больше, то агент уже не может "слышать" и пакет ему переправлен не будет.
+    constexpr double DISTANCE_STILL_HEARD           = 90000.0;
 
     /**
      * @short Использование ВПП.
@@ -128,6 +132,27 @@ namespace xenon {
         // Посадку произвел и освобождает ВПП.
         ACF_DOES_RUNWAY_LEAVING
     };
+    
+    // Типы возможных агентов
+    enum agent_t {
+        AGENT_UNKNOWN = 0,
+        // X-Plane - это тоже агент.
+        AGENT_XPLANE,
+        AGENT_AIRCRAFT,
+        AGENT_AIRPORT,
+        // Тягач, он же "толкач".
+        AGENT_PUSHER
+    };
+    
+    // Кому адресован пакет.
+    enum say_to_t {
+        SAY_TO_UNKNOWN = 0,
+        SAY_TO_ALL,
+        SAY_TO_THIS_TYPE,
+        SAY_TO_THIS_ONE        
+    };
+
+
 
 
 }; // namespace xenon

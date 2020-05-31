@@ -14,7 +14,9 @@ using namespace xenon;
 // *********************************************************************************************************************
 
 CommandParser::CommandParser() {
-    __register< CmdHello >("CmdHello");
+    __register< CmdHello >( "CmdHello" );
+    __register< CmdVehicleCondition >( "CmdVehicleCondition" );
+    __register< CmdAircraftCondition >( "CmdAircraftCondition" );
 }
 
 // *********************************************************************************************************************

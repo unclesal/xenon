@@ -24,46 +24,6 @@ CmdHello::CmdHello() : AbstractCommand() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-CmdHello::CmdHello( const location_t & location ) : CmdHello() {    
-    _location = location;    
+CmdHello::CmdHello( const vehicle_condition_t & vcl_condition ) : AbstractCommand( SAY_TO_ALL, vcl_condition ) {    
+    _command_name = "CmdHello";    
 }
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                           Преобразование из объекта в JSON                                        *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void CmdHello::to_json ( JSON & json ) {
-    AbstractCommand::to_json( json );
-    json["latitude"] = _location.latitude;
-    json["longitude"] = _location.longitude;
-    json["altitude"] = _location.altitude;
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                          Преобразование из JSONа в объект                                         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void CmdHello::from_json ( JSON & json ) {
-    
-    AbstractCommand::from_json( json );
-    _location.latitude = json.value( "latitude", 0.0 );
-    _location.longitude = json.value( "longitude", 0.0 );
-    _location.altitude = json.value( "altitude", 0.0 );
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                            Выполнение на стороне сервера                                          *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-#ifdef SERVER_SIDE
-void CmdHello::execute_on_server( ConnectedClientListener * client, ClientsListener * server ) {
-    // Пока что ничего не даем, ту же самую команду обратно.
-    client->send( this );
-}
-#endif

@@ -20,20 +20,12 @@ namespace xenon {
         public:
             
             CmdHello();
-            CmdHello( const location_t & location );
+            CmdHello( const vehicle_condition_t & vcl_condition );
             virtual ~CmdHello() override = default;
-            
-            virtual void to_json( JSON & json ) override;
-            virtual void from_json( JSON & json ) override;
-            
-#ifdef SERVER_SIDE
-            virtual void execute_on_server( ConnectedClientListener * client, ClientsListener * server );
-#endif
-
             
         protected:
             
-            location_t _location;
+        private:
             
     }; // class CmdHello
     

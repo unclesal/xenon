@@ -50,11 +50,10 @@ BimboAircraft::BimboAircraft(
         v[i] = 0.0;
         __actuators[i] = actuator_motion_t();
     }
-    // Времена полной отработки механизмов.
-    __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = TIME_FOR_GEAR_MOTION;
     
 #endif
 
+    vcl_condition.agent_type = AGENT_AIRCRAFT;
     __graph = new AircraftStateGraph( this );
     __taxing_prepared = false;
     

@@ -16,14 +16,12 @@ using namespace std;
 // *********************************************************************************************************************
 
 AgentAircraft::AgentAircraft ( const std::string & uuid )
-    : AbstractAgent( uuid, AGENT_AIRCRAFT ) {
+    : AbstractAgent( uuid ) {
 
     if ( uuid == BOEING_1 ) {        
         
         __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
 
-        _communicator->set_agent_name("Boeing 738");
-        
         if ( ! Airport::airports_was_readed() ) {
             cerr << "Airports was not readed, exit." << endl;
             return;        
@@ -64,9 +62,9 @@ void AgentAircraft::run() {
 
 void AgentAircraft::on_connect() {
 
-    cout << "AgentAircraft connected!" << endl;
+    cout << "Communicator - connected!!!" << endl;
     if ( __ptr_acf ) {
-        CmdHello * hello = new CmdHello( __ptr_acf->get_location() );
+        CmdHello * hello = new CmdHello( __ptr_acf->vcl_condition );
         _communicator->request( hello );
     }
 
