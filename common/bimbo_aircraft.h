@@ -95,6 +95,8 @@ namespace xenon {
 #endif
             ;
 
+            void update_from( const aircraft_condition_t & ac ) override;
+
             // Освещение вкл-выкл
             void set_taxi_lites(bool on) override {
 #ifdef INSIDE_XPLANE
@@ -164,12 +166,12 @@ namespace xenon {
                 acf_condition.speed_brake_position = position;
             };
             
-            void set_thrust_value( const float & value ) override {
+            void set_thrust_position( const float & position ) override {
 #ifdef INSIDE_XPLANE
-                __actuators[ V_CONTROLS_THRUST_RATIO ].endpoint = value;
+                __actuators[ V_CONTROLS_THRUST_RATIO ].endpoint = position;
                 __actuators[ V_CONTROLS_THRUST_RATIO ].requested = true;
 #endif
-                acf_condition.thrust_position = value;
+                acf_condition.thrust_position = position;
             };
                         
             // Расположить самолет на данной стоянке.

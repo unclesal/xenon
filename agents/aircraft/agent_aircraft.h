@@ -10,13 +10,12 @@
 #include <string>
 
 #include "airport.h"
-#include "connected_communicator.h"
-#include "connected_communicator_reactor.h"
+#include "abstract_agent.h"
 #include "bimbo_aircraft.h"
 
 namespace xenon {
     
-    class AgentAircraft : public ConnectedCommunicatorReactor {
+    class AgentAircraft : public AbstractAgent {
         
         public:
             
@@ -29,8 +28,8 @@ namespace xenon {
             void run();
             
             void on_connect() override;
-            void on_disconnect() override;
-            void on_received( AbstractCommand * cmd ) override;
+            void on_disconnect() override;            
+            
             void on_error( std::string message ) override;
             
         protected:                        
@@ -38,9 +37,7 @@ namespace xenon {
         private:
 
             BimboAircraft * __ptr_acf;
-            void __step();
-            
-            ConnectedCommunicator * __communicator;
+            void __step();                        
             
     };
     

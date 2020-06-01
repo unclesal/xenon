@@ -6,6 +6,7 @@
 
 #include "user_aircraft.h"
 #include "xplane.hpp"
+#include "tested_agents.h"
 
 using namespace xenon;
 
@@ -139,6 +140,21 @@ rotation_t UserAircraft::get_rotation() {
     rotation_t result;
     // TODO: make me
     return result;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                         Заполнить содержимое структур состояния пользовательского самолета                        *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void UserAircraft::update_conditions() {
+
+    vcl_condition.agent_type = AGENT_XPLANE;
+    vcl_condition.agent_uuid = XPLANE_AIRCRAFT;
+    vcl_condition.agent_name = "X-Plane";
+    vcl_condition.location = get_location();
+    vcl_condition.rotation = get_rotation();
 }
 
 // *********************************************************************************************************************

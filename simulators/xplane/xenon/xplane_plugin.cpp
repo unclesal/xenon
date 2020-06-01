@@ -168,7 +168,20 @@ void XPlanePlugin::__init_around() {
 // *********************************************************************************************************************
 
 void XPlanePlugin::on_connect() {
-    XPlane::log("Communicator - connected!");
+    
+    __user_aircraft.update_conditions();
+        
+    // Заявляем о себе.
+    CmdAircraftCondition * current_condion = new CmdAircraftCondition(
+        __user_aircraft.vcl_condition, __user_aircraft.acf_condition
+    );
+    __communicator->request( current_condion );
+    
+    // Спрашиваем об окружающих.
+    CmdQueryAround * query_arround = new CmdQueryAround( 
+        __user_aircraft.vcl_condition
+    );
+    __communicator->request( query_arround );
 }
 
 // *********************************************************************************************************************
@@ -187,7 +200,18 @@ void XPlanePlugin::on_disconnect() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void XPlanePlugin::on_received( AbstractCommand * cmd ) {
+void XPlanePlugin::on_received( void * abstract_command ) {
+    if ( ! abstract_command ) return;
+    AbstractCommand * cmd = ( AbstractCommand * ) abstract_command;
+    
+    // Порядок - имеет значение!!!
+    CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * >( cmd );
+    if ( cmd_aircraft_condition ) {
+        __command_received( cmd_aircraft_condition );
+        return;
+    };
+    
+    XPlane::log("XPlanePlugin::on_received: " + cmd->command_name() + " received, but unhandled" );
 }
 
 // *********************************************************************************************************************
@@ -426,6 +450,55 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
     }; // end of switch inFromWho
 
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                 Получена команда о состоянии внешнего самолета                                    *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
+    
+    __agents_mutex.lock();
+    
+    BimboAircraft * bimbo = nullptr;
+    bool was_appended = false;
+    
+    for ( auto b : __bimbos ) {
+        if ( b->agent_uuid() == cmd->agent_uuid() ) {
+            bimbo = b;
+            break;
+        };
+    };
+    
+    auto acf_condition = cmd->acf_condition();    
+    
+    if ( ! bimbo ) {
+        bimbo = new BimboAircraft(
+            acf_condition.icao_type, acf_condition.icao_airline, acf_condition.livery
+        );
+        was_appended = true;
+        __bimbos.push_back( bimbo );
+    };
+    
+    ((AbstractVehicle * ) bimbo )->update_from( cmd->vcl_condition() );
+    bimbo->update_from( acf_condition );
+    
+    if ( was_appended ) {
+        
+        // Если самолет только что был добавлен, то тут не надо "плавностей". Он же 
+        // только что появился на экране. Должен быть сразу же - таким, какой он есть.
+        
+        if ( acf_condition.is_gear_down ) bimbo->v[ XPMP2::V_CONTROLS_GEAR_RATIO ] = 1.0;
+        bimbo->v[ XPMP2::V_CONTROLS_FLAP_RATIO ] = acf_condition.flaps_position;
+        bimbo->v[ XPMP2::V_CONTROLS_SPEED_BRAKE_RATIO ] = acf_condition.speed_brake_position;
+        bimbo->v[ XPMP2::V_CONTROLS_THRUST_RATIO ] = acf_condition.thrust_position;
+    };
+    
+    __agents_mutex.unlock();
+        
+}
+
 
 // *********************************************************************************************************************
 // *                                                                                                                   *

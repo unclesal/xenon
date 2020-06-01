@@ -72,6 +72,7 @@ set(SOURCES
     ${CONTROL}/aircraft_state_ready_for_taxing.cpp
     ${CONTROL}/aircraft_state_runway_leaved.cpp
 
+    ../abstract_agent.cpp
     agent_aircraft.cpp
     main.cpp
 )

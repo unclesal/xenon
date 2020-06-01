@@ -20,9 +20,7 @@ namespace xenon {
             virtual void to_json( JSON & json ) override;
             virtual void from_json( JSON & json ) override;
                         
-        protected:
-            
-            vehicle_condition_t _vcl_condition;
+        protected:                        
             
         private:                        
             

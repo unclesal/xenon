@@ -61,7 +61,7 @@ void CmdQueryAround::execute_on_server( ConnectedClientCore * client, ClientsLis
     // Здесь вызова нижележащего уровня - вообще не происходит, 
     // т.к. данную команду никому пересылать не надо. Сразу же
     // вызывается у "сервера" запрос об окружающих агентах.
-    server->send_around( get_agent_uuid() );
+    server->send_around( agent_uuid() );
 
 }
 #endif

@@ -30,7 +30,20 @@ namespace xenon {
             virtual location_t get_location();
             virtual void set_location( const location_t & location );
             virtual rotation_t get_rotation() = 0;
-            virtual void set_rotation( const rotation_t & rotation ) {};            
+            virtual void set_rotation( const rotation_t & rotation ) {};
+            
+            const std::string & agent_uuid() {
+                return vcl_condition.agent_uuid;
+            };
+            
+            void update_from( const vehicle_condition_t & vc ) {
+                vcl_condition = vc;
+                set_location( vc.location );
+                set_rotation( vc.rotation );
+#ifdef INSIDE_XPLANE
+                if ( vcl_condition.is_clamped_to_ground ) clamp_to_ground();
+#endif                                
+            };
 
 #ifdef INSIDE_XPLANE
             virtual void observe() {};
@@ -57,10 +70,6 @@ namespace xenon {
             vehicle_condition_t vcl_condition;
 
         protected:                        
-            
-#ifndef INSIDE_XPLANE
-            location_t _location;
-#endif
 
         private:
             

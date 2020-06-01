@@ -25,6 +25,10 @@ namespace xenon {
             void to_json( JSON & json ) override;
             void from_json( JSON & json ) override;
             
+            const aircraft_condition_t & acf_condition() {
+                return _acf_condition;
+            };
+            
 #ifdef SERVER_SIDE
             void execute_on_server( ConnectedClientCore * client, ClientsListener * server ) override;
 #endif

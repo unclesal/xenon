@@ -9,6 +9,7 @@
 // System includes.
 #include <map>
 #include <vector>
+#include <mutex>
 
 // X-Plane plugin SDK includes
 #include "XPLMDefs.h"
@@ -24,6 +25,9 @@
 #include "airport.h"
 #include "connected_communicator.h"
 #include "abstract_command.h"
+
+#include "cmd_query_around.h"
+#include "cmd_aircraft_condition.h"
 
 namespace xenon {
 
@@ -63,7 +67,7 @@ namespace xenon {
             
             void on_connect() override;
             void on_disconnect() override;
-            void on_received( AbstractCommand * cmd ) override;
+            void on_received( void * abstract_command ) override;
             void on_error( std::string message ) override;
 
         private:
@@ -95,6 +99,14 @@ namespace xenon {
             XAmbient __ambient;
             // XAutopilotState __autopilot;
 
+            /**
+             * @short Мутекс - один на две коллекции агентов.
+             * Мутекс - нужен,  потому что пакет по сети может прийти "асинхронно" 
+             * по отношению к вызываемым в плагине call-back'ам.
+             */
+            
+            std::mutex __agents_mutex;
+            
             // Все движущиеся элементы в игре.
             vector < AbstractVehicle * > __vehicles;
             vector < BimboAircraft * > __bimbos;
@@ -112,6 +124,8 @@ namespace xenon {
              */
 
             void __ai_controlled_aircraft_was_loaded( int index );
+            
+            void __command_received( CmdAircraftCondition * cmd );
 
     }; // class XPlanePlugin
 };

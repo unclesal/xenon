@@ -37,7 +37,7 @@ BimboAircraft::BimboAircraft(
     , XPMP2::Aircraft(icao_type, icao_airline, livery )
 #else
     // Находимся - снаружи X-Plane.
-    , acIcaoType( icao_type )
+    , acIcaoType( icao_type )    
     , acIcaoAirline( icao_airline )
     , acLivery( livery )
 #endif
@@ -45,15 +45,23 @@ BimboAircraft::BimboAircraft(
 
 #ifdef INSIDE_XPLANE
 
+    // Внутри X-Plane, в плагине.
+    
     bClampToGround = false;
     for (auto i=0; i<XPMP2::V_COUNT; i++ ) {
         v[i] = 0.0;
         __actuators[i] = actuator_motion_t();
     }
     
+#else
+
+    // Снаружи X-Plane, в агенте.
+    acf_condition.icao_type = icao_type;
+    acf_condition.icao_airline = icao_airline;
+    acf_condition.livery = livery;
+    
 #endif
 
-    vcl_condition.agent_type = AGENT_AIRCRAFT;
     __graph = new AircraftStateGraph( this );
     __taxing_prepared = false;
     
@@ -268,6 +276,7 @@ void BimboAircraft::place_on_ground( const position_t & position, rotation_t & r
     set_position( position );
     rotation.pitch = _params.taxing_pitch;
     set_rotation( rotation );
+    vcl_condition.is_clamped_to_ground = true;
     // Если самолет на земле, то шасси-то у него точно выпущены же.
     v[ V_CONTROLS_GEAR_RATIO ] = 1.0;
 }
@@ -288,12 +297,13 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     rotation_t rotation;
     rotation.heading = ramp.heading;
     // Первоначальная, грубая установка позиции.
-    place_on_ground(position, rotation);    
+    place_on_ground(position, rotation);
 #else
+    vcl_condition.is_clamped_to_ground = true;
     set_location( ramp.location );
-    SetHeading( ramp.heading );
-    
+    SetHeading( ramp.heading );        
 #endif
+
     // Здесь уже все равно, внутри X-Plane или нет.
     set_gear_down( true);
 
@@ -552,6 +562,42 @@ void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp, const float 
     
     _params.cruise_altitude = cruise_altitude;
     
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                          Изменение состояния самолета от пришедшей по сети структуры                              *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::update_from( const aircraft_condition_t & ac ) {
+    AbstractAircraft::update_from( ac );
+
+#ifdef INSIDE_XPLANE    
+    if ( label != vcl_condition.agent_name ) {
+        label = vcl_condition.agent_name;
+        if ( vcl_condition.agent_type == AGENT_AIRCRAFT ) {
+
+            // Данный самолет является отражением внешнего агента.
+            
+            colLabel[0] = 0.0f;  // R
+            colLabel[1] = 1.0f;  // G
+            colLabel[2] = 0.0f;  // B
+
+        } else if ( vcl_condition.agent_type == AGENT_XPLANE ) {
+
+            // Данный самолет - это человек, зашедший по сети в X-Plane.
+
+            colLabel[0] = 0.0f;  // R
+            colLabel[1] = 0.0f;  // G
+            colLabel[2] = 1.0f;  // B
+
+        } else {
+            XPlane::log("BimboAircraft::update_from(), unhandled agent type " + to_string( vcl_condition.agent_type ));
+        }
+    }
+#endif
+
 }
 
 // *********************************************************************************************************************

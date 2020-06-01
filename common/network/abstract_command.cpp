@@ -40,7 +40,9 @@ AbstractCommand::AbstractCommand( const say_to_t & say_to, const vehicle_conditi
 // *********************************************************************************************************************
 
 void AbstractCommand::to_json ( JSON & json ) {
+    
     JSONAble::to_json( json );
+    
     json["packet_number"] = __packet_number;
     json["say_to"] = (uint8_t) _say_to;
     
@@ -48,6 +50,10 @@ void AbstractCommand::to_json ( JSON & json ) {
     if ( !_vcl_condition.to_agent_uuid.empty() ) json["to_agent_uuid"] = _vcl_condition.to_agent_uuid;
     json["agent_type"] = ( uint8_t ) _vcl_condition.agent_type;
     json["agent_name"] = _vcl_condition.agent_name;
+    
+    // Прижатость к земле.
+    json[ "is_clamped_to_ground" ] = _vcl_condition.is_clamped_to_ground;
+    Logger::log("To json: clamped=" + to_string( _vcl_condition.is_clamped_to_ground ));
     
     json["latitude"] = _vcl_condition.location.latitude;
     json["longitude"] = _vcl_condition.location.longitude;
@@ -63,6 +69,7 @@ void AbstractCommand::to_json ( JSON & json ) {
 void AbstractCommand::from_json ( JSON & json ) {
     
     JSONAble::from_json( json );
+    
     __packet_number = json.value( "packet_number", 0 );
     _say_to = (say_to_t) json.value( "say_to", (uint8_t) SAY_TO_UNKNOWN );
     
@@ -70,6 +77,10 @@ void AbstractCommand::from_json ( JSON & json ) {
     _vcl_condition.to_agent_uuid = json.value( "to_agent_uuid", "" );
     _vcl_condition.agent_type = ( agent_t ) json.value("agent_type", (uint8_t)AGENT_UNKNOWN );
     _vcl_condition.agent_name = json.value("agent_name", "UNKNOWN");
+    
+    // Прижатость к земле.
+    _vcl_condition.is_clamped_to_ground = json.value( "is_clamped_to_ground", false );
+    Logger::log("From json, clamped=" + to_string( _vcl_condition.is_clamped_to_ground ));
     
     _vcl_condition.location.latitude = json.value( "latitude", 0.0 );
     _vcl_condition.location.longitude = json.value( "longitude", 0.0 );
@@ -86,5 +97,37 @@ void AbstractCommand::from_json ( JSON & json ) {
 #ifdef SERVER_SIDE
 void AbstractCommand::execute_on_server( ConnectedClientCore * client, ClientsListener * server ) {    
     server->send_to_those_who_can_hear( this );
+}
+#endif
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                               Выполнение команды на стороне агента - по умолчанию                                 *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+#ifdef INSIDE_AGENT
+void AbstractCommand::execute_on_agent( ConnectedCommunicatorReactor * current_agent ) {
+    
+    current_agent->agents_mutex.lock();
+
+    bool exists = false;
+    std::string uuid = agent_uuid();
+    // Ищем в коллекции уже существующий агент с таким же uuid'ом.
+    for ( int i=0; i < current_agent->agents.size(); ++ i ) {
+        if ( current_agent->agents.at( i ).agent_uuid() == uuid ) {
+            current_agent->agents.at( i ).vcl_condition = _vcl_condition;            
+            exists = true;
+        }
+    }
+
+    if ( ! exists ) {
+        ConnectedCommunicatorReactor::another_agent_t a;
+        a.vcl_condition = _vcl_condition;
+        a.acf_condition = nullptr;        
+        current_agent->agents.push_back( a ); 
+    }
+
+    current_agent->agents_mutex.unlock();
+
 }
 #endif

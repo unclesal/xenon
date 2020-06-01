@@ -30,6 +30,8 @@ namespace xenon {
             AbstractAircraft();
             virtual ~AbstractAircraft() override = default;    
             
+            aircraft_condition_t acf_condition;
+            
             // Освещение вкл-выкл
             virtual void set_taxi_lites(bool on) {};
             virtual void set_landing_lites(bool on) {};
@@ -40,12 +42,12 @@ namespace xenon {
             virtual void set_gear_down( bool down ) { };
             virtual void set_reverse_on( bool on ) { };
             virtual void set_flaps_position( const float & position ) { };
-            virtual void set_thrust_value( const float & value ) {};
+            virtual void set_thrust_position( const float & position ) {};
             virtual void set_speed_brake_position( const float & value ) {};
             
             virtual void move( float meters ) {};
             
-            aircraft_condition_t acf_condition;
+            virtual void update_from( const aircraft_condition_t & ac );
             
         protected:
             

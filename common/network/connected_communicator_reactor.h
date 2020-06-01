@@ -6,8 +6,8 @@
 #pragma once
 
 #include <string>
-
-#include "abstract_command.h"
+#include <vector>
+#include <mutex>
 
 namespace xenon {
 
@@ -15,13 +15,27 @@ namespace xenon {
         
         public:
 
+            struct another_agent_t {
+                vehicle_condition_t vcl_condition;
+                aircraft_condition_t * acf_condition = nullptr;
+                
+                const std::string & agent_uuid() {
+                    return vcl_condition.agent_uuid;
+                };
+            };
+            
             ConnectedCommunicatorReactor() = default;
             virtual ~ConnectedCommunicatorReactor() = default;
+            
+            std::vector<another_agent_t> agents;
+            std::mutex agents_mutex;
                     
             virtual void on_connect() = 0;
             virtual void on_disconnect() = 0;
-            virtual void on_received( AbstractCommand * cmd ) = 0;
+            virtual void on_received( void * abstract_command ) = 0;
             virtual void on_error( std::string message ) = 0;
+            
+        protected:                        
             
 
     }; // class ConnectedCommunicatorReactor

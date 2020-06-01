@@ -35,10 +35,17 @@ AbstractVehicle::AbstractVehicle() {
 
 location_t AbstractVehicle::get_location() {
 #ifdef INSIDE_XPLANE
+    
+    // Внутри X-Plane
     position_t position = get_position();
     return XPlane::position_to_location(position);
+
 #else
-    return _location;
+    
+    // Не в плагине, отдельно действующая "самоходка" 
+    // в рамках, например, внешнего агента.
+    return vcl_condition.location;
+
 #endif
 };
 
@@ -110,10 +117,15 @@ void AbstractVehicle::clamp_to_ground() {
 
 void AbstractVehicle::set_location( const location_t & location ) {
 #ifdef INSIDE_XPLANE
+    
+    // Внутри X-Plane plugin'а.
     position_t position = XPlane::location_to_position( location );
     set_position( position );
 #else
-    _location = location;
+    
+    // Не в плагине. Например - во внешнем агенте.
+    vcl_condition.location = location;
+    
 #endif
 }
 

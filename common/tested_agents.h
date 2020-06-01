@@ -7,5 +7,7 @@
 #pragma once
 
 
-#define BOEING_1    "4204f982a17811eaaf3794de807942f4"
-#define BE58_1      "9c72a710a24b11ea89d394de807942f4"
+#define BOEING_1            "4204f982a17811eaaf3794de807942f4"
+#define BE58_1              "9c72a710a24b11ea89d394de807942f4"
+
+#define XPLANE_AIRCRAFT     "9b46e480a3f611eab14b94de807942f4"

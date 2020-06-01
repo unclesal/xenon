@@ -57,9 +57,6 @@ void CmdVehicleCondition::to_json( JSON & json) {
     json[ "speed" ] = _vcl_condition.speed;    
     json[ "target_speed" ] = _vcl_condition.target_speed;
     
-    // Прижатость к земле.
-    json[ "is_clamped_to_ground" ] = _vcl_condition.is_clamped_to_ground;
-
     // Курс (плоскостная величина).
     json[ "heading_acceleration" ] = _vcl_condition.heading_acceleration;
     json[ "target_heading" ] = _vcl_condition.target_heading;        
@@ -86,10 +83,7 @@ void CmdVehicleCondition::from_json( JSON & json ) {
     _vcl_condition.acceleration = json.value( "acceleration", 0.0 );
     _vcl_condition.speed = json.value( "speed", 0.0 );
     _vcl_condition.target_speed = json.value( "target_speed", 0.0 );
-    
-    // Прижатость к земле.
-    _vcl_condition.is_clamped_to_ground = json.value( "is_clamped_to_ground", false );
-    
+        
     // Курс
     _vcl_condition.heading_acceleration = json.value( "heading_acceleration", 0.0 );
     _vcl_condition.target_heading = json.value( "target_heading", 0.0 );

@@ -17,20 +17,25 @@
 
 namespace xenon {
     
-    class AbstractAgent {
+    class AbstractAgent : public ConnectedCommunicatorReactor {
         
-        public:
+        public:                        
             
-            AbstractAgent( ConnectedCommunicatorReactor * reactor );
+            AbstractAgent();
             virtual ~AbstractAgent();
             
             virtual void run() = 0;
+            virtual void on_received( void * abstract_command ) override;
 
         protected:
             
-            ConnectedCommunicator * _communicator;            
+            ConnectedCommunicator * _communicator; 
             
-        private:
+            inline void _create_communicator() {
+                _communicator = new ConnectedCommunicator( this );
+            };                        
+            
+        private:            
             
     }; // AbstractAgent
     

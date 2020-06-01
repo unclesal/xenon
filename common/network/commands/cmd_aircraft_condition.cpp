@@ -77,13 +77,13 @@ void CmdAircraftCondition::to_json( JSON & json ) {
     
     // Положение и состояние актуаторов.
     uint16_t actuators = 0;
-    if ( _acf_condition.is_taxi_lites_on ) actuators &= TAXI_LITES;
-    if ( _acf_condition.is_landing_lites_on ) actuators &= LANDING_LITES;
-    if ( _acf_condition.is_beacon_lites_on ) actuators &= BEACON_LITES;
-    if ( _acf_condition.is_strobe_lites_on ) actuators &= STROBE_LITES;
-    if ( _acf_condition.is_nav_lites_on ) actuators &= NAV_LITES;
-    if ( _acf_condition.is_gear_down ) actuators &= GEAR_DOWN;
-    if ( _acf_condition.is_reverse_on ) actuators &= REVERSE_ON;
+    if ( _acf_condition.is_taxi_lites_on ) actuators |= TAXI_LITES;
+    if ( _acf_condition.is_landing_lites_on ) actuators |= LANDING_LITES;
+    if ( _acf_condition.is_beacon_lites_on ) actuators |= BEACON_LITES;
+    if ( _acf_condition.is_strobe_lites_on ) actuators |= STROBE_LITES;
+    if ( _acf_condition.is_nav_lites_on ) actuators |= NAV_LITES;
+    if ( _acf_condition.is_gear_down ) actuators |= GEAR_DOWN;
+    if ( _acf_condition.is_reverse_on ) actuators |= REVERSE_ON;
     json[ "actuators" ] = actuators;
     
     // Пропорциональные актуаторы.
@@ -102,6 +102,7 @@ void CmdAircraftCondition::to_json( JSON & json ) {
 void CmdAircraftCondition::from_json( JSON & json ) {
     
     CmdVehicleCondition::from_json( json );
+    Logger::log("CmdAircraftCondition::from_json((), clamped=" + to_string( _vcl_condition.is_clamped_to_ground ));
     
     _acf_condition.icao_type = json.value( "icao_type", "" );
     _acf_condition.icao_airline = json.value( "icao_airline", "" );
