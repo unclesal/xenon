@@ -41,11 +41,10 @@ AbstractCommand * CommandParser::parse( char * buffer, const ssize_t & len, std:
         
         JSON json = JSON::from_ubjson(v_ubjson);
         command_name = json.value("command_name", "");
-        Logger::log("Command name=" + command_name );
+        if ( command_name.empty() ) return nullptr;
+        
         auto instance = __create_instance( command_name );
-        Logger::log("instance created");
         if ( instance ) instance->from_json( json );
-        Logger::log("made from json");
         return instance;
         
     } catch ( JSON::parse_error & err ) {

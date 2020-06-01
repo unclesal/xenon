@@ -35,9 +35,8 @@ XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
     __networking->set_setter( this );
 
     __uair_count = 0;
-    __around_inited = false;
     
-    __communicator = new ConnectedCommunicator( this );
+    __communicator = nullptr;        
 
 }
 
@@ -85,9 +84,10 @@ void XPlanePlugin::observe_user_aircraft() {
         __user_aircraft.observe();
         // __networking->send_to_all( & __user_aircraft );
 
-        // "Отложенная" инициализация.
+        // "Отложенная" инициализация. Естественно, нам "коммуникатор" нужен
+        // только в одном экземпляре, смысла нет порождать его 10 раз.
 
-        if ( ! __around_inited ) {
+        if ( ! __communicator ) {
             __uair_count ++;
             // Начиная со второго тика - ждем, когда будет дочитаны
             // полностью все имеющиеся аэропорты.
@@ -108,10 +108,17 @@ void XPlanePlugin::observe_user_aircraft() {
 
 void XPlanePlugin::__init_around() {
 
-    if ( __around_inited ) return;
+    if ( __communicator ) return;
     
     // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
+
     if ( ! Airport::airports_was_readed() ) return;
+
+    // Коммуникатор можно порождать только тогда, когда все остальное уже готово
+    // (инициализировано). Это потому, что в коммуникаторе есть потоки, он тут
+    // же может соединиться и начать работать - с указателями, которых еще не существует.
+
+    __communicator = new ConnectedCommunicator( this );
     
 //    // Порождаем самолетик для пробы.
 //    XPlane::log("Init one bimbo...");
@@ -152,8 +159,6 @@ void XPlanePlugin::__init_around() {
 //    // Это по сути "старт".
 //    bimbo->choose_next_action();
 
-    // Инициализировали. Больше этого делать - не будем.
-    __around_inited = true;
 }
 
 // *********************************************************************************************************************
@@ -420,4 +425,29 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
 
     }; // end of switch inFromWho
 
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                                     Деструктор                                                    *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+XPlanePlugin::~XPlanePlugin() {
+    
+    if ( __communicator ) {
+        if ( __communicator->is_connected() ) __communicator->disconnect();
+        delete( __communicator );
+        __communicator = nullptr;
+    }
+    
+    // Корректное освобождение памяти, выделенной под самоходки.
+    for ( auto vcl : __vehicles ) {
+        delete( vcl );
+    }
+    // Корректное освобождение памяти под самолеты.
+    for ( auto bimbo : __bimbos ) {
+        delete bimbo;
+    }
+    
 }

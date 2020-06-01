@@ -32,7 +32,7 @@ namespace xenon {
         public:
 
             XPlanePlugin( XPLMPluginID & this_plugin_id );
-            virtual ~XPlanePlugin() = default;
+            virtual ~XPlanePlugin();
 
             void enable();
             void disable();
@@ -70,7 +70,6 @@ namespace xenon {
 
             bool __enabled;
             int __uair_count;
-            bool __around_inited;
             
             ConnectedCommunicator * __communicator;
 

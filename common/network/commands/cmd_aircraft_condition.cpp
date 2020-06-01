@@ -6,6 +6,7 @@
 
 #include "cmd_aircraft_condition.h"
 #include "utils.hpp"
+#include "tested_agents.h"
 
 using namespace xenon;
 
@@ -55,7 +56,12 @@ CmdAircraftCondition::CmdAircraftCondition(
 void CmdAircraftCondition::to_json( JSON & json ) {
     
     CmdVehicleCondition::to_json( json );
-    
+
+    // Поля, которые могут быть пустыми.
+    if ( ! _acf_condition.icao_type.empty()) json[ "icao_type" ] = _acf_condition.icao_type;
+    if ( ! _acf_condition.icao_airline.empty()) json[ "icao_airline" ] = _acf_condition.icao_airline;
+    if ( ! _acf_condition.livery.empty()) json[ "livery" ] = _acf_condition.livery;
+
     // Вертикальная скорость, метров в секунду.
     json[ "vertical_speed" ] = _acf_condition.vertical_speed;
     json[ "target_vertical_speed" ] = _acf_condition.target_vertical_speed;
@@ -97,6 +103,10 @@ void CmdAircraftCondition::from_json( JSON & json ) {
     
     CmdVehicleCondition::from_json( json );
     
+    _acf_condition.icao_type = json.value( "icao_type", "" );
+    _acf_condition.icao_airline = json.value( "icao_airline", "" );
+    _acf_condition.livery = json.value( "livery", "" );
+    
     _acf_condition.vertical_speed = json.value( "vertical_speed", 0.0 );
     _acf_condition.target_vertical_speed = json.value( "target_vertical_speed", 0.0 );
     _acf_condition.vertical_acceleration = json.value( "vertical_acceleration", 0.0 );
@@ -129,3 +139,26 @@ void CmdAircraftCondition::from_json( JSON & json ) {
     _acf_condition.vertical_speed_fpm = xenon::meters_per_seconds_to_feet_per_min( _acf_condition.vertical_speed );
     
 };
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                             Перекрытая процедура выполнения команды на стороне сервера.                           *
+// *                Часть информации не передается по сети, т.к. сервер знает об этом из базы данных.                  *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+#ifdef SERVER_SIDE
+void CmdAircraftCondition::execute_on_server( ConnectedClientCore * client, ClientsListener * server ) {
+    
+    // Заполнение полей происходит - до вызова "родительской" функции, 
+    // т.к. там они уже будут переставлены в ConnectedClientCore.
+    
+    if ( _vcl_condition.agent_uuid == BOEING_1 ) {
+        _acf_condition.icao_type = "B738";
+        _acf_condition.icao_airline = "AFF";
+        _acf_condition.livery = "AFF";
+    }
+
+    CmdVehicleCondition::execute_on_server( client, server );
+    
+}
+#endif

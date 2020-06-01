@@ -19,18 +19,14 @@ using namespace std;
 
 AgentAircraft::AgentAircraft ( const std::string & uuid ) {
     
-    __communicator = new ConnectedCommunicator( this );
-
     if ( ! Airport::airports_was_readed() ) {
         Airport::read_all();
     }
 
    // Ждем, пока аэропорт не вычитает свои данные.
-   Logger::log("Waiting airports readed...");
    while ( ! Airport::airports_was_readed() ) {
        usleep(50);
    }
-   Logger::log("apts readed, ok.");
 
     if ( uuid == BOEING_1 ) {        
         
@@ -44,7 +40,15 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) {
         }
     }
     
-    if ( ! __ptr_acf ) Logger::log("AgentAircraft::AgentAircraft() UUID " + uuid + " not handled");
+    if ( ! __ptr_acf ) {
+        Logger::log("AgentAircraft::AgentAircraft() UUID " + uuid + " not handled");
+        return;
+    };
+    
+    // Коммуникатор порождаем последним, т.к. там потоки и он может тут же 
+    // соединиться. Нужно, чтобы все указатели были уже инициализированы.
+
+    __communicator = new ConnectedCommunicator( this );
 
 }
 
@@ -82,7 +86,9 @@ void AgentAircraft::on_connect() {
     CmdAircraftCondition * cmd_acf_condition = new CmdAircraftCondition(
         __ptr_acf->vcl_condition, __ptr_acf->acf_condition
     );
+    Logger::log("CmdAircraftCondition created.");
     __communicator->request( cmd_acf_condition );
+    Logger::log("Communicator requested.");
     
     // Спрашиваем наше окружение - тех агентов, которых мы можем "слышать".
     CmdQueryAround * cmd_around = new CmdQueryAround( __ptr_acf->vcl_condition );
@@ -129,4 +135,18 @@ void AgentAircraft::on_received( AbstractCommand * cmd ) {
     cout << "AgentAircraft::on_received: " << cmd->command_name() << endl;
 };
 
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                                    Деструктор                                                     *
+// *                                                                                                                   *
+// *********************************************************************************************************************
 
+AgentAircraft::~AgentAircraft() {
+    
+    if ( __communicator ) {
+        if ( __communicator->is_connected() ) __communicator->disconnect();
+        delete ( __communicator );
+        __communicator = nullptr;
+    };
+    
+}

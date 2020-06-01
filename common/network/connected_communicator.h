@@ -38,6 +38,14 @@ namespace xenon {
             );
             ~ConnectedCommunicator();
             
+            bool is_connected() {
+                return __connected;
+            };
+            
+            void disconnect() {
+                __close_socket();
+            };
+            
             /**
              * @short Запрос от некоего агента к центральному коммуникатору.
              * Точнее, здесь идет только постановка в очередь. Фактическая отправка пакета на сервер
@@ -63,7 +71,7 @@ namespace xenon {
             
             hostent * __remote_communicator;
             sockaddr_in __server_addr;
-            CommandParser * __parser;
+            CommandParser __parser;
             bool __connected;
             
             std::mutex __transmitt_mutex;
@@ -74,8 +82,7 @@ namespace xenon {
             void __read_from_socket();
             
             void __try_open_socket();
-            void __close_socket();
-            
+            void __close_socket();            
         
     }; // CommunicatorClient
     

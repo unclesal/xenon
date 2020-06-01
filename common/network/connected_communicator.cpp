@@ -161,7 +161,6 @@ void ConnectedCommunicator::request( AbstractCommand * cmd ) {
     
     cmd->_vcl_condition.agent_system_time_ms = xenon::get_system_time_ms();
 
-    
     __transmitt_mutex.lock();
     __transmitt_queue.push_back( cmd );
     __transmitt_mutex.unlock();
@@ -174,18 +173,20 @@ void ConnectedCommunicator::request( AbstractCommand * cmd ) {
 // *********************************************************************************************************************
 
 void ConnectedCommunicator::__read_from_socket() {
-    
+        
     if ( __socket < 0 ) return;
-    memset( & __rx_buffer, 0, sizeof( __rx_buffer) );
-    ssize_t bytes = ::read( __socket, & __rx_buffer, sizeof( __rx_buffer ) );
+    memset( __rx_buffer, 0, sizeof( __rx_buffer) );
+    ssize_t bytes = ::read( __socket, __rx_buffer, sizeof( __rx_buffer ) );
     if ( bytes <= 0 ) {        
-        __reactor->on_error("ConnectedCommunicator::__read_from_socket: received " + std::to_string(bytes));
+        // __reactor->on_error("ConnectedCommunicator::__read_from_socket: received " + std::to_string(bytes));
         __close_socket();
         return;
     }
+
     // Если сколько-то байт было принято - парзим.
     std::string command_name;
-    AbstractCommand * cmd = __parser->parse( __rx_buffer, bytes, command_name );
+    AbstractCommand * cmd = __parser.parse( __rx_buffer, bytes, command_name );
+    
     if ( ! cmd ) {
         __reactor->on_error(
             "ConnectedCommunicator::__read_from_socket(), got " + std::to_string( bytes ) 
@@ -194,7 +195,7 @@ void ConnectedCommunicator::__read_from_socket() {
         __close_socket();
         return;
     }
-        
+            
     __reactor->on_received( cmd );
     
     delete( cmd );

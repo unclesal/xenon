@@ -30,7 +30,6 @@ AbstractCommand::AbstractCommand( const say_to_t & say_to, const vehicle_conditi
     __packet_number = 0;
     _vcl_condition = vcl_condition;
     _say_to = say_to;
-    Logger::log("AbstractCommand constructor, say_to=" + to_string( say_to ));
 }
 
 
@@ -44,7 +43,6 @@ void AbstractCommand::to_json ( JSON & json ) {
     JSONAble::to_json( json );
     json["packet_number"] = __packet_number;
     json["say_to"] = (uint8_t) _say_to;
-    Logger::log("AbstractCommand::to_json(), say_to=" + to_string( _say_to ) );
     
     json["agent_uuid"] = _vcl_condition.agent_uuid;
     if ( !_vcl_condition.to_agent_uuid.empty() ) json["to_agent_uuid"] = _vcl_condition.to_agent_uuid;
@@ -67,7 +65,6 @@ void AbstractCommand::from_json ( JSON & json ) {
     JSONAble::from_json( json );
     __packet_number = json.value( "packet_number", 0 );
     _say_to = (say_to_t) json.value( "say_to", (uint8_t) SAY_TO_UNKNOWN );
-    Logger::log("AbstractCommand::from_json(), say_to=" + to_string( _say_to ));
     
     _vcl_condition.agent_uuid = json.value("agent_uuid", "");
     _vcl_condition.to_agent_uuid = json.value( "to_agent_uuid", "" );
@@ -87,7 +84,7 @@ void AbstractCommand::from_json ( JSON & json ) {
 // *********************************************************************************************************************
 
 #ifdef SERVER_SIDE
-void AbstractCommand::execute_on_server( ConnectedClientListener * client, ClientsListener * server ) {    
+void AbstractCommand::execute_on_server( ConnectedClientCore * client, ClientsListener * server ) {    
     server->send_to_those_who_can_hear( this );
 }
 #endif

@@ -17,6 +17,12 @@ namespace xenon {
             CmdQueryAround( const vehicle_condition_t & vcl_condition );
             virtual ~CmdQueryAround() override = default;
             
+            void to_json( JSON & json ) override;
+            void from_json( JSON & json ) override;
+            
+#ifdef SERVER_SIDE
+            void execute_on_server( ConnectedClientCore * client, ClientsListener * server ) override;
+#endif
         protected:
             
         private:

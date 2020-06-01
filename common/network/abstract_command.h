@@ -10,7 +10,7 @@
 #include "logger.h"
 
 #ifdef SERVER_SIDE
-#include "connected_client_listener.h"
+#include "connected_client_core.h"
 #include "clients_listener.h"
 #endif
 
@@ -52,7 +52,7 @@ namespace xenon {
             };
 
 #ifdef SERVER_SIDE
-            virtual void execute_on_server( ConnectedClientListener * client, ClientsListener * server );
+            virtual void execute_on_server( ConnectedClientCore * client, ClientsListener * server );            
 #endif
 
         protected:

@@ -24,12 +24,7 @@ namespace xenon {
                 const std::string & uuid
             );
 
-            ~AgentAircraft() {
-                if ( __communicator ) {
-                    delete ( __communicator );
-                    __communicator = nullptr;
-                };
-            };
+            virtual ~AgentAircraft();
             
             void run();
             

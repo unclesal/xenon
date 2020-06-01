@@ -23,7 +23,7 @@
 // My own includes
 #include "xplane_plugin.h"
 #include "xplane.hpp"
-#include "ivao/whazzup_reader_thread.h"
+// #include "ivao/whazzup_reader_thread.h"
 
 // Temporary solution for program's settings storage.
 #include "settings.h"
@@ -36,9 +36,11 @@ using namespace std;
 using namespace xenon;
 
 xenon::XPlanePlugin * _plugin;
-pthread_t   _whazzup_reader_thread;
+
+// pthread_t   _whazzup_reader_thread;
 // Был ли корректно создан поток чтения состояния IVAO?
-unsigned char _whazzup_gave_birth_to = 0;
+// unsigned char _whazzup_gave_birth_to = 0;
+
 const char * plugin_name = "xenon";
 
 // *********************************************************************************************************************
@@ -95,25 +97,26 @@ PLUGIN_API void	XPluginStop(void) {
 
     xenon::XPlane::log("Plugin stop.");
 
-	// The destroying a plugin variable.
+    // The destroying a plugin variable.
+    try {
 
-	try {
+        if ( _plugin ) {
+            delete( _plugin );
+            _plugin = nullptr;
+        }
 
-		if ( _plugin ) {
-			delete( _plugin );
-			_plugin = nullptr;
-		}
-
-	} catch (std::exception & e ) {
-		xenon::XPlane::log( std::string("xenon_plugin::XPluginStop(): ") + e.what() );
-	} catch ( ... ) {
-		xenon::XPlane::log( "xenon_plugin::XPluginStop(): unhandled exception ... :-( ..." );
-	}
-
-	// Остановка потока чтения состояния IVAO.
-	if (_whazzup_gave_birth_to) {
+    } catch (std::exception & e ) {
+        xenon::XPlane::log( std::string("xenon_plugin::XPluginStop(): ") + e.what() );
+    } catch ( ... ) {
+        xenon::XPlane::log( "xenon_plugin::XPluginStop(): unhandled exception ... :-( ..." );
+    }
+    
+#ifdef IVAO
+    // Остановка потока чтения состояния IVAO.
+    if (_whazzup_gave_birth_to) {
         pthread_cancel(_whazzup_reader_thread);
     }
+#endif
 
 }
 
