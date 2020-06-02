@@ -240,6 +240,22 @@ namespace xenon {
                 return result;
             };
 #endif
+
+#ifdef INSIDE_XPLANE            
+            static inline position_t shift( const position_t & from, const float & meters, const float & heading ) {
+
+                position_t to = from;
+                
+                auto radians = xenon::degrees_to_radians( heading );
+
+                float dx = meters * sinf( radians );
+                float dz = meters * cosf( radians );
+                to.x += dx;
+                to.z -= dz;                
+
+                return to;
+            };
+#endif
             
     }; // class XPlane
 }; // namespace xenon

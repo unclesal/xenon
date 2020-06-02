@@ -32,8 +32,7 @@ void AircraftDoesPushBack::_internal_start() {
     _ptr_acf->vcl_condition.is_clamped_to_ground = true;
     
     _ptr_acf->set_nav_lites( true );
-    // _params.tug = - TAXI_SLOW_TUG;
-    // _ptr_acf->vcl_condition.target_acceleration = -TAXI_SLOW_ACCELERATION;
+    _ptr_acf->vcl_condition.acceleration = PUSH_BACK_SPEED / 15.0f;
     
     _ptr_acf->vcl_condition.target_speed = PUSH_BACK_SPEED;
     __current_phase = PHASE_STRAIGHT;
@@ -54,9 +53,10 @@ void AircraftDoesPushBack::_internal_start() {
 // *********************************************************************************************************************
 
 void AircraftDoesPushBack::__internal_step__phase_straight() {
-    // Точка, до которой нас выталкивают.
+    
     waypoint_t wp = _get_front_wp();
-    auto wp1 = _get_first_wp();
+    if ( _taxi_turn_started(wp) ) __current_phase = PHASE_TURN;
+    
 
     /*
     auto wp_position = XPlane::location_to_position( wp.location );        
@@ -103,24 +103,18 @@ void AircraftDoesPushBack::__internal_step__phase_straight() {
 
 void AircraftDoesPushBack::__internal_step__phase_turn() {
     waypoint_t wp = _get_front_wp();
-    double delta = __get_delta_to_target_heading( wp );
+    double delta = _get_delta_to_target_heading( wp );
     normalize_degrees( delta );
     // Порог разницы в курсах, ниже которого мы считаем, что выровнялись.
     double threshold = 0.8;
     
     if ( (delta >= 360 - threshold ) || ( delta <= threshold ) ) {
         
+        // Останавливаемся.
+        XPlane::log("go to phase stop");
         _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;
-        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
-        
-        // Останавливаемся. Знаки будут положительными, т.к. мы ехали назад.
-        // Он чо-т шибко долго останавливается визуально-то. Поэтому увеличил.
-        // _params.tug = TAXI_SLOW_TUG * 5.0; 
-        // _ptr_acf->vcl_condition.target_acceleration = TAXI_SLOW_ACCELERATION * 3.0;
-
-        // Это надо обнулить с предыдущей фазы.
-        _ptr_acf->vcl_condition.acceleration = 0.0;        
-        _ptr_acf->vcl_condition.target_speed = 0.0;
+        _ptr_acf->vcl_condition.heading_acceleration = 0.0;        
+        _taxi_breaking( 0.0, 5.0 );
                 
         __current_phase = PHASE_STOP;
     }
@@ -140,28 +134,6 @@ void AircraftDoesPushBack::__internal_step__phase_stop() {
         _finish();        
     }
 
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *          Получить разницу между текущим курсом самолета и целевым курсом на нулевой точке полетного плана         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-double AircraftDoesPushBack::__get_delta_to_target_heading( const waypoint_t & wp ) {
-    
-    auto current_rotation = _ptr_acf->get_rotation();
-    // Текущий курс самолета.
-    double heading = current_rotation.heading;
-    normalize_degrees( heading );
-    // Целевой курс, как нам надо встать.
-    double target_heading = wp.outgoing_heading;
-    normalize_degrees( target_heading );
-
-    double delta_heading = target_heading - heading;
-    // Здесь нормализация - не выполняется. Потому что она нужна не всегда.
-    return delta_heading;
-    
 }
 
 // *********************************************************************************************************************

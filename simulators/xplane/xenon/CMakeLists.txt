@@ -120,6 +120,7 @@ target_include_directories(xenon PUBLIC
 
 target_link_libraries(xenon
     ${CMAKE_SOURCE_DIR}/3dparty/libXPMP2/libXPMP2.a
+    /usr/local/lib/libGeographic.a
 )
 
 

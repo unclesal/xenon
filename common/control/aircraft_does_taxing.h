@@ -26,7 +26,7 @@ namespace xenon {
     
         private:
             
-            void __choose_speed();            
+            void __choose_speed();
         
     }; // class AircraftDoesTaxing
     

@@ -35,8 +35,8 @@ void AircraftDoesLiningUp::_internal_start() {
     // _ptr_acf->condition.tug = TAXI_NORMAL_TUG;
     // _ptr_acf->vcl_condition.target_acceleration = TAXI_NORMAL_ACCELERATION;
     
-    _ptr_acf->vcl_condition.acceleration = 0.0;        
-    _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
+    _ptr_acf->vcl_condition.acceleration = TAXI_NORMAL_ACCELERATION;
+    _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
     
     // Причем поехали пока что прямо, как стоим.
     _ptr_acf->vcl_condition.heading_acceleration = 0.0;
@@ -61,28 +61,19 @@ void AircraftDoesLiningUp::_internal_start() {
 void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_call ) {
     
     // Подруливание на точку осуществляем - сразу же, в "прямолинейной" фазе.
-    _head_steering( elapsed_since_last_call, 25.0 );
+    // _head_steering( elapsed_since_last_call, 25.0 );
 
     auto wp = _get_front_wp();
-    double distance = _calculate_distance_to_wp( wp );        
-    if ( distance < 8.0 ) {
+    double distance = _calculate_distance_to_wp( wp );      
+    
+    if (( distance < 75.0 ) && ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED )) {
+        _taxi_breaking( TAXI_SLOW_SPEED, 3.0 );        
+    };
+    
+    if ( _taxi_turn_started( wp ) ) {        
         __phase = PHASE_ROTATION;
         // Убираем ближнюю точку ВПП, мы ее достигли.
-        _front_wp_reached();
-        
-        // Чуть начинаем подтормаживать.
-        _ptr_acf->vcl_condition.acceleration = 0.0;
-        _ptr_acf->vcl_condition.target_speed = 2.0;
-
-        // _ptr_acf->condition.tug = -0.2;
-        // _ptr_acf->vcl_condition.target_acceleration = -2.0;
-        
-        
-        // И здесь же устанавливаем параметры изменения курса и торможения.
-        // Это уже будет - дальняя точка рулежки.
-        
-        _head_steering( elapsed_since_last_call, 25.0 );                
-                
+        _front_wp_reached();                
     }
 }
 
@@ -99,21 +90,18 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading; 
     
-    if ( ( abs(delta) < 5.0 ) && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
-        // Тормозим.
-        
-        // _ptr_acf->condition.tug = -0.2;
-        // _ptr_acf->vcl_condition.target_acceleration = -2.0;
-        
-        _ptr_acf->vcl_condition.acceleration = 0.0;        
-        _ptr_acf->vcl_condition.target_speed = 0.0;
+    XPlane::log(
+        "Bearing=" + to_string(bearing) + ", heading=" + to_string( heading ) + ", delta=" + to_string( delta )
+    );
+    if ( ( abs(delta) < 3.0 ) && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
+        // Тормозим.        
+        _taxi_breaking( 0.0, 3.0 );
+        // И фиксируем текущий курс, больше крутиться не будем.
+        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
 
-    } else {
-        // Все еще выполняем поворот.
-        _head_steering( elapsed_since_last_call, 25.0 );
     };
     
-    if ( _ptr_acf->vcl_condition.speed <= 0.2 ) {
+    if ( _ptr_acf->vcl_condition.speed <= 0.5 ) {
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.target_speed = 0.0;
         // _ptr_acf->condition.tug = 0.0;

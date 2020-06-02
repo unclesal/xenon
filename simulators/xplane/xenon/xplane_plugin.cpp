@@ -120,44 +120,40 @@ void XPlanePlugin::__init_around() {
 
     __communicator = new ConnectedCommunicator( this );
     
-//    // Порождаем самолетик для пробы.
-//    XPlane::log("Init one bimbo...");
-//    auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
-//    bimbo->label = "Boeing 737-800";
-//    bimbo->colLabel[0] = 0.0f;  // R
-//    bimbo->colLabel[1] = 1.0f;  // G
-//    bimbo->colLabel[2] = 0.0f;  // B
+    // Порождаем самолетик для пробы.
+    XPlane::log("Init one bimbo...");
+    auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
+    bimbo->label = "Boeing 737-800";
+    bimbo->colLabel[0] = 0.0f;  // R
+    bimbo->colLabel[1] = 1.0f;  // G
+    bimbo->colLabel[2] = 0.0f;  // B
         
-////     Radar
-////
-////     acRadar.code = 7654;
-////     acRadar.mode = xpmpTransponderMode_ModeC;
+//     Radar
 
-//    auto usss = Airport::get_by_icao("USSS");
-//    auto gate = usss.get_startup_locations()["15"];
-    
-//    bimbo->is_clamped_to_ground = true;
-//    bimbo->place_on_ground( gate );
-    
-    
-//    auto where_i_am = bimbo->get_location();
-    
-//    auto way = usss.get_taxi_way_for_departure( where_i_am );
-//    XPlane::log("Got " + to_string(way.size()) + " points in FP");
-//    bimbo->prepare_for_take_off( way );
+//    bimbo->acRadar.code = 7654;
+//    bimbo->acRadar.mode = xpmpTransponderMode_ModeC;
+
+//     auto usss = Airport::get_by_icao("USSS");
+//     auto gate = usss.get_startup_locations()["15"];    
+//     bimbo->is_clamped_to_ground = true;
+//     bimbo->place_on_ground( gate );
+//             
+//     auto where_i_am = bimbo->get_location();    
+//     auto way = usss.get_taxi_way_for_departure( where_i_am );
+//     XPlane::log("Got " + to_string(way.size()) + " points in FP");
+//     bimbo->prepare_for_take_off( way );
     
 //    // Тест - начиная от предварительного старта.
 //    // bimbo->test__place_on_hp();
     
 //    // Тест - на конце ВПП.
-//    // bimbo->test__place_on_rwy_end();
+//    // bimbo->test__place_on_rwy_end();            
 
-//    __bimbos.push_back( bimbo );
-    
-////     bimbo->test__fly();
-////
-//    // Это по сути "старт".
-//    bimbo->choose_next_action();
+    bimbo->test__fly();
+
+    // Это по сути "старт".
+    bimbo->choose_next_action();
+    __bimbos.push_back( bimbo );
 
 }
 
@@ -459,6 +455,7 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
 
 void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     
+    /*
     __agents_mutex.lock();
     
     BimboAircraft * bimbo = nullptr;
@@ -496,7 +493,7 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     };
     
     __agents_mutex.unlock();
-        
+    */
 }
 
 

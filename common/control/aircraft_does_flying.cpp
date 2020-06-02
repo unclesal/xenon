@@ -43,20 +43,8 @@ void AircraftDoesFlying::_internal_start() {
     
     // Контроль скорости будет осуществляться в данном действии 
     // автоматически, поэтому существующие значения - обнуляем.
-    _ptr_acf->vcl_condition.acceleration = 0.0;
+    // _ptr_acf->vcl_condition.acceleration = 0.0;
     
-//     -----------------------------------------------------------------------
-//     TODO: убрать потом. Для отладки: какие-то похожие на правду скорости.
-//     _params.tug = 0.4;
-//     _params.acceleration = 0.0;
-//     _params.target_acceleration = 2.0;
-//     _params.target_speed = 102.889; // 200 kph
-//     _params.speed = 100.0;
-//     
-//     _params.vertical_acceleration = 0.6f;
-//     _params.target_vertical_speed = feet_per_min_to_meters_per_second( _get_acf_parameters().vertical_climb_speed );
-//     -----------------------------------------------------------------------
-
 };
 
 // *********************************************************************************************************************
@@ -116,6 +104,27 @@ void AircraftDoesFlying::__control_of_speed (
 // *********************************************************************************************************************
 
 void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call ) {
+    
+    // Положение закрылков в полете.
+    auto acf_params = _get_acf_parameters();
+    
+    if (
+        ( _ptr_acf->vcl_condition.speed >= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed ))
+        && ( _ptr_acf->vcl_condition.acceleration >= 0.0 )
+        && ( _ptr_acf->acf_condition.flaps_position != 0.0 )
+    ) {
+        _ptr_acf->set_flaps_position(0.0);
+        XPlane::log("FLY: laps to 0");
+    }
+    
+    if ( 
+        ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed))
+        && ( _ptr_acf->vcl_condition.acceleration <= 0.0 )
+        && ( _ptr_acf->acf_condition.flaps_position != acf_params.flaps_take_off_position )
+    ) {
+        _ptr_acf->set_flaps_position( acf_params.flaps_take_off_position );
+        XPlane::log("FLY: flaps to TO");
+    };
     
     auto wp = _get_front_wp();
     _head_bearing( wp );

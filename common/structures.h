@@ -55,6 +55,14 @@ namespace xenon {
         double l1_flat() {
             return abs(latitude) + abs(longitude);
         };
+        
+        bool operator == ( const location_t & l ) {
+            return (
+                ( latitude == l.latitude )
+                && ( longitude == l.longitude )
+                && ( altitude == l.altitude )
+            );
+        };
     };
 
 
@@ -97,6 +105,15 @@ namespace xenon {
         double distance_to_next_wp = 0.0;
         // Действие для достижения этой точки плана полета.
         xenon::aircraft_action_t action_to_achieve = ACF_DOES_NOTHING;
+        
+        bool operator == ( const waypoint_t & w ) {
+            return (                
+                ( name == w.name )
+                && ( type == w.type )
+                && ( location == w.location )
+                && ( action_to_achieve == w.action_to_achieve )
+            );
+        };
     };
 
     /**
@@ -148,6 +165,11 @@ namespace xenon {
      */
     
     struct aircraft_parameters_t {
+        // Длина самолета (метров).
+        float length = 6.0;
+        // Размах крыла, метров.
+        float wingspan = 6.0;
+        
         // Скорость (узлов в час), при которой происходит отрыв 
         // передней стойки шасси
         float v1 = 50.0;

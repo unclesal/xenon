@@ -19,10 +19,10 @@
 using namespace std;
 using namespace xenon;
 
-#ifndef INSIDE_XPLANE
+// #ifndef INSIDE_XPLANE
 #include <GeographicLib/Geodesic.hpp>
 using namespace GeographicLib;
-#endif
+// #endif
 
 namespace xenon {
 
@@ -151,24 +151,19 @@ namespace xenon {
         return brng;
     };
 
-#ifndef INSIDE_XPLANE
     inline location_t shift( const location_t & from, const double & meters, const float & heading ) {
-
-        const Geodesic & geod = GeographicLib::Geodesic::WGS84();
 
         location_t to;
         to.altitude = from.altitude;
-
+        
+        const Geodesic & geod = GeographicLib::Geodesic::WGS84();        
         double azi2 = 0.0, m12 = 0.0, M12 = 0.0, M21 = 0.0, S12 = 0.0;
-
         geod.Direct(
             from.latitude, from.longitude, heading, meters,
             to.latitude, to.longitude, azi2, m12, M12, M21, S12
         );
-
         return to;
     };
-#endif
 
     /**
      * @brief Расстояние от точки до линии, определенной двумя другими точками.

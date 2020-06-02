@@ -339,6 +339,9 @@ rotation_t BimboAircraft::get_rotation() {
 void BimboAircraft::__acf_parameters_correction() {
     
     if ( acIcaoType == "B738" ) {
+        _params.length = 40.0;
+        _params.wingspan = 34.0;
+
         _params.v1 = 100.0;
         _params.v2 = 120.0;
         _params.climb_speed = 240.0;
@@ -349,7 +352,7 @@ void BimboAircraft::__acf_parameters_correction() {
         _params.vertical_descend_speed = 1400.0;
         
         _params.take_off_angle = 8.0;
-        _params.taxing_pitch = -1.8;
+        _params.taxing_pitch = -1.85;
         _params.on_ground_offset = 3.25;
         
         _params.flaps_take_off_position = 0.35;
@@ -515,17 +518,22 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused
 
 void BimboAircraft::move( float meters ) {
 
+    
 #ifdef INSIDE_XPLANE
 
-    auto radians = degrees_to_radians( drawInfo.heading );
-
-    float dx = meters * sinf( radians );
-    float dz = meters * cosf( radians );
-    drawInfo.x += dx;
-    drawInfo.z -= dz;
+    // Внутри X-Plane - вариант, при котором существенно меньше вычислений.
+    
+    auto position = get_position();
+    auto dest = XPlane::shift( position, meters, GetHeading() );
+    drawInfo.x = dest.x;
+    drawInfo.z = dest.z;
+    
 
 #else
-
+    
+    // Снаружи X-Plane - вычисления через геоид, 
+    // т.к. "игровых координат" здесь нет.
+    
     auto location = get_location();
     auto dest = xenon::shift( location, meters, GetHeading() );
     set_location( dest );
@@ -700,39 +708,38 @@ void BimboAircraft::test__fly() {
     
 //     При вылете с полосы 08L
 //     SS028
-//     waypoint_t ss028 = {
-//         .name = "SS028",
-//         .type = WAYPOINT_FLYING,
-//         .location = {
-//             .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
-//             .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
-//             .altitude = 700.0
-//         },
-//         .speed = 240.0,
-//         .incomming_heading = 0.0,
-//         .outgoing_heading = 0.0,        
-//         .distance_to_next_wp = 0.0,
-//         .action_to_achieve = ACF_DOES_FLYING
-//     };
-//     fp.push_back( ss028 );
+    waypoint_t ss028 = {
+        .name = "SS028",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
+            .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
+            .altitude = 1100.0
+        },
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    fp.push_back( ss028 );
     
 //     D237K
-//     waypoint_t d237k = {
-//         .name = "D237K",
-//         .type = WAYPOINT_FLYING,
-//         .location = {
-//             .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
-//             .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
-//             .altitude = 700.0
-//         },
-//         .speed = 240.0,
-//         .incomming_heading = 0.0,
-//         .outgoing_heading = 0.0,        
-//         .distance_to_next_wp = 0.0,
-//         .action_to_achieve = ACF_DOES_FLYING
-//     };
-//     fp.push_back( d237k );
-//     
+    waypoint_t d237k = {
+        .name = "D237K",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
+            .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
+            .altitude = 1100.0
+        },
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    fp.push_back( d237k );
      
     // SS025 
     waypoint_t ss025 = {
@@ -741,7 +748,7 @@ void BimboAircraft::test__fly() {
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
             .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
-            .altitude = 900.0
+            .altitude = 1100.0
         },
         .speed = 240.0,
         .incomming_heading = 0.0,
@@ -758,7 +765,7 @@ void BimboAircraft::test__fly() {
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 41.97, 'N' ),
             .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
-            .altitude = 900.0
+            .altitude = 1100.0
         },
         .speed = 190.0,
         .incomming_heading = 0.0,
@@ -767,8 +774,8 @@ void BimboAircraft::test__fly() {
         .action_to_achieve = ACF_DOES_FLYING
     };
     fp.push_back( cf08l );
-    
-    // RW08L 
+
+    // RW08L - торец ВПП.    
     waypoint_t rwy08l = {
         .name = "RWY08L",
         .type = WAYPOINT_RUNWAY,
@@ -782,7 +789,7 @@ void BimboAircraft::test__fly() {
         .outgoing_heading = 0.0,          
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_LANDING
-    };
+    };    
     fp.push_back( rwy08l );
     
     // RWY26R - только для обеспечения посадки, для установки курса и торможения на ВПП.
@@ -792,7 +799,7 @@ void BimboAircraft::test__fly() {
         .location = {
             .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
             .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
-            .altitude = 600.0
+            .altitude = 170.0
         },
         .speed = 0.0,
         .incomming_heading = 0.0,        
@@ -804,29 +811,40 @@ void BimboAircraft::test__fly() {
      
     prepare_flight_plan( fp, 1000.0f );
         
+    vcl_condition.is_clamped_to_ground = false;
+
+    // -------------- Какие-то похожие на правду скорости ------------------
+    vcl_condition.acceleration = 2.0;
+    vcl_condition.target_speed = 102.889; // 200 kph
+    vcl_condition.speed = 100.0;
+
+    acf_condition.vertical_acceleration = 0.6f;
+    acf_condition.target_vertical_speed = feet_per_min_to_meters_per_second( _params.vertical_climb_speed );
+    // ---------------------------------------------------------------------
+
     // Для теста встаем на последнюю точку ВПП по горизонтали,
     // но - в небе, типа только что взлетели.
-    vcl_condition.is_clamped_to_ground = false;
     
-//     location_t start_point = {
-//         .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
-//         .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
-//         .altitude = 600.0
-//     };
-//     set_location( start_point );
-    set_location( fp.at(0).location );
+    location_t start_point = {
+        .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
+        .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
+        .altitude = 600.0
+    };
+     set_location( start_point );
     
-    
+     // Это если хочется на первую точку полетного плана.
+    // set_location( fp.at(0).location );   
+   
     auto rotation = get_rotation();
-    rotation.heading = 70.0;
+    rotation.heading = 80.0;
     rotation.pitch = 1.0;
     set_rotation( rotation );
     
-    v[ V_CONTROLS_GEAR_RATIO ] = 0.0;
-    v[ V_CONTROLS_SPEED_BRAKE_RATIO ] = 0.0;
-        
+//    v[ V_CONTROLS_GEAR_RATIO ] = 0.0;
+//    v[ V_CONTROLS_SPEED_BRAKE_RATIO ] = 0.0;
+
     // Состояние AIRBORNED имеет только одно исходящее действие, это полет.
-    __graph->set_active_state( ACF_STATE_AIRBORNED );    
+    __graph->set_active_state( ACF_STATE_AIRBORNED );
     
 }
 #endif

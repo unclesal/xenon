@@ -80,6 +80,7 @@ void AircraftDoesLanding::_internal_start() {
 // *********************************************************************************************************************
 
 void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters ) {
+    
     _head_bearing( wp );
     auto acf_location = _get_acf_location();
     auto acf_rotation = _get_acf_rotation();
@@ -132,11 +133,15 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
             _ptr_acf->acf_condition.pitch_acceleration = 0.2f;
     }
     
+    location_t end_rwy_location = wp.location;
+#ifdef INSIDE_XPLANE    
+    _ptr_acf->hit_to_ground( end_rwy_location );
+#endif
 
     // На скольки-нибудь метрах высоты относительно высоты торца ВПП - останавливаемся.
-    auto da = acf_location.altitude - wp.location.altitude;
+    auto da = acf_location.altitude - end_rwy_location.altitude;
 
-    if ( da <= 45.0 ) {
+    if ( da <= 13.0 ) {
 
         // Переход в фазу выравнивания.
 
@@ -157,15 +162,14 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
         // По крену - насмерть. Как есть - так и есть.
         _ptr_acf->acf_condition.roll_acceleration = 0.0;
 
-        // Курс - оставляем. В фазе выравнивания тоже будет подруливание.
-        // _params.heading_acceleration = 0.0;
+        // Курс - оставляем как есть, не меняем. Потому что в 
+        // фазе выравнивания тоже будет подруливание.
                 
-        auto acf_rotation = _get_acf_rotation();
-        
         // Целевой угол, на который мы должны выйти - это достаточно большой 
-        // угол, но такой, при котором хвост еще не касается земли.
+        // угол, но такой, при котором хвост еще не касается земли.        
         _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().take_off_angle;
         
+        auto acf_rotation = _get_acf_rotation();        
         if ( acf_rotation.pitch < _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = 2.0f;
          else _ptr_acf->acf_condition.pitch_acceleration = 2.0f;
         
@@ -223,7 +227,7 @@ void AircraftDoesLanding::__step__alignment(
         // _params.tug = 0;
         // _ptr_acf->vcl_condition.target_acceleration = 0.0;
 
-        _ptr_acf->vcl_condition.acceleration = -3.6f;
+        _ptr_acf->vcl_condition.acceleration = -3.0f;
         _ptr_acf->vcl_condition.target_speed = 0.0;
         
         // Включение реверса.

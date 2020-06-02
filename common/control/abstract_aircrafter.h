@@ -88,17 +88,28 @@ namespace xenon {
                 return xenon::distance2d( location, wp.location );
             };
             
+            inline void _remove_waypoints_up_to( const waypoint_t & wp ) {
+                if ( _ptr_acf->_flight_plan.empty() ) return;
+                bool next_point = false;
+                while (( ! _ptr_acf->_flight_plan.empty() ) && ( ! next_point )) {
+                    auto cur_wp = _ptr_acf->_flight_plan.at(0);
+                    next_point = cur_wp == wp;
+                    _ptr_acf->_flight_plan.pop_front();
+                };
+            };
+            
             /**
              * @short Посчитать расстояние до "достаточно крутого поворота"
              */
 
-            inline double _calculate_distance_to_turn() {
+            inline double _calculate_distance_to_turn( waypoint_t & turned_wp ) {
     
                 auto location = _get_acf_location();
                 for ( int i=0; i < ( (int) _ptr_acf->_flight_plan.size() ); i++ ) {
                     auto wp = _ptr_acf->_flight_plan.at(i);
                     double change = wp.incomming_heading - wp.outgoing_heading;
-                    if ( change >= 20.0 ) {
+                    if ( abs(change) >= 20.0 ) {
+                        turned_wp = wp;
                         return xenon::distance2d(location, wp.location);
                     }
                 }

@@ -53,15 +53,20 @@ namespace xenon {
              * @short Нулевая точка плана - удаляется, а не приближается, как оно должно быть в "штатном" режиме.
              */
             
-            inline bool _front_wp_recedes() {
-                auto wp = _get_front_wp();
-                return ( __previous_distance_to_front_wp < (int) _calculate_distance_to_wp( wp ) );
-            };
+//             inline bool _front_wp_recedes() {
+//                 auto wp = _get_front_wp();
+//                 return ( _previous_distance_to_front_wp() < _calculate_distance_to_wp( wp ) );
+//             };
 
             
-            double _previous_distance_to_front_wp() {
-                return __previous_distance_to_front_wp;
-            };
+//             float _previous_distance_to_front_wp() {
+//                 float result;
+//                 for ( int i=0; i<PREVIOUS_ARRAY_SIZE; i++ ) {
+//                     result += __previous_distance_to_front_wp[i];
+//                 };
+//                 result /= (float) PREVIOUS_ARRAY_SIZE;
+//                 return result;
+//             };
             
             
             /** 
@@ -79,6 +84,25 @@ namespace xenon {
             
             void _altitude_adjustment( const float & target_altitude, const float & time_to_achieve );
             void _speed_adjustment( const float & target_speed, const float & time_to_achieve );
+            
+            /**
+             * @short Получить (не нормированную, как есть) разницу между текущим курсом и курсом точки привода.
+             */
+            double _get_delta_to_target_heading( const waypoint_t & wp );
+            
+            /**
+             * @short Вычисление точки начала поворота при рулении.
+             * И если точка достигнута, то установка параметров этого самого разворота.
+             */
+            bool _taxi_turn_started( const waypoint_t & destination );
+            
+            /**
+             * @short Применить торможение при рулении.
+             * @param to_speed целевая скорость, до которой надо затормозить.
+             * @param seconds за сколько секунд планируется затормозить.
+             */
+            
+            void _taxi_breaking( const float & to_speed, const float & for_seconds );
 
             
         private:
@@ -97,7 +121,7 @@ namespace xenon {
              * @short Дистанция до следующей точки полетного плана - в предыдущем "шаге" цикла.
              * С точностью до метра. Иначе там набежки бывают, если оно double. 
              */
-            int __previous_distance_to_front_wp;
+            // int __previous_distance_to_front_wp[ PREVIOUS_ARRAY_SIZE ];
             
             // Массив предыдущих значений для вычисления интегральной составляющей по курсу
             double __previous_heading_delta[ PREVIOUS_ARRAY_SIZE ];

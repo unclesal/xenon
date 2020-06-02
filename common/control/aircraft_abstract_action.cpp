@@ -23,9 +23,7 @@ AircraftAbstractAction::AircraftAbstractAction (
         
     __total_duration = 0.0;
     __started = false;
-    __finished = false;
-    
-    __previous_distance_to_front_wp = 0;
+    __finished = false;        
 
 }
 
@@ -45,13 +43,22 @@ void AircraftAbstractAction::__start() {
         __total_duration = 0.0;
         __total_distance = 0.0;
         
-        // Массив предыдущих расхождений по курсу для каждой фазы будет свой.
-        for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) __previous_heading_delta[i] = 0.0;
-
-        __started = true;                
-        
         auto wp = _get_front_wp();
-        __previous_distance_to_front_wp = (int) _calculate_distance_to_wp( wp );
+        auto distance_to_front = (int) _calculate_distance_to_wp( wp );
+                
+        for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
+            
+            // Массив предыдущих дистанций - в начале действия там все
+            // дистанции должны быть равны текущей. Иначе точка сразу же
+            // может начать удаляться.
+            // __previous_distance_to_front_wp[ i ] = (int) distance_to_front;
+            
+            // Массив предыдущих расхождений по курсу для каждой фазы будет свой.
+            __previous_heading_delta[ i ] = 0.0;
+            
+        }
+
+        __started = true;                                
         
         _internal_start();
         
@@ -237,7 +244,13 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
         
         // До перемещения - запоминаем предыдущее положение.
         auto front_wp = _get_front_wp();
-        __previous_distance_to_front_wp = (int) _calculate_distance_to_wp( front_wp );
+        
+//         for ( int i = PREVIOUS_ARRAY_SIZE - 2; i>=0; -- i ) {
+//             __previous_distance_to_front_wp[i + 1] = __previous_distance_to_front_wp[i];
+//         }
+//               
+//         __previous_distance_to_front_wp[0] = (int) _calculate_distance_to_wp( front_wp );
+        
         // Прямолинейное перемещение самолета 
         __move_straight( elapsed_since_last_call );
         
@@ -407,7 +420,7 @@ void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void xenon::AircraftAbstractAction::_speed_adjustment( const float & target_speed, const float & time_to_achieve) {
+void AircraftAbstractAction::_speed_adjustment( const float & target_speed, const float & time_to_achieve) {
     auto ds = target_speed - _ptr_acf->vcl_condition.speed;
     _ptr_acf->vcl_condition.target_speed = target_speed;
     _ptr_acf->vcl_condition.acceleration = 0.0;
@@ -421,3 +434,112 @@ void xenon::AircraftAbstractAction::_speed_adjustment( const float & target_spee
 
 }
 
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *          Получить разницу между текущим курсом самолета и целевым курсом на нулевой точке полетного плана         *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+double AircraftAbstractAction::_get_delta_to_target_heading( const waypoint_t & wp ) {
+    
+    auto current_rotation = _ptr_acf->get_rotation();
+    // Текущий курс самолета.
+    double heading = current_rotation.heading;
+    xenon::normalize_degrees( heading );
+    // Целевой курс, как нам надо встать.
+    double target_heading = wp.outgoing_heading;
+    xenon::normalize_degrees( target_heading );
+
+    double delta_heading = target_heading - heading;
+    // Здесь нормализация - не выполняется. Потому что она нужна не всегда.
+    return delta_heading;
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                        Применить торможение при рулении                                           *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftAbstractAction::_taxi_breaking( const float & to_speed, const float & for_seconds ) {
+    auto cur_speed = _ptr_acf->vcl_condition.speed;
+    if (( cur_speed == 0.0 ) || ( for_seconds == 0.0 )) return;
+    auto ds = to_speed - cur_speed;
+    _ptr_acf->vcl_condition.target_speed = to_speed;
+    _ptr_acf->vcl_condition.acceleration = ds / for_seconds;
+    
+//     XPlane::log(
+//         "Cur speed=" + to_string( cur_speed ) + ", to speed=" + to_string( to_speed )
+//         + ", ds=" + to_string( ds ) + ", accel=" + to_string( _ptr_acf->vcl_condition.acceleration)
+//     );
+}
+
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *       Вычисление точки поворота при рулении. И если она достигнута, то установка параметров этого поворота.       *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination ) {
+    
+    // Точка, где мы сейчас находимся.
+    auto me = _get_acf_location();
+    
+    // Точка, сдвинутая метров на сколько-нибудь от destination для описания сегмента.
+    auto wp1 = xenon::shift( destination.location, 25.0, destination.outgoing_heading );
+    
+    // Разница в курсах (для определения направления поворота, вправо или влево)
+    double delta_heading = _get_delta_to_target_heading( destination );
+    // Нормализация, потому что сейчас будем определять сторону поворота.
+    normalize_degrees( delta_heading );
+
+    auto taxi_radius = TAXI_TURN_RADIUS;
+    if ( delta_heading > 180.0 ) taxi_radius = - taxi_radius;
+    
+    // Точка, сдвинутая от нашей текущей позиции в сторону поворота на радиус 
+    // поворота. Эта точка находится на линии, где будет центр разворота.
+    auto me_shifted = xenon::shift( me, taxi_radius, _ptr_acf->vcl_condition.rotation.heading + 90.0 );
+    
+    auto wp_shifted = xenon::shift( destination.location, taxi_radius, destination.outgoing_heading - 90.0 );
+    auto wp1_shifted = xenon::shift( wp1, taxi_radius, destination.outgoing_heading - 90.0 );
+        
+    auto dist_shifted_me_to_segment = xenon::distance_to_segment( me_shifted, wp_shifted, wp1_shifted );
+//    XPlane::log("dis=" + to_string( dist_shifted_me_to_segment ));
+    
+    // Место разворота, похоже, зависит от того, вперед самолет 
+    // едет или назад. И похоже что это - длина самолета.
+
+    float threshold = 2.5;
+    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _get_acf_parameters().length * 2.0 / 3.5;
+    
+    if ( dist_shifted_me_to_segment <= threshold ) {
+        // Длина дуги, которую нам надо пройти.
+        auto len = TAXI_TURN_RADIUS * degrees_to_radians( delta_heading );
+        // Время, за которое мы ее пройдем.
+        auto dt = len / _ptr_acf->vcl_condition.speed;
+        // Изменение по курсу, градусов в секунду.
+        auto delta_h = delta_heading / dt;
+        if ( _ptr_acf->vcl_condition.speed < 0.0 ) delta_h = - delta_h;
+        
+        delta_heading < 180.0 ?
+            _ptr_acf->vcl_condition.heading_acceleration = delta_h 
+            : _ptr_acf->vcl_condition.heading_acceleration = - delta_h;
+            
+        // Самолету надо поставить целевой курс, чтобы он начал поворачивать.
+        _ptr_acf->vcl_condition.target_heading = destination.outgoing_heading;
+        
+//         XPlane::log(
+//             "cur heading=" + to_string( _ptr_acf->vcl_condition.rotation.heading)
+//             + ", wanted=" + to_string( destination.outgoing_heading )
+//             + ", delta=" + to_string( delta_heading )
+//             + ", accel=" + to_string( _ptr_acf->vcl_condition.heading_acceleration )
+//         );
+        
+        return true;
+    }
+
+    return false;
+
+}

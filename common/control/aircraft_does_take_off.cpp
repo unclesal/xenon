@@ -44,10 +44,7 @@ void AircraftDoesTakeOff::_internal_start() {
     // Резкое ускорение. На скорость воздействуем 
     // только один раз за весь взлет.
     
-    // _params.tug = 0.4;
-    // _ptr_acf->vcl_condition.target_acceleration = 2.0;
-    
-    _ptr_acf->vcl_condition.acceleration = 0.0;    
+    _ptr_acf->vcl_condition.acceleration = 2.0;    
     _ptr_acf->vcl_condition.target_speed = knots_to_merets_per_second( _get_acf_parameters().v2 );
 
 }

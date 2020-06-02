@@ -34,7 +34,6 @@ namespace xenon {
             
             phase_t __current_phase;
             
-            double __get_delta_to_target_heading( const waypoint_t & wp );
             void __internal_step__phase_straight();
             void __internal_step__phase_turn();
             void __internal_step__phase_stop();
