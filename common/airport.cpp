@@ -1236,11 +1236,14 @@ std::deque< waypoint_t > Airport::get_taxi_way_for_parking(
         //  Курсы, которыми достигаются точки.
         result.at(0).incomming_heading = xenon::bearing(from, result.at(0).location);
         for ( int i=0; i < (int)result.size() - 1; i++ ) {
+
             auto location_from = result.at( i ).location;
             auto location_to = result.at( i + 1 ).location;
+
             auto direction = xenon::bearing( location_from, location_to );
             result.at( i ).outgoing_heading = direction;
             result.at( i + 1 ).incomming_heading = direction;
+
         }
 
     } catch ( const std::range_error & re ) {

@@ -149,7 +149,8 @@ void XPlanePlugin::__init_around() {
 //    // Тест - на конце ВПП.
 //    // bimbo->test__place_on_rwy_end();            
 
-    bimbo->test__fly();
+    // bimbo->test__fly();
+    bimbo->test__taxing();
 
     // Это по сути "старт".
     bimbo->choose_next_action();

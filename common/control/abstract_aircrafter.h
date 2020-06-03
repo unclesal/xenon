@@ -80,6 +80,7 @@ namespace xenon {
             inline void _front_wp_reached() {                
                 if ( ! _ptr_acf->_flight_plan.empty() ) {
                     _ptr_acf->_flight_plan.pop_front();
+                    Logger::log("Front WP reached. Left " + to_string( _ptr_acf->_flight_plan.size()));
                 } else Logger::log("ERROR: AbstractAircrafter::_front_wp_reached(), empty flight plan.");
             };
                         

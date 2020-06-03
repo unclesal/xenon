@@ -216,6 +216,7 @@ namespace xenon {
             void choose_next_action();
 
             void test__fly();
+            void test__taxing();
 
 #ifdef INSIDE_XPLANE
             void test__place_on_hp();

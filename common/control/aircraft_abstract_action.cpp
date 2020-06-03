@@ -276,9 +276,24 @@ void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, doub
     };
     
     auto wp = _get_front_wp();
+
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );
+    /*
     auto heading = _get_acf_rotation().heading;
-    auto delta = bearing - heading;        
+    auto delta1 = ( bearing - heading );
+    auto delta2 = delta1 + 360.0;
+    Logger::log(
+        "Heading=" + to_string( heading )
+        + ", bearing=" + to_string( bearing )
+        + ", delta1=" + to_string( delta1 )
+        + ", delta2=" + to_string( delta2 )
+    );
+    */
+    auto delta = _get_delta_to_target_heading( wp );
+    // abs( delta1 ) < abs( delta2 ) ? delta = delta1 : delta = delta2;
+
+    Logger::log("Corrected delta: " + to_string( delta ));
+
     _ptr_acf->vcl_condition.target_heading = bearing;
     _ptr_acf->vcl_condition.heading_acceleration = kp * delta * elapsed_since_last_call;
 

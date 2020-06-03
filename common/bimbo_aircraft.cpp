@@ -189,7 +189,7 @@ void BimboAircraft::_action_finished( void * action ) {
     
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
     aircraft_state_graph::edge_t edge = __graph->get_edge_for( ptr_abstract_action );
-    Logger::log("Action " + edge.name + " finished");
+    Logger::log("Action " + edge.name + " finished.");
     __graph->action_finished( ptr_abstract_action );
     choose_next_action();
     
@@ -884,3 +884,38 @@ void BimboAircraft::test__fly() {
     
 }
 
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                         Тестирование руления на стоянку                                           *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::test__taxing() {
+
+    auto usss = Airport::get_by_icao("USSS");
+
+    location_t start_point = {
+        .latitude = 56.744801,
+        .longitude = 60.803618,
+        .altitude = 170.0
+    };
+#ifdef INSIDE_XPLANE
+
+    AbstractVehicle::hit_to_ground( start_point );
+    vcl_condition.is_clamped_to_ground = true;
+    v[ V_CONTROLS_GEAR_RATIO ] = 1.0;
+
+#endif
+    set_location( start_point );
+
+    auto heading = 80.0;
+    auto rotation = get_rotation();
+    rotation.heading = heading;
+    set_rotation( rotation );
+
+    _params.destination = "USSS";
+    acf_condition.icao_type = "B738";
+
+    __graph->set_active_state( ACF_STATE_LANDED );
+
+}

@@ -27,6 +27,8 @@ namespace xenon {
         private:
             
             void __choose_speed();
+            void __become_to_hp( waypoint_t & front_wp );
+
         
     }; // class AircraftDoesTaxing
     

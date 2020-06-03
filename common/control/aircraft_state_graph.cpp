@@ -175,11 +175,15 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
     
     try {
         __graph[ nd ].current_state = true;
+        __ptr_acf->vcl_condition.current_state = __graph[ nd ].state;
         __current_state = ( AircraftAbstractState * ) __graph[ nd ].ptr_state_class;
-        if ( __current_state ) __current_state->__activate();
+        if ( __current_state ) {
+            __current_state->__activate();
+        }
     } catch ( const std::range_error & re ) {
         Logger::log("ERROR: AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
     }
+
 };
 
 // *********************************************************************************************************************
@@ -189,8 +193,8 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
 // *********************************************************************************************************************
 
 void AircraftStateGraph::set_active_state( const aircraft_state_t & state ) {
-    auto airborned_d = get_node_for( state );
-    set_active_state( airborned_d );
+    auto state_d = get_node_for( state );
+    set_active_state( state_d );
 }
 
 // *********************************************************************************************************************
@@ -209,6 +213,7 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
         Logger::log("AircraftStateGraph::set_active_action " + __graph[ ed ].name );
 #endif        
         __graph[ ed ].current_action = true;
+        __ptr_acf->vcl_condition.current_action = __graph[ ed ].action;
         __current_action = (AircraftAbstractAction * ) __graph[ ed ].ptr_does_class;
 
         // Это единственное место, где должен вызываться старт. Поэтому сам старт сделан приватным.
