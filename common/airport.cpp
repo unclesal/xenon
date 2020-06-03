@@ -1081,7 +1081,7 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     }
 
     // Ближайший к заданному положению узел, принадлежащий именно рулежным дорожкам.
-    auto nearest_node_descriptor = __routes.get_nearest_node( from, AirportNetwork::WAY_TAXIWAY );
+    auto nearest_node_descriptor = __routes.get_nearest_node_d( from, AirportNetwork::WAY_TAXIWAY );
     AirportNetwork::node_t nearest_node;
     try {
         nearest_node = __routes.graph()[ nearest_node_descriptor ];
@@ -1137,4 +1137,116 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
         
     return result;
 
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                         Вернуть свободную парковку, подходящую для данного типа ВС                                *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+startup_location_t Airport::get_free_parking( const std::string & icao_type ) {
+    startup_location_t result;
+    if ( icao_type == "B738" ) result = __startup_locations["15"];
+    else result = __startup_locations["10"];
+    return result;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                Посчитать и выдать путь для руления на парковку.                                   *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+std::deque< waypoint_t > Airport::get_taxi_way_for_parking(
+    const location_t & from, const float & heading, const startup_location_t & parking
+) {
+    std::deque< waypoint_t > result;
+
+    // Ближайшая точка на ВПП к запрошенному местоположению.
+
+    auto nearest_d = __routes.get_nearest_node_d( from, AirportNetwork::WAY_RUNWAY );
+    if ( nearest_d == AirportNetwork::graph_t::null_vertex()) {
+        Logger::log("ERROR: Airport::get_taxi_way_for_parking(), nearest waypoint on RUNWAY not found.");
+        return result;
+    }
+
+    // Сам нод найденной точки.
+
+    try {
+        bool node_found = false;
+        auto nearest_node = __routes.graph()[ nearest_d ];
+        auto bearing = xenon::bearing(from, nearest_node.location);
+        auto dh = bearing - heading;
+        if ( abs(dh) <= 30.0 ) node_found = true;
+        else {
+            // Узел найти не удалось. Он может и "ближайший", но проблема
+            // в том, что он - за нами, на не впереди нас.
+            auto edges = __routes.get_edges_for( nearest_d );
+            for ( auto e: edges ) {
+                // Нас интересуют только взлетки.
+                if ( e.way_type != AirportNetwork::WAY_RUNWAY ) continue;
+                auto his_nodes = __routes.get_nodes_for( e.name );
+                for ( auto n : his_nodes ) {
+                    bearing = xenon::bearing( from, n.location );
+                    dh = bearing - heading;
+                    if ( abs(dh) <= 30.0 ) {
+                        node_found = true;
+                        nearest_node = n;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ( ! node_found ) {
+            // Подходящего узла для указанного курса мы так и не нашли.
+            Logger::log(
+                "Airport::get_taxi_way_for_parking(), no nearest node was found for heading "
+                + to_string( heading )
+            );
+            return result;
+        }
+        
+        // Подходящий узел (начала руления) - найден. Но нам нужен - не сам узел, а его дескриптор.
+        
+        nearest_d = __routes.get_node_d_for( nearest_node );
+        if ( nearest_d == AirportNetwork::graph_t::null_vertex() ) {
+            Logger::log("Airport::get_taxi_way_for_parking, nearest node descriptor was not found");
+            return result;
+        };
+
+        // Все. Запрашиваем Дейкстру.
+        auto way = __routes.get_shortest_path( nearest_d, parking.location );
+        for ( auto descriptor : way ) {
+            auto node = __routes.graph()[ descriptor ];
+            waypoint_t wp;
+            wp.name = node.name;
+            wp.type = WAYPOINT_TAXING;
+            wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
+            wp.location = node.location;
+            wp.location.altitude = evalution_in_meters();
+            result.push_back( wp );
+        }
+
+        // Последняя точка - это паркинг, и достигается он - медленным рулением.
+        result.at( result.size() - 1 ).type = WAYPOINT_PARKING;
+        result.at( result.size() - 1 ).action_to_achieve = ACF_DOES_SLOW_TAXING;
+
+        //  Курсы, которыми достигаются точки.
+        result.at(0).incomming_heading = xenon::bearing(from, result.at(0).location);
+        for ( int i=0; i < (int)result.size() - 1; i++ ) {
+            auto location_from = result.at( i ).location;
+            auto location_to = result.at( i + 1 ).location;
+            auto direction = xenon::bearing( location_from, location_to );
+            result.at( i ).outgoing_heading = direction;
+            result.at( i + 1 ).incomming_heading = direction;
+        }
+
+    } catch ( const std::range_error & re ) {
+        Logger::log("ERROR: Airport::get_taxi_way_for_parking(), range error.");
+        return result;
+    }
+
+    return result;
 }

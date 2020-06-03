@@ -89,8 +89,13 @@ namespace xenon {
         ACF_STATE_AIRBORNED,
         // Находится на глиссаде
         ACF_STATE_ON_FINAL,
-        // Произвел посадку и ушел с ВПП
-        ACF_STATE_RUNWAY_LEAVED
+        // Произвел посадку, закончил торможение.
+        ACF_STATE_LANDED,
+        // Освободил ВПП
+        ACF_STATE_RUNWAY_LEAVED,
+        // Непосредственно перед тем, как запарковаться
+        // (в плане полета осталась одна точка, это сама парковка)
+        ACF_STATE_BEFORE_PARKING
     };
 
     // Действия (ребра графа состояний самолета).

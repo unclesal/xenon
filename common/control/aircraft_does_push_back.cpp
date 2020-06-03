@@ -111,7 +111,7 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
     if ( (delta >= 360 - threshold ) || ( delta <= threshold ) ) {
         
         // Останавливаемся.
-        XPlane::log("go to phase stop");
+        Logger::log("go to phase stop");
         _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;
         _ptr_acf->vcl_condition.heading_acceleration = 0.0;        
         _taxi_breaking( 0.0, 5.0 );

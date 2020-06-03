@@ -3,7 +3,7 @@
 #                                                                                                                      #
 # Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                           Created 27 may 2020 at 08:18 #
 ########################################################################################################################
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.15)
 project(agent_aircraft LANGUAGES C CXX)
 set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
@@ -11,13 +11,18 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++)
 # set(CMAKE_BUILD_TYPE MATCHES "Release")
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
-add_compile_options(-O3 -fPIC -Wno-deprecated-declarations)
+add_compile_options(-fPIC -Wno-deprecated-declarations)
+
+# Debug build?
+if(CMAKE_BUILD_TYPE MATCHES "Release")
+    add_compile_options( -O3 )
+endif()
 
 # Сборка - именно для серверной части.
-add_definitions(-DINSIDE_AGENT)
+add_definitions( -DINSIDE_AGENT )
 
 # С отладкой или без нее. Без отладки - сразу же уйдет в fork().
-add_definitions(-DDEBUG)
+add_definitions( -DDEBUG )
 
 set(COMMON ../../common)
 set(CONTROL ${COMMON}/control)
@@ -64,7 +69,9 @@ set(SOURCES
     ${CONTROL}/aircraft_does_take_off.cpp
     ${CONTROL}/aircraft_does_taxing.cpp
     ${CONTROL}/aircraft_state_airborned.cpp
+    ${CONTROL}/aircraft_state_before_parking.cpp
     ${CONTROL}/aircraft_state_graph.cpp
+    ${CONTROL}/aircraft_state_landed.cpp
     ${CONTROL}/aircraft_state_on_final.cpp
     ${CONTROL}/aircraft_state_on_hp.cpp
     ${CONTROL}/aircraft_state_parking.cpp

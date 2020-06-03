@@ -134,6 +134,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     }
     
     location_t end_rwy_location = wp.location;
+
 #ifdef INSIDE_XPLANE    
     _ptr_acf->hit_to_ground( end_rwy_location );
 #endif
@@ -200,14 +201,19 @@ void AircraftDoesLanding::__step__alignment(
     auto ground_pos = acf_position;
     _ptr_acf->hit_to_ground( ground_pos );
     
-    // Целевая точка назначения и расстояние до нее. Это все еще ближний торец ВПП.
+
     // auto target_pos = XPlane::location_to_position( wp.location );
     // auto distance = XPlane::distance_2d( acf_position, target_pos );
     
     // Выстота (расстояние до земли)
     auto height = acf_position.y - ground_pos.y;
+#else
+    auto acf_location = _get_acf_location();
+    // Выстота (расстояние до земли)
+    auto height = acf_location.altitude - wp.location.altitude;
+#endif
     
-    if ( height <= 0.5 ) {
+    if ( height <= 0.3 ) {
         
         Logger::log("Touch down!!!");
         // Сели. Самолет прижимаем к земле.
@@ -237,16 +243,19 @@ void AircraftDoesLanding::__step__alignment(
             
     } else if ( height <= 2.5 ) {
         
-        _ptr_acf->acf_condition.target_vertical_speed = -0.5f;
-        if ( _ptr_acf->acf_condition.vertical_speed < _ptr_acf->acf_condition.target_vertical_speed ) _ptr_acf->acf_condition.vertical_acceleration = 2.0f;
-        else _ptr_acf->acf_condition.vertical_acceleration = -2.0f;
+        // Достаточно высоко - снижаемся поинтенсивнее.
+        _ptr_acf->acf_condition.target_vertical_speed = -0.6f;
+
+        if ( _ptr_acf->acf_condition.vertical_speed < _ptr_acf->acf_condition.target_vertical_speed )
+            // Цифра глаза режет с учетом вышестоящей целевой
+            // вертикальной скорости, но проблема в том, что самолет
+            // может иметь - не известную нам вертикальную скорость.
+            _ptr_acf->acf_condition.vertical_acceleration = 2.0f;
+        else
+            _ptr_acf->acf_condition.vertical_acceleration = -2.0f;
         
     }
-    
-#else
-    Logger::log("ERROR: AircraftDoesLanding outside of X-Plane not released!");
-#endif
-    
+        
 };
 
 // *********************************************************************************************************************
@@ -264,6 +273,8 @@ void AircraftDoesLanding::__step__breaking() {
         _front_wp_reached();
         
         // Все. Действие посадки - закончено.
+        auto location = _ptr_acf->get_location();
+        Logger::log("Stopped lat=" + to_string( location.latitude ) + ", lon=" + to_string(location.longitude));
         _finish();
     }
     

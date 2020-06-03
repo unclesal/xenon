@@ -114,7 +114,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         && ( _ptr_acf->acf_condition.flaps_position != 0.0 )
     ) {
         _ptr_acf->set_flaps_position(0.0);
-        XPlane::log("FLY: laps to 0");
+        Logger::log("FLY: laps to 0");
     }
     
     if ( 
@@ -123,7 +123,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         && ( _ptr_acf->acf_condition.flaps_position != acf_params.flaps_take_off_position )
     ) {
         _ptr_acf->set_flaps_position( acf_params.flaps_take_off_position );
-        XPlane::log("FLY: flaps to TO");
+        Logger::log("FLY: flaps to TO");
     };
     
     auto wp = _get_front_wp();

@@ -514,6 +514,23 @@ namespace xenon {
 
             deque< waypoint_t > get_taxi_way_for_departure( const location_t & from );
 
+            /**
+             * @brief Вернуть путь руления от указанного места до стоянки.
+             * @param from Точка, от которой рулим.
+             * @param heading Курс, которым мы сейчас стоИм, чтобы исключить точки сзади ВС.
+             * @param parking Стоянка, на которую хотим попасть.
+             * @return Путь, если он был найден. Первая точка этого пути ищется в растре 30
+             * градусов от указанного курса. И если она не найдена, если куср был каким-нибудь
+             * "левым" - то возвращаемый путь окажется пустым.
+             */
+            deque< waypoint_t > get_taxi_way_for_parking(
+                const location_t & from,
+                const float & heading,
+                const startup_location_t & parking
+            );
+
+            startup_location_t get_free_parking( const std::string & icao_type );
+
         private:
 
             // Общая кучка прочитанных аэропортов. Ключом является код аэропорта,

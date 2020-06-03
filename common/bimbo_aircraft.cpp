@@ -169,6 +169,12 @@ void BimboAircraft::choose_next_action() {
         __start_fp0_action();
         return;
     }
+
+    if ( __graph->current_state_is( ACF_STATE_LANDED )) {
+        if ( !_flight_plan.empty() ) __start_fp0_action();
+        else Logger::log("BimboAircraft::choose_next_action(), ACF_STATE_LANDED, but FP is empty");
+        return;
+    }
     
     Logger::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
@@ -436,6 +442,21 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                          Подготовка самолета к рулению без дополнительных обязательств                            *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void BimboAircraft::prepare_for_taxing( const deque < xenon::waypoint_t > & taxi_way) {
+    
+    for ( int i=0; i<taxi_way.size(); i++ ) {
+        _flight_plan.push_back( taxi_way.at(i) );
+    }
+
+}
+
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                               Вернуть позицию самолета в игровом пространстве                                     *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -548,7 +569,14 @@ void BimboAircraft::move( float meters ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp, const float & cruise_altitude ) {
+void BimboAircraft::prepare_flight_plan(
+    const std::string & flight_number,
+    const std::string & departure,
+    const std::string & destination,
+    const std::vector < std::string > & alternate,
+    const float & cruise_altitude,
+    deque < waypoint_t > & fp
+) {
     
     // Прямо по входному массиву - ничего страшного.
     // Потому что выходной массив, т.е. действующий полетный план,
@@ -563,13 +591,19 @@ void BimboAircraft::prepare_flight_plan( deque < waypoint_t > & fp, const float 
         at_n.incomming_heading = bearing;
     };
     
-    // TODO: вообще-то - не факт, что в самый конец, они могут и перетасовываться же? 
+    // TODO: вообще-то - не факт, наверное, что в самый конец,
+    // они могут и перетасовываться же?
+
     for ( int i=0; i < (int) fp.size(); ++ i ) {
         _flight_plan.push_back( fp.at( i ) );
     };
     
     _params.cruise_altitude = cruise_altitude;
-    
+    _params.departure = departure;
+    _params.destination = destination;
+    _params.alternate = alternate;
+    _params.flight_number = flight_number;
+
 }
 
 // *********************************************************************************************************************
@@ -701,62 +735,62 @@ void BimboAircraft::test__place_on_rwy_end() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-#ifdef INSIDE_XPLANE
+
 void BimboAircraft::test__fly() {
     
     deque< waypoint_t > fp;
     
-//     При вылете с полосы 08L
-//     SS028
-    waypoint_t ss028 = {
-        .name = "SS028",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
-            .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
-            .altitude = 1100.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
-    fp.push_back( ss028 );
+////     При вылете с полосы 08L
+////     SS028
+//    waypoint_t ss028 = {
+//        .name = "SS028",
+//        .type = WAYPOINT_FLYING,
+//        .location = {
+//            .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
+//            .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
+//            .altitude = 1100.0
+//        },
+//        .speed = 240.0,
+//        .incomming_heading = 0.0,
+//        .outgoing_heading = 0.0,
+//        .distance_to_next_wp = 0.0,
+//        .action_to_achieve = ACF_DOES_FLYING
+//    };
+//    fp.push_back( ss028 );
     
-//     D237K
-    waypoint_t d237k = {
-        .name = "D237K",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
-            .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
-            .altitude = 1100.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
-    fp.push_back( d237k );
+////     D237K
+//    waypoint_t d237k = {
+//        .name = "D237K",
+//        .type = WAYPOINT_FLYING,
+//        .location = {
+//            .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
+//            .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
+//            .altitude = 1100.0
+//        },
+//        .speed = 240.0,
+//        .incomming_heading = 0.0,
+//        .outgoing_heading = 0.0,
+//        .distance_to_next_wp = 0.0,
+//        .action_to_achieve = ACF_DOES_FLYING
+//    };
+//    fp.push_back( d237k );
      
-    // SS025 
-    waypoint_t ss025 = {
-        .name = "SS025",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
-            .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
-            .altitude = 1100.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
-    fp.push_back( ss025 );
+//    // SS025
+//    waypoint_t ss025 = {
+//        .name = "SS025",
+//        .type = WAYPOINT_FLYING,
+//        .location = {
+//            .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
+//            .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
+//            .altitude = 1100.0
+//        },
+//        .speed = 240.0,
+//        .incomming_heading = 0.0,
+//        .outgoing_heading = 0.0,
+//        .distance_to_next_wp = 0.0,
+//        .action_to_achieve = ACF_DOES_FLYING
+//    };
+//    fp.push_back( ss025 );
     
     // CF08L
     waypoint_t cf08l = {
@@ -809,7 +843,9 @@ void BimboAircraft::test__fly() {
     };
     fp.push_back( rwy26r );
      
-    prepare_flight_plan( fp, 1000.0f );
+    vector< std::string > alternate;
+    alternate.push_back("USCC");
+    prepare_flight_plan( "TEST1", "USSS", "USSS", alternate, 5000.0f, fp );
         
     vcl_condition.is_clamped_to_ground = false;
 
@@ -822,18 +858,18 @@ void BimboAircraft::test__fly() {
     acf_condition.target_vertical_speed = feet_per_min_to_meters_per_second( _params.vertical_climb_speed );
     // ---------------------------------------------------------------------
 
-    // Для теста встаем на последнюю точку ВПП по горизонтали,
-    // но - в небе, типа только что взлетели.
+//    // Для теста встаем на последнюю точку ВПП по горизонтали,
+//    // но - в небе, типа только что взлетели.
     
-    location_t start_point = {
-        .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
-        .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
-        .altitude = 600.0
-    };
-     set_location( start_point );
+//    location_t start_point = {
+//        .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
+//        .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
+//        .altitude = 600.0
+//    };
+//    set_location( start_point );
     
-     // Это если хочется на первую точку полетного плана.
-    // set_location( fp.at(0).location );   
+    // Это если хочется на первую точку полетного плана.
+    set_location( fp.at(0).location );
    
     auto rotation = get_rotation();
     rotation.heading = 80.0;
@@ -847,4 +883,4 @@ void BimboAircraft::test__fly() {
     __graph->set_active_state( ACF_STATE_AIRBORNED );
     
 }
-#endif
+

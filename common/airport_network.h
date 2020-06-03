@@ -24,9 +24,6 @@ namespace xenon {
         public:
 
             struct node_t {
-                // Latitude of node in decimal degrees Eight decimal places supported
-                // double latitude = 0.0;
-                // Longitude of node in decimal degrees Eight decimal places supported
                 // double longitude = 0.0;
                 location_t location;
 
@@ -39,6 +36,15 @@ namespace xenon {
                 int xp_id = -1;
                 // Node name. Not currently used. String (max 16 characters)
                 string name = "";
+                
+                bool operator == ( const node_t & n ) {
+                    return (
+                        ( location == n.location )
+                        && ( usage == n.usage )
+                        && ( xp_id == n.xp_id )
+                        && ( name == n.name )
+                    );
+                };
             };
 
             struct active_zone_t {
@@ -110,9 +116,22 @@ namespace xenon {
 
             graph_t::vertex_descriptor get_node_by_xp_id( const int & xp_id );
 
-            graph_t::vertex_descriptor get_nearest_node( const location_t & from, const way_type_t way_type );
-            node_t get_nearest_node( const location_t & location, const vector <node_t> & nodeset );
-            node_t get_farest_node( const location_t & location, const vector< node_t > & nodeset );
+            /**
+             * @brief Получить дескриптор ближайшего узла к данной точке, имеющего данный тип.
+             * @param from
+             * @param way_type
+             * @return
+             */
+            graph_t::vertex_descriptor get_nearest_node_d( const location_t & from, const way_type_t way_type );
+            
+            /**
+             * @brief Получить дескриптор для данного узла
+             */
+
+            graph_t::vertex_descriptor get_node_d_for( const node_t & node );
+            
+            node_t get_nearest_node( const location_t & location, const vector < node_t > & nodeset );
+            node_t get_farest_node( const location_t & location, const vector < node_t > & nodeset );
 
             // @todo наверняка здесь может быть правильнее.
             vector<edge_t> get_edges_for( const graph_t::vertex_descriptor & node_descriptor );
@@ -123,7 +142,10 @@ namespace xenon {
             // Получить вектором все имена для данного типа (рулежных дорожек или взлеток).
             vector< string > get_names_for( way_type_t way_type );
 
-            // Получить все узлы, входящие в данную рулежную дорожку или взлетку - по ее имени.
+            /**
+             * @short Получить все узлы, входящие в данную рулежную дорожку или взлетку - по ее имени.
+             * Массив выдается с сортировкой по координатам.
+             */
             vector< node_t > get_nodes_for( const string & edge_name );
 
         private:

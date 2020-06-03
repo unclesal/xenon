@@ -18,7 +18,7 @@ endif()
 
 if (NOT ${DISTRIB_DIR_EXISTS})
     message("Environment variable DISTRIB_DIR was not exported. Or directory \"$ENV{DISTRIB_DIR}\" does not exists.")
-    set(DISTRIB_DIR ../../../distrib/xplane_plugin_dir/xenon)
+    set(DISTRIB_DIR ${CMAKE_SOURCE_DIR}../../../distrib/xplane_plugin_dir/xenon)
 endif()
 
 # PLUGIN_DIR - это для make install. Если его нет, то 
@@ -48,8 +48,11 @@ set(NETCMD ${NETWORK}/commands)
 set(CONTROL ${COMMON}/control)
 
 ########################################################################################################################
-#                                              Source Files
+#                                                                                                                      #
+#                                                      Source Files                                                    #
+#                                                                                                                      #
 ########################################################################################################################
+
 add_library(xenon MODULE
         ${COMMON}/jsonable.cpp
         ${COMMON}/abstract_aircraft.cpp
@@ -83,7 +86,9 @@ add_library(xenon MODULE
         ${CONTROL}/aircraft_does_take_off.cpp
         ${CONTROL}/aircraft_does_taxing.cpp
         ${CONTROL}/aircraft_state_airborned.cpp
+        ${CONTROL}/aircraft_state_before_parking.cpp
         ${CONTROL}/aircraft_state_graph.cpp
+        ${CONTROL}/aircraft_state_landed.cpp
         ${CONTROL}/aircraft_state_parking.cpp
         ${CONTROL}/aircraft_state_on_final.cpp
         ${CONTROL}/aircraft_state_on_hp.cpp

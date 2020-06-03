@@ -48,13 +48,14 @@ namespace xenon {
             virtual void move( float meters ) {};
             
             virtual void update_from( const aircraft_condition_t & ac );
+            virtual void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) {};
             
         protected:
             
             deque<waypoint_t> _flight_plan;
             
             aircraft_parameters_t _params;
-            
+
             virtual void _action_finished( void * action ) = 0;            
 
         private:

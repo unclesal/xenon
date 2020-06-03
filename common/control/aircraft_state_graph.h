@@ -13,6 +13,8 @@
 #include "aircraft_abstract_state.h"
 
 #include "aircraft_state_airborned.h"
+#include "aircraft_state_before_parking.h"
+#include "aircraft_state_landed.h"
 #include "aircraft_state_on_final.h"
 #include "aircraft_state_on_hp.h"
 #include "aircraft_state_parking.h"

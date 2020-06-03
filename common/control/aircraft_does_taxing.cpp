@@ -67,18 +67,18 @@ void AircraftDoesTaxing::__choose_speed() {
             float time_to_reach = distance_to_turn / _ptr_acf->vcl_condition.speed;
             if ( time_to_reach <= 10.0 ) {
                 // До точки поворота осталось меньше скольки-нибудь секунд - тормозим.
-                XPlane::log("breaking to TAXI_SLOW_SPEED for 10 sec");
+                Logger::log("breaking to TAXI_SLOW_SPEED for 10 sec");
                 _taxi_breaking( TAXI_SLOW_SPEED, 10.0);
 
             } else {
             
                 if ( _ptr_acf->vcl_condition.speed > TAXI_SLOW_SPEED ) {                
                     // Скорость - высокая. Тормозим. 
-                    XPlane::log("down to TAXI_SLOW_SPEED");
+                    Logger::log("down to TAXI_SLOW_SPEED");
                     _taxi_breaking( TAXI_SLOW_SPEED, 3.0 );                    
                 } else if ( _ptr_acf->vcl_condition.speed < TAXI_SLOW_SPEED ) {                    
                     // Текущая скорость низкая, можно подразогнаться до TAXI_SLOW_SPEED
-                    XPlane::log("up to TAXI_SLOW_SPEED");
+                    Logger::log("up to TAXI_SLOW_SPEED");
                     _ptr_acf->vcl_condition.acceleration = TAXI_SLOW_ACCELERATION;
                     _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
                 }
@@ -125,7 +125,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
             auto ds = TAXI_SLOW_SPEED - _ptr_acf->vcl_condition.speed;
             _ptr_acf->vcl_condition.acceleration = ds / 5.0;
             _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
-            XPlane::log(
+            Logger::log(
                 "Go to HP speed=" + to_string(_ptr_acf->vcl_condition.speed) 
                 + ", acceleration=" + to_string( _ptr_acf->vcl_condition.acceleration )
             );

@@ -198,18 +198,28 @@ namespace xenon {
 
             void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
             
+            void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) override;
+            
             /**
              * @param cruise_altitude высота в футах. Она не сильно необходима в подготовке полетного
              * плана, но просто чтобы не забывать, что ее нужно устанавливать на полетный план.
              */
-            void prepare_flight_plan( deque<waypoint_t> & fp, const float & cruise_altitude );
+            void prepare_flight_plan(
+                const std::string & flight_number,
+                const std::string & departure,
+                const std::string & destination,
+                const vector <std::string> & alternate,
+                const float & cruise_altitude,
+                deque<waypoint_t> & fp
+            );
             
             void choose_next_action();
 
+            void test__fly();
+
 #ifdef INSIDE_XPLANE
             void test__place_on_hp();
-            void test__place_on_rwy_end();
-            void test__fly();
+            void test__place_on_rwy_end();            
 #endif
             
 #ifdef INSIDE_XPLANE

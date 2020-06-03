@@ -172,7 +172,7 @@ vector<AirportNetwork::edge_t> AirportNetwork::get_edges_for( const graph_t::ver
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node(
+AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_nearest_node_d(
     const location_t & from, const way_type_t way_type
 ) {
 
@@ -211,7 +211,7 @@ std::deque< AirportNetwork::graph_t::vertex_descriptor > AirportNetwork::get_sho
 ) {
 
     std::deque< graph_t::vertex_descriptor > path;
-    auto end_node_descriptor = get_nearest_node( to_location, WAY_ANY );
+    auto end_node_descriptor = get_nearest_node_d( to_location, WAY_ANY );
     size_t visited = 0;
     
     // Перекрытый класс Дейкстра-обхода графа (dijkstra visitor)
@@ -368,8 +368,6 @@ vector< AirportNetwork::node_t > AirportNetwork::get_nodes_for( const string & e
     // Сортировка массива nodes, ключом является сумма latitude + logitude.
     sort( nodes.begin(), nodes.end(), []( node_t & a, node_t & b ) {
         return ( a.location.l1_flat() > b.location.l1_flat() );
-            // ( a.location.latitude + a.location.longitude )
-            // > ( b.location.latitude + b.location.longitude );
     } );
     return nodes;
 }
@@ -414,4 +412,23 @@ AirportNetwork::node_t AirportNetwork::get_farest_node(
         }
     }
     return result;
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                       Получить дескриптор по его узлу                                             *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+AirportNetwork::graph_t::vertex_descriptor AirportNetwork::get_node_d_for( const xenon::AirportNetwork::node_t & node ) {
+    
+    graph_t::vertex_iterator vi, vi_end, next;
+    for ( tie(vi, vi_end) = vertices( __graph ); vi != vi_end; ++vi) {
+        graph_t::vertex_descriptor node_descriptor = * vi;
+        auto cur_node = __graph[ node_descriptor ];
+        if ( cur_node == node ) return node_descriptor;
+    }
+
+    return xenon::AirportNetwork::graph_t::null_vertex();
+
 }

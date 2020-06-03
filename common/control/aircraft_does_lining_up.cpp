@@ -90,7 +90,7 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading; 
     
-    XPlane::log(
+    Logger::log(
         "Bearing=" + to_string(bearing) + ", heading=" + to_string( heading ) + ", delta=" + to_string( delta )
     );
     if ( ( abs(delta) < 3.0 ) && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {

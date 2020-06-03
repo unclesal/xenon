@@ -45,12 +45,22 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     auto state_on_final_d = __create_state< AircraftStateOnFinal > (
         ACF_STATE_ON_FINAL, "On final"
     );
+
+    // Посадка выполнена (торможение закончено, остановился).
+    auto state_landed_d = __create_state< AircraftStateLanded > (
+        ACF_STATE_LANDED, "Landed"
+    );
+
     // Освободил ВПП.
     auto state_rwy_leaved_d =  __create_state< AircraftStateRunwayLeaved > (
         ACF_STATE_RUNWAY_LEAVED, "Runway leaved"
     );
-    
 
+    // Заходит на парковку (последняя точка осталась, сама парковка)
+    auto state_before_parking_d = __create_state< AircraftStateBeforeParking > (
+        ACF_STATE_BEFORE_PARKING, "Before parking"
+    );
+    
     // ------------------------------------------------------------------------
     //           Действия, переход из одного состояния в другое
     // ------------------------------------------------------------------------
@@ -97,11 +107,31 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_FLYING, "Flying", state_airborned_d, state_on_final_d
     );
     
-    // Из выхода на глиссаду в состояние "освободил ВПП" выходим посадкой.
+    // Из выхода на глиссаду в состояние "приземлился" - выходим посадкой.
     __create_action < AircraftDoesLanding > (
-        ACF_DOES_LANDING, "Landing",  state_on_final_d, state_rwy_leaved_d
+        ACF_DOES_LANDING, "Landing",  state_on_final_d, state_landed_d
     );
     
+    // Из состояния "приземлился" в состояние "освободил ВПП" выходим рулением.
+    __create_action< AircraftDoesTaxing > (
+        ACF_DOES_NORMAL_TAXING, "Leave runway (taxing)", state_landed_d, state_rwy_leaved_d
+    );
+
+    // Из состояния "освободил ВПП" до "почти запарковался" - все еще руление.
+    __create_action< AircraftDoesTaxing > (
+        ACF_DOES_NORMAL_TAXING, "Taxing to gate", state_rwy_leaved_d, state_before_parking_d
+    );
+
+    // Замыкание графа. Из состояния "почти запарковался" в состояние "на парковке".
+    // Тут два варианта. Либо заруливает сам, либо его заталкивают.
+
+    __create_action< AircraftDoesTaxing > (
+        ACF_DOES_SLOW_TAXING, "Taxing to parking", state_before_parking_d, state_parking_d
+    );
+
+    __create_action< AircraftDoesPushBack > (
+        ACF_DOES_PUSH_BACK, "Push back to parking", state_before_parking_d, state_parking_d
+    );
     
 }
 

@@ -25,7 +25,7 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
 
    // Ждем, пока аэропорт не вычитает свои данные.
    while ( ! Airport::airports_was_readed() ) {
-       usleep(50);
+       usleep(500);
    }
 
     if ( uuid == BOEING_1 ) {        
@@ -40,8 +40,12 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
         } else {
             // Пока что все вручную и для отладки.
             auto usss = Airport::get_by_icao("USSS");
-            auto gate = usss.get_startup_locations()["15"];    
-            __ptr_acf->place_on_ground( gate );        
+            // auto gate = usss.get_startup_locations()["15"];
+            // __ptr_acf->place_on_ground( gate );
+
+            __ptr_acf->test__fly();
+            __ptr_acf->choose_next_action();
+
         }        
     }        
     
@@ -68,13 +72,43 @@ void AgentAircraft::run() {
         cerr << "AgentAircraft::run(): acf pointer is none. Exit." << endl;
         return;
     }
+
+    __previous_time = xenon::get_system_time_ms();
     
     for (;;) {
-        sleep(100);
-        // __step();
+        // Время - в микросекундах.
+        usleep(15000);
+        __step();
     }
     
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                                  Для отладки                                                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+/*
+void AgentAircraft::__test() {
+    auto usss = Airport::get_by_icao("USSS");
+    auto parking = usss.get_free_parking("B738");
+    location_t start_point = {
+        .latitude = 56.744801,
+        .longitude = 60.803618,
+        .altitude = 170.0
+    };
+
+    auto heading = 80.0;
+    auto way = usss.get_taxi_way_for_parking( start_point, heading, parking );
+
+    // Он запросто мог получиться нулевой длины, если самолет стоял как-нибудь "боком".
+    if ( way.empty() ) {
+        Logger::log("AgentAircraft::__test(), taxi way for parking is empty.");
+        return;
+    }
+}
+*/
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -110,7 +144,16 @@ void AgentAircraft::on_connect() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AgentAircraft::__step() {
+void AgentAircraft::__step() {    
+
+    // Время, прошедшее с момента предыдущего вызова процедуры обновления.
+    float elapsed_since_last_call = ( xenon::get_system_time_ms() - __previous_time) / 1000.0;
+    __previous_time = xenon::get_system_time_ms();
+
+
+    // Вызываем обновление состояния агента.
+    __ptr_acf->UpdatePosition( elapsed_since_last_call, 0 );
+
 }
 
 // *********************************************************************************************************************
