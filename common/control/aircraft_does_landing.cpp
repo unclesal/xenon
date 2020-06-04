@@ -230,11 +230,9 @@ void AircraftDoesLanding::__step__alignment(
         else _ptr_acf->acf_condition.pitch_acceleration = 0.9f;
         
         // Торможение.
-        // _params.tug = 0;
-        // _ptr_acf->vcl_condition.target_acceleration = 0.0;
-
         _ptr_acf->vcl_condition.acceleration = -3.0f;
-        _ptr_acf->vcl_condition.target_speed = 0.0;
+        // До нуля-то не надо, быстрее освободим ВПП.
+        _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
         
         // Включение реверса.
         _ptr_acf->set_reverse_on( true );
@@ -266,11 +264,16 @@ void AircraftDoesLanding::__step__alignment(
 
 void AircraftDoesLanding::__step__breaking() {
     
-    if ( _ptr_acf->vcl_condition.speed < 0.5 ) {
+    if ( _ptr_acf->vcl_condition.speed < TAXI_NORMAL_SPEED + 0.5 ) {
         Logger::log("DONE");
         // Точка, на которую "целились", т.е. конечная 
         // точка ВПП в плане полета - нам больше не нужна.
         _front_wp_reached();
+        
+        // Убирание реверса.
+        _ptr_acf->set_reverse_on( false );
+        // Убирание воздушных тормозов.
+        _ptr_acf->set_speed_brake_position( 0.0 );
         
         // Все. Действие посадки - закончено.
         auto location = _ptr_acf->get_location();

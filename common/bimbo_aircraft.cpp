@@ -121,6 +121,7 @@ void BimboAircraft::choose_next_action() {
         auto node = __graph->get_node_for( current_state );
         current_state_name = node.name;
     }
+    
     Logger::log("choose_next_action(), state=" + current_state_name + ", fp size=" + to_string( _flight_plan.size() ) );
     
     if (
@@ -175,6 +176,16 @@ void BimboAircraft::choose_next_action() {
         else Logger::log("BimboAircraft::choose_next_action(), ACF_STATE_LANDED, but FP is empty");
         return;
     }
+    
+    if ( __graph->current_state_is( ACF_STATE_RUNWAY_LEAVED )) {
+        __start_fp0_action();
+        return;
+    };
+    
+    if ( __graph->current_state_is( ACF_STATE_BEFORE_PARKING )) {
+        __start_fp0_action();
+        return;
+    };
     
     Logger::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
@@ -314,7 +325,7 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     set_gear_down( true);
 
     // Сдвиг относительно начала стоянки
-    move( shift_from_ramp() );    
+    move( _params.shift_from_ramp );
     // В графе состояний отмечаем, что мы встали на стоянку.
     __graph->place_on_parking();
 
@@ -347,6 +358,7 @@ void BimboAircraft::__acf_parameters_correction() {
     if ( acIcaoType == "B738" ) {
         _params.length = 40.0;
         _params.wingspan = 34.0;
+        _params.shift_from_ramp = -9.0;
 
         _params.v1 = 100.0;
         _params.v2 = 120.0;
@@ -374,20 +386,6 @@ void BimboAircraft::__acf_parameters_correction() {
 #endif
         
     } else Logger::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                                Смещение в метрах относительно координат стоянки                                   *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-float BimboAircraft::shift_from_ramp() {
-
-    if ( acIcaoType == "B738" ) {
-        return -9.0;
-    }
-    return -5.0;
 }
 
 // *********************************************************************************************************************
@@ -451,7 +449,15 @@ void BimboAircraft::prepare_for_taxing( const deque < xenon::waypoint_t > & taxi
     for ( int i=0; i<taxi_way.size(); i++ ) {
         _flight_plan.push_back( taxi_way.at(i) );
     }
-
+    
+    // Если последняя точка парковка - то ее нужно сместить в зависимости от типа ВС.
+    auto wpp = _flight_plan.at( _flight_plan.size() - 1 );
+    if ( wpp.type == WAYPOINT_PARKING ) {
+        auto dest = xenon::shift( wpp.location, _params.shift_from_ramp, wpp.incomming_heading );
+        wpp.location = dest;
+        _flight_plan.at( _flight_plan.size() - 1 ) = wpp;
+    }
+    
 }
 
 

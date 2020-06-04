@@ -34,9 +34,7 @@ namespace xenon {
                 // одной фазе, вплоть до касания ВПП.
                 PHASE_ALIGNMENT,
                 // Торможение
-                PHASE_BREAKING,
-                // Уход с ВПП на ближайшую рулежку
-                PHASE_LEAVE_RUNWAY
+                PHASE_BREAKING                
             };
             
             phase_t __phase;

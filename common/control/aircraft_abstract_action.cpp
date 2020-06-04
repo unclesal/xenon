@@ -276,23 +276,8 @@ void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, doub
     };
     
     auto wp = _get_front_wp();
-
-    auto bearing = xenon::bearing( _get_acf_location(), wp.location );
-    /*
-    auto heading = _get_acf_rotation().heading;
-    auto delta1 = ( bearing - heading );
-    auto delta2 = delta1 + 360.0;
-    Logger::log(
-        "Heading=" + to_string( heading )
-        + ", bearing=" + to_string( bearing )
-        + ", delta1=" + to_string( delta1 )
-        + ", delta2=" + to_string( delta2 )
-    );
-    */
-    auto delta = _get_delta_to_target_heading( wp );
-    // abs( delta1 ) < abs( delta2 ) ? delta = delta1 : delta = delta2;
-
-    Logger::log("Corrected delta: " + to_string( delta ));
+    auto bearing = xenon::bearing( _get_acf_location(), wp.location );    
+    auto delta = _get_delta_bearing( wp );
 
     _ptr_acf->vcl_condition.target_heading = bearing;
     _ptr_acf->vcl_condition.heading_acceleration = kp * delta * elapsed_since_last_call;
@@ -314,11 +299,16 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
         return;
     };
     
-    auto location = _get_acf_location();
+
+    
     auto heading = _get_acf_rotation().heading;
-    auto bearing = xenon::bearing( location, wp.location );
-    if (( bearing < 90.0 ) && ( heading > 270.0 )) bearing += 360;
-    auto delta = bearing - heading;
+    
+//     auto location = _get_acf_location();    
+//     auto bearing = xenon::bearing( location, wp.location );
+//     if (( bearing < 90.0 ) && ( heading > 270.0 )) bearing += 360;
+//     auto delta = bearing - heading;
+    
+    auto delta = _get_delta_bearing( wp );
     
     // Работа PID-регулятора, который устанавливает крен самолета. 
     // Сдвиг по курсу потом формируется - уже в зависимости от крена.
@@ -451,15 +441,48 @@ void AircraftAbstractAction::_speed_adjustment( const float & target_speed, cons
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                     Получить разницу между текущим курсом самолета и азимутом на точку                            *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
+    
+    auto bearing = xenon::bearing( _get_acf_location(), wp.location );    
+    auto heading = _get_acf_rotation().heading;
+    auto delta = bearing - heading;
+    if ( abs(delta) >= 180.0 ) {
+
+        auto delta2 = 0.0;
+        if (( heading >= 180.0 ) && ( bearing <= 180 ))
+            delta2 = delta + 360.0;
+        else
+            delta2 = delta - 360.0;
+
+        if ( abs( delta2 ) < abs( delta )) delta = delta2;
+    }
+
+//     Logger::log(
+//         wp.name + ", type=" + to_string( wp.type )
+//         + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
+//         + ", heading=" + to_string( heading )
+//         + ", bearing=" + to_string( bearing )
+//         + ", delta=" + to_string( delta )
+//     );    
+    
+    return delta;
+
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *          Получить разницу между текущим курсом самолета и целевым курсом на нулевой точке полетного плана         *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
 double AircraftAbstractAction::_get_delta_to_target_heading( const waypoint_t & wp ) {
     
-    auto current_rotation = _ptr_acf->get_rotation();
     // Текущий курс самолета.
-    double heading = current_rotation.heading;
+    double heading = _ptr_acf->get_rotation().heading;
     xenon::normalize_degrees( heading );
     // Целевой курс, как нам надо встать.
     double target_heading = wp.outgoing_heading;

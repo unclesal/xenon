@@ -125,8 +125,8 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // Замыкание графа. Из состояния "почти запарковался" в состояние "на парковке".
     // Тут два варианта. Либо заруливает сам, либо его заталкивают.
 
-    __create_action< AircraftDoesTaxing > (
-        ACF_DOES_SLOW_TAXING, "Taxing to parking", state_before_parking_d, state_parking_d
+    __create_action< AircraftDoesParking > (
+        ACF_DOES_PARKING, "Parking", state_before_parking_d, state_parking_d
     );
 
     __create_action< AircraftDoesPushBack > (

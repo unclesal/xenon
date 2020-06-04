@@ -8,12 +8,6 @@ namespace xenon {
 
     const double PI = 3.1415926535897932384626433832795028841971693993751;
     
-//     / Convert feet to meters, e.g. for altitude calculations
-//     const float M_per_FT   = 0.3048;   // meter per 1 foot
-//     
-//     / Convert nautical miles to meters
-//     const float M_per_NM      = 1852.0;
-// 
     // Радиус Земли в метрах. Нужен для приблизительных вычислений внутри X-Plane.
     const double EARTH_RADIUS = 6371.0 * 1000.0;
     
@@ -23,6 +17,8 @@ namespace xenon {
     // Скорость выталкивания, метров в секунду.
     // Отрицательная, потому как выталкивается-то - назад.
     const float PUSH_BACK_SPEED = -0.8;
+    
+    const float PARKING_SPEED = 1.5;
 
     // Скорость при "медленной и аккуратной" рулежке, например, при заходе на стоянку.
     const float TAXI_SLOW_SPEED = 4.16;  // 15 км/ч
@@ -59,6 +55,7 @@ namespace xenon {
         WAYPOINT_PARKING,
         WAYPOINT_TAXING,
         WAYPOINT_RUNWAY,
+        WAYPOINT_RUNWAY_LEAVED,
         WAYPOINT_SID,                
         // Точка - собственно полетного плана. Вне зависимости,
         // набирает он там высоту или идет на круизе.
@@ -124,7 +121,8 @@ namespace xenon {
         // Выполняет посадку (уже находится на глиссаде)
         ACF_DOES_LANDING,
         // Посадку произвел и освобождает ВПП.
-        ACF_DOES_RUNWAY_LEAVING
+        ACF_DOES_RUNWAY_LEAVING,
+        ACF_DOES_PARKING,
     };
     
     // Типы возможных агентов

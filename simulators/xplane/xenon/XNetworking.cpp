@@ -37,10 +37,10 @@ XNetworking * XNetworking::create() {
 
 void * __receiving_thread( void * arg ) {
 
-    XPlane::log("Receiver thread started successfully.");
+    // XPlane::log("Receiver thread started successfully.");
 
     for (;;) {
-        usleep(2);
+        usleep(10);
         if ( __worker ) __worker->receive();
     }
 

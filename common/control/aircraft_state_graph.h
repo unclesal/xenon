@@ -26,6 +26,7 @@
 #include "aircraft_does_landing.h"
 #include "aircraft_does_lining_up.h"
 #include "aircraft_does_nothing.h"
+#include "aircraft_does_parking.h"
 #include "aircraft_does_push_back.h"
 #include "aircraft_does_runway_leaving.h"
 #include "aircraft_does_slow_taxing.h"

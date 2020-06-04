@@ -91,6 +91,11 @@ namespace xenon {
             double _get_delta_to_target_heading( const waypoint_t & wp );
             
             /**
+             * @short Получить (не нормируя, как оно есть) разницу между текущим курсом и азимутом на указанную точку.
+             */
+            double _get_delta_bearing( const waypoint_t & wp );
+            
+            /**
              * @short Вычисление точки начала поворота при рулении.
              * И если точка достигнута, то установка параметров этого самого разворота.
              */

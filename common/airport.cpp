@@ -1169,19 +1169,22 @@ std::deque< waypoint_t > Airport::get_taxi_way_for_parking(
     if ( nearest_d == AirportNetwork::graph_t::null_vertex()) {
         Logger::log("ERROR: Airport::get_taxi_way_for_parking(), nearest waypoint on RUNWAY not found.");
         return result;
-    }
-
-    // Сам нод найденной точки.
+    }    
 
     try {
+        // Сам нод найденной точки. Причем, нужен тот, который 
+        // от нас спереди, по ВПП самолеты задом не ездят.
+        
         bool node_found = false;
         auto nearest_node = __routes.graph()[ nearest_d ];
         auto bearing = xenon::bearing(from, nearest_node.location);
         auto dh = bearing - heading;
         if ( abs(dh) <= 30.0 ) node_found = true;
         else {
+            
             // Узел найти не удалось. Он может и "ближайший", но проблема
             // в том, что он - за нами, на не впереди нас.
+            
             auto edges = __routes.get_edges_for( nearest_d );
             for ( auto e: edges ) {
                 // Нас интересуют только взлетки.
@@ -1229,10 +1232,6 @@ std::deque< waypoint_t > Airport::get_taxi_way_for_parking(
             result.push_back( wp );
         }
 
-        // Последняя точка - это паркинг, и достигается он - медленным рулением.
-        result.at( result.size() - 1 ).type = WAYPOINT_PARKING;
-        result.at( result.size() - 1 ).action_to_achieve = ACF_DOES_SLOW_TAXING;
-
         //  Курсы, которыми достигаются точки.
         result.at(0).incomming_heading = xenon::bearing(from, result.at(0).location);
         for ( int i=0; i < (int)result.size() - 1; i++ ) {
@@ -1245,6 +1244,20 @@ std::deque< waypoint_t > Airport::get_taxi_way_for_parking(
             result.at( i + 1 ).incomming_heading = direction;
 
         }
+        
+        // Нулевая точка полетного плана - это еще ВПП.
+        result.at( 0 ).type = WAYPOINT_RUNWAY;
+        // Первая (от нуля) точка полетного плана - это уход со взлетки.
+        result.at( 1 ).type = WAYPOINT_RUNWAY_LEAVED;
+        
+        // Последняя точка - это сама парковка.
+        waypoint_t gate;
+        gate.location = parking.location;
+        gate.incomming_heading = parking.heading;
+        gate.name = parking.name;
+        gate.type = WAYPOINT_PARKING;
+        gate.action_to_achieve = ACF_DOES_PARKING;
+        result.push_back( gate );
 
     } catch ( const std::range_error & re ) {
         Logger::log("ERROR: Airport::get_taxi_way_for_parking(), range error.");
