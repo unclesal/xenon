@@ -54,9 +54,7 @@ namespace xenon {
             
             deque<waypoint_t> _flight_plan;
             
-            aircraft_parameters_t _params;
-
-            virtual void _action_finished( void * action ) = 0;            
+            aircraft_parameters_t _params;                   
 
         private:
                         

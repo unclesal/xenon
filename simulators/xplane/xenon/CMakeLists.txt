@@ -46,6 +46,7 @@ set(COMMON ../../../common)
 set(NETWORK ${COMMON}/network)
 set(NETCMD ${NETWORK}/commands)
 set(CONTROL ${COMMON}/control)
+set(FRAMES ${COMMON}/frames)
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -60,6 +61,9 @@ add_library(xenon MODULE
         ${COMMON}/bimbo_aircraft.cpp
         ${COMMON}/airport.cpp
         ${COMMON}/airport_network.cpp
+        
+        ${FRAMES}/abstract_frame.cpp
+        ${FRAMES}/entity_frame.cpp
         
         ${NETCMD}/cmd_aircraft_condition.cpp
         ${NETCMD}/cmd_query_around.cpp
@@ -117,6 +121,7 @@ target_include_directories(xenon PUBLIC
     3dparty/libXPMP2/include
     ../XPSDK301/CHeaders/XPLM
     ${COMMON}
+    ${FRAMES}
     ${NETWORK}
     ${NETCMD}
     ${CONTROL}

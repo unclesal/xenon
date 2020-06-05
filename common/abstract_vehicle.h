@@ -8,6 +8,7 @@
 #include "structures.h"
 #include "utils.hpp"
 #include "logger.h"
+#include "entity_frame.h"
 
 #ifdef INSIDE_XPLANE
 #include "XPLMScenery.h"
@@ -15,7 +16,7 @@
 
 namespace xenon {
 
-    class AbstractVehicle {
+    class AbstractVehicle : public EntityFrame {
 
         public:
 
@@ -69,7 +70,9 @@ namespace xenon {
              */
             vehicle_condition_t vcl_condition;
 
-        protected:                        
+        protected:                    
+            
+            virtual void _action_finished( void * action ) {};
 
         private:
             

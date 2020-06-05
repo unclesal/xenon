@@ -111,7 +111,6 @@ void XPlanePlugin::__init_around() {
     if ( __communicator ) return;
     
     // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
-
     if ( ! Airport::airports_was_readed() ) return;
 
     // Коммуникатор можно порождать только тогда, когда все остальное уже готово
@@ -120,13 +119,19 @@ void XPlanePlugin::__init_around() {
 
     __communicator = new ConnectedCommunicator( this );
     
-    // Порождаем самолетик для пробы.
-    XPlane::log("Init one bimbo...");
-    auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
-    bimbo->label = "Boeing 737-800";
-    bimbo->colLabel[0] = 0.0f;  // R
-    bimbo->colLabel[1] = 1.0f;  // G
-    bimbo->colLabel[2] = 0.0f;  // B
+    auto acf1 = new BimboAircraft("B772", "UAE", "UAE");
+    auto usss = Airport::get_by_icao("USSS");
+    auto gate = usss.get_startup_locations()["15"];
+    acf1->place_on_ground( gate );    
+    __bimbos.push_back( acf1 );
+        
+//    // Порождаем самолетик для пробы.
+//    XPlane::log("Init one bimbo...");
+//    auto bimbo = new BimboAircraft("B738", "AFF", "AFF");
+//    bimbo->label = "Boeing 737-800";
+//    bimbo->colLabel[0] = 0.0f;  // R
+//    bimbo->colLabel[1] = 1.0f;  // G
+//    bimbo->colLabel[2] = 0.0f;  // B
         
 //     Radar
 
@@ -149,12 +154,12 @@ void XPlanePlugin::__init_around() {
 //    // Тест - на конце ВПП.
 //    // bimbo->test__place_on_rwy_end();            
 
-    // bimbo->test__fly();
-    bimbo->test__taxing();
-
-    // Это по сути "старт".
-    bimbo->choose_next_action();
-    __bimbos.push_back( bimbo );
+//    // bimbo->test__fly();
+//    bimbo->test__taxing();
+//
+//    // Это по сути "старт".
+//    bimbo->choose_next_action();
+//    __bimbos.push_back( bimbo );
 
 }
 
@@ -455,13 +460,12 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
 // *********************************************************************************************************************
 
 void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
-    
-    /*
+        
     __agents_mutex.lock();
     
     BimboAircraft * bimbo = nullptr;
     bool was_appended = false;
-    
+        
     for ( auto b : __bimbos ) {
         if ( b->agent_uuid() == cmd->agent_uuid() ) {
             bimbo = b;
@@ -479,6 +483,11 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
         __bimbos.push_back( bimbo );
     };
     
+    XPlane::log(
+        "Bimbo: type=" + acf_condition.icao_type + ", airline=" + acf_condition.icao_airline + ", livery=" + acf_condition.livery 
+    );
+
+    
     ((AbstractVehicle * ) bimbo )->update_from( cmd->vcl_condition() );
     bimbo->update_from( acf_condition );
     
@@ -494,7 +503,7 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     };
     
     __agents_mutex.unlock();
-    */
+    
 }
 
 

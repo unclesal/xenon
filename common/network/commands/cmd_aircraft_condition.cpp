@@ -102,7 +102,6 @@ void CmdAircraftCondition::to_json( JSON & json ) {
 void CmdAircraftCondition::from_json( JSON & json ) {
     
     CmdVehicleCondition::from_json( json );
-    Logger::log("CmdAircraftCondition::from_json((), clamped=" + to_string( _vcl_condition.is_clamped_to_ground ));
     
     _acf_condition.icao_type = json.value( "icao_type", "" );
     _acf_condition.icao_airline = json.value( "icao_airline", "" );
@@ -153,10 +152,30 @@ void CmdAircraftCondition::execute_on_server( ConnectedClientCore * client, Clie
     // Заполнение полей происходит - до вызова "родительской" функции, 
     // т.к. там они уже будут переставлены в ConnectedClientCore.
     
-    if ( _vcl_condition.agent_uuid == BOEING_1 ) {
+    if ( _vcl_condition.agent_uuid == B738_AFF ) {
+        
         _acf_condition.icao_type = "B738";
         _acf_condition.icao_airline = "AFF";
         _acf_condition.livery = "AFF";
+        
+    } else if ( _vcl_condition.agent_uuid == A321_AFL ) {
+        
+        _acf_condition.icao_type == "A321";
+        _acf_condition.icao_airline = "AFL";
+        _acf_condition.livery = "AFL";
+        
+    } else if ( _vcl_condition.agent_uuid == A321_SVR ) {
+        
+        _acf_condition.icao_type == "A321";
+        _acf_condition.icao_airline = "SVR";
+        _acf_condition.livery = "SVR";
+        
+    } else if ( _vcl_condition.agent_uuid == B772_UAE ) {
+        
+        _acf_condition.icao_type == "B772";
+        _acf_condition.icao_airline = "UAE";
+        _acf_condition.livery = "UAE";
+        
     }
 
     CmdVehicleCondition::execute_on_server( client, server );

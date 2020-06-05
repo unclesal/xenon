@@ -27,6 +27,7 @@ add_definitions( -DDEBUG )
 set(COMMON ../../common)
 set(CONTROL ${COMMON}/control)
 set(NET ${COMMON}/network)
+set(FRAMES ${COMMON}/frames)
 set(NETCMD ${NET}/commands)
 
 include_directories(
@@ -35,6 +36,7 @@ include_directories(
     ${NET}
     ${NETCMD}
     ${CONTROL}
+    ${FRAMES}
     ../
     ${CMAKE_SOURCE_DIR}
 )
@@ -47,6 +49,9 @@ set(SOURCES
     ${COMMON}/bimbo_aircraft.cpp
     ${COMMON}/airport_network.cpp
     ${COMMON}/airport.cpp
+    
+    ${FRAMES}/abstract_frame.cpp
+    ${FRAMES}/entity_frame.cpp
     
     ${NET}/abstract_command.cpp
     ${NET}/command_parser.cpp

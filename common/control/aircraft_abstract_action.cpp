@@ -299,8 +299,6 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
         return;
     };
     
-
-    
     auto heading = _get_acf_rotation().heading;
     
 //     auto location = _get_acf_location();    

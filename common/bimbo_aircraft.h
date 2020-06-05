@@ -210,7 +210,9 @@ namespace xenon {
                 deque<waypoint_t> & fp
             );
             
+#ifdef INSIDE_AGENT            
             void choose_next_action();
+#endif
 
             void test__fly();
             void test__taxing();
@@ -228,11 +230,13 @@ namespace xenon {
 #endif
 
         protected:
-            
+
+#ifdef INSIDE_AGENT            
             /**
              * @short Текущее действие было завершено.
              */
             void _action_finished( void * action ) override;
+#endif
             
         private:
 

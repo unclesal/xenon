@@ -53,7 +53,6 @@ void AbstractCommand::to_json ( JSON & json ) {
     
     // Прижатость к земле.
     json[ "is_clamped_to_ground" ] = _vcl_condition.is_clamped_to_ground;
-    Logger::log("To json: clamped=" + to_string( _vcl_condition.is_clamped_to_ground ));
     
     json["latitude"] = _vcl_condition.location.latitude;
     json["longitude"] = _vcl_condition.location.longitude;
@@ -80,7 +79,6 @@ void AbstractCommand::from_json ( JSON & json ) {
     
     // Прижатость к земле.
     _vcl_condition.is_clamped_to_ground = json.value( "is_clamped_to_ground", false );
-    Logger::log("From json, clamped=" + to_string( _vcl_condition.is_clamped_to_ground ));
     
     _vcl_condition.location.latitude = json.value( "latitude", 0.0 );
     _vcl_condition.location.longitude = json.value( "longitude", 0.0 );

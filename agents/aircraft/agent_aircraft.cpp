@@ -23,32 +23,13 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
         Airport::read_all();
     }
 
-   // Ждем, пока аэропорт не вычитает свои данные.
-   while ( ! Airport::airports_was_readed() ) {
-       usleep(500);
-   }
-
-    if ( uuid == BOEING_1 ) {        
-        
-        __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
-        __ptr_acf->vcl_condition.agent_name = "Agent 1";
-        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
-        
-        if ( ! Airport::airports_was_readed() ) {
-            cerr << "Airports was not readed, exit." << endl;
-            return;        
-        } else {
-            // Пока что все вручную и для отладки.
-            auto usss = Airport::get_by_icao("USSS");
-            // auto gate = usss.get_startup_locations()["15"];
-            // __ptr_acf->place_on_ground( gate );
-
-            __ptr_acf->test__fly();
-            __ptr_acf->choose_next_action();
-
-        }        
-    }        
+    // Ждем, пока аэропорт не вычитает свои данные.
+    while ( ! Airport::airports_was_readed() ) {
+        usleep(500);
+    }
     
+    __temporary_make_aircraft_by_uuid( uuid );
+            
     if ( ! __ptr_acf ) {
         Logger::log("AgentAircraft::AgentAircraft() UUID " + uuid + " not handled");
         return;
@@ -62,6 +43,63 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                                     Времянка: создание самолета по его UUIDу                                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid ) {
+    
+    if ( uuid == B738_AFF ) {        
+        
+        __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
+        __ptr_acf->vcl_condition.agent_name = "Boeing 737-800 AFF";
+        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
+        
+        // Пока что все вручную и для отладки.
+        auto usss = Airport::get_by_icao("USSS");
+
+        auto gate = usss.get_startup_locations()["15"];
+        __ptr_acf->place_on_ground( gate );
+
+        // __ptr_acf->test__fly();
+        // __ptr_acf->choose_next_action();
+        
+    } else if ( uuid == A321_AFL ) {
+        
+        __ptr_acf = new BimboAircraft("A321", "AFL", "AFL");
+        __ptr_acf->vcl_condition.agent_name = "Airbus A321 AFL";
+        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
+        
+        auto usss = Airport::get_by_icao("USSS");
+        auto gate = usss.get_startup_locations()["13"];
+        __ptr_acf->place_on_ground( gate );
+        
+    } else if ( uuid == A321_SVR ) { 
+        
+        __ptr_acf = new BimboAircraft("A321", "SVR", "SVR");
+        __ptr_acf->vcl_condition.agent_name = "Airbus A321 SVR";
+        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
+        
+        auto usss = Airport::get_by_icao("USSS");
+        auto gate = usss.get_startup_locations()["12"];
+        __ptr_acf->place_on_ground( gate );
+        
+    } else if ( uuid == B772_UAE ) {
+        
+        __ptr_acf = new BimboAircraft("B772", "UAE", "UAE");
+        __ptr_acf->vcl_condition.agent_name = "Boeing 777-200 UAE";
+        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
+        
+        auto usss = Airport::get_by_icao("USSS");
+        auto gate = usss.get_startup_locations()["11"];
+        __ptr_acf->place_on_ground( gate );
+    }
+
+}
+
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                                           Метод выполнения агента самолета                                        *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -69,7 +107,7 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
 void AgentAircraft::run() {
     
     if ( ! __ptr_acf ) {
-        cerr << "AgentAircraft::run(): acf pointer is none. Exit." << endl;
+        Logger::log("AgentAircraft::run(): acf pointer is none. Exit.");
         return;
     }
 
@@ -77,7 +115,7 @@ void AgentAircraft::run() {
     
     for (;;) {
         // Время - в микросекундах.
-        usleep(15000);
+        usleep( AGENT_TICK );
         __step();
     }
     
@@ -118,14 +156,6 @@ void AgentAircraft::__test() {
 
 void AgentAircraft::on_connect() {
 
-    cout << "Communicator - connected!!!" << endl;
-        
-    Logger::log("Before send lat=" + to_string( __ptr_acf->vcl_condition.location.latitude)
-        + ", lon=" + to_string( __ptr_acf->vcl_condition.location.longitude )
-        + ", alt=" + to_string( __ptr_acf->vcl_condition.location.altitude )
-        + ", clamped=" + to_string( __ptr_acf->vcl_condition.is_clamped_to_ground )
-    );
-    
     // Даем свое состояние коммуникатору.
     CmdAircraftCondition * cmd_acf_condition = new CmdAircraftCondition(
         __ptr_acf->vcl_condition, __ptr_acf->acf_condition

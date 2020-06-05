@@ -196,7 +196,10 @@ void ConnectedCommunicator::__read_from_socket() {
         return;
     }
     
-    Logger::log("ConnectedCommunicator::read_from_socket: got " + cmd->command_name() + " from " + cmd->agent_name() );
+    Logger::log(
+        "ConnectedCommunicator::read_from_socket: got " + to_string( bytes ) + ", "
+        + cmd->command_name() + " from " + cmd->agent_name() 
+    );
             
     __reactor->on_received( cmd );
     

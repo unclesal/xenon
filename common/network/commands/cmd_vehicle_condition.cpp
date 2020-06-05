@@ -28,7 +28,7 @@ CmdVehicleCondition::CmdVehicleCondition()
 // *********************************************************************************************************************
 
 CmdVehicleCondition::CmdVehicleCondition(const vehicle_condition_t & vcl_condition) 
-    : AbstractCommand( SAY_TO_ALL, vcl_condition )
+    : AbstractCommand( SAY_TO_ENVIRONMENT, vcl_condition )
 {
     _command_name = "CmdVehicleCondition";
     _vcl_condition = vcl_condition;

@@ -201,7 +201,7 @@ namespace xenon {
         
         // Смещение относительно земной поверхности в метрах,
         // чтобы шасси точно ехали по земле.
-        float on_ground_offset = 0.0;
+        float on_ground_offset = 2.0;
         
         // Взлетное положение закрылков, max = 1.0
         float flaps_take_off_position = 0.4;

@@ -113,6 +113,7 @@ void BimboAircraft::__start_fp0_action() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_AGENT
 void BimboAircraft::choose_next_action() {  
     
     string current_state_name = "Unknown state";
@@ -190,12 +191,15 @@ void BimboAircraft::choose_next_action() {
     Logger::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
 };
 
+#endif
+
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                            Действие было завершено, переход в следующее состояние                                 *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+#ifdef INSIDE_AGENT
 void BimboAircraft::_action_finished( void * action ) {
     
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
@@ -205,6 +209,7 @@ void BimboAircraft::_action_finished( void * action ) {
     choose_next_action();
     
 };
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -292,6 +297,10 @@ void BimboAircraft::set_rotation( const rotation_t & rotation ) {
 void BimboAircraft::place_on_ground( const position_t & position, rotation_t & rotation, bool clamp ) {    
     set_position( position );
     rotation.pitch = _params.taxing_pitch;
+    
+    // Для проверки величины установленного взлетного угла.
+    // rotation.pitch = _params.take_off_angle;
+    
     set_rotation( rotation );
     vcl_condition.is_clamped_to_ground = true;
     // Если самолет на земле, то шасси-то у него точно выпущены же.
@@ -312,7 +321,7 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     position_t position = XPlane::location_to_position( ramp.location );
     // Угловое положение самолета.
     rotation_t rotation;
-    rotation.heading = ramp.heading;
+    rotation.heading = ramp.heading;    
     // Первоначальная, грубая установка позиции.
     place_on_ground(position, rotation);
 #else
@@ -385,6 +394,99 @@ void BimboAircraft::__acf_parameters_correction() {
         __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].full_time = 5.0;
 #endif
         
+    } else if ( acIcaoType == "A321" ) {
+        
+        _params.length = 45.0;
+        _params.wingspan = 34.0;
+        _params.shift_from_ramp = -15.0;
+
+        _params.v1 = 100.0;
+        _params.v2 = 120.0;
+        _params.climb_speed = 240.0;
+        _params.cruise_speed = 300.0;
+        _params.descent_speed = 220.0;
+        _params.landing_speed = 140.0;
+        _params.vertical_climb_speed = 1900.0;
+        _params.vertical_descend_speed = 1400.0;
+        
+        _params.take_off_angle = 8.0;
+        _params.taxing_pitch = -1.35;
+        _params.on_ground_offset = 3.5;
+        
+        _params.flaps_take_off_position = 0.35;
+        _params.flaps_take_off_speed = 200.0;
+        _params.flaps_landing_speed = 170.0;
+
+#ifdef INSIDE_XPLANE        
+        __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_THRUST_RATIO ].full_time = 30.0;
+        __actuators[ V_CONTROLS_THRUST_REVERS ].full_time = 5.0;
+        __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].full_time = 5.0;
+#endif
+
+    } else if ( acIcaoType == "B744" ) {
+
+        _params.length = 70.6;
+        _params.wingspan = 64.4;
+        _params.shift_from_ramp = -15.0;
+
+        _params.v1 = 100.0;
+        _params.v2 = 120.0;
+        _params.climb_speed = 240.0;
+        _params.cruise_speed = 300.0;
+        _params.descent_speed = 220.0;
+        _params.landing_speed = 140.0;
+        _params.vertical_climb_speed = 1900.0;
+        _params.vertical_descend_speed = 1400.0;
+        
+        _params.take_off_angle = 8.0;
+        _params.taxing_pitch = -1.35;
+        _params.on_ground_offset = 5.0;
+        
+        _params.flaps_take_off_position = 0.35;
+        _params.flaps_take_off_speed = 200.0;
+        _params.flaps_landing_speed = 170.0;
+
+#ifdef INSIDE_XPLANE        
+        __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_THRUST_RATIO ].full_time = 30.0;
+        __actuators[ V_CONTROLS_THRUST_REVERS ].full_time = 5.0;
+        __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].full_time = 5.0;
+#endif
+        
+    } else if ( acIcaoType == "B772" ) {
+        
+        _params.length = 63.73;
+        _params.wingspan = 60.93;
+        _params.shift_from_ramp = -15.0;
+
+        _params.v1 = 100.0;
+        _params.v2 = 120.0;
+        _params.climb_speed = 240.0;
+        _params.cruise_speed = 300.0;
+        _params.descent_speed = 220.0;
+        _params.landing_speed = 150.0;
+        _params.vertical_climb_speed = 1900.0;
+        _params.vertical_descend_speed = 1400.0;
+        
+        _params.take_off_angle = 11.5;
+        _params.taxing_pitch = -1.35;
+        _params.on_ground_offset = 5.7;
+        
+        _params.flaps_take_off_position = 0.35;
+        _params.flaps_take_off_speed = 200.0;
+        _params.flaps_landing_speed = 170.0;
+
+#ifdef INSIDE_XPLANE        
+        __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_GEAR_RATIO ].full_time = 20.0;
+        __actuators[ V_CONTROLS_THRUST_RATIO ].full_time = 30.0;
+        __actuators[ V_CONTROLS_THRUST_REVERS ].full_time = 5.0;
+        __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].full_time = 5.0;
+#endif
+
     } else Logger::log("BimboAircraft::__acf_parameters_correction(), not applied for " + acIcaoType );
 }
 
