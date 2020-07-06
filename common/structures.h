@@ -287,7 +287,7 @@ namespace xenon {
 
         float heading_acceleration = 0.0;
         float target_heading = 0.0;
-
+        
         // Текущее состояние графа.
         aircraft_state_t current_state = ACF_STATE_UNKNOWN;
         aircraft_action_t current_action = ACF_DOES_NOTHING;
@@ -334,7 +334,7 @@ namespace xenon {
         float flaps_position = 0.0;
         float speed_brake_position = 0.0;
         float thrust_position = 0.0;
-        
+                
     };
 
     // Описание агента с точки зрения его возможности общаться.

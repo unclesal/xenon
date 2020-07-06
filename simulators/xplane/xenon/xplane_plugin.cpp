@@ -455,75 +455,75 @@ void XPlanePlugin::handle_message(XPLMPluginID from, int messageID, void * ptrPa
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                  Добавление внешнего самолета ("агента") в коллекцию, если его там еще не было                    *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+BimboAircraft * XPlanePlugin::__add_one_aircraft( CmdAircraftCondition * cmd ) {
+    
+    Logger::log("Create new one");
+    auto acf_condition = cmd->acf_condition();    
+    BimboAircraft * bimbo = new BimboAircraft(
+        acf_condition.icao_type, acf_condition.icao_airline, acf_condition.livery
+    );        
+    
+    bimbo->label = cmd->vcl_condition().agent_name;
+    if ( cmd->vcl_condition().agent_type == AGENT_AIRCRAFT ) {
+        // Данный самолет является отражением внешнего агента.            
+        bimbo->colLabel[0] = 0.0f;  // R
+        bimbo->colLabel[1] = 1.0f;  // G
+        bimbo->colLabel[2] = 0.0f;  // B
+
+    } else if ( cmd->vcl_condition().agent_type == AGENT_XPLANE ) {
+        // Данный самолет - это человек, зашедший по сети в X-Plane.
+        bimbo->colLabel[0] = 0.0f;  // R
+        bimbo->colLabel[1] = 0.0f;  // G
+        bimbo->colLabel[2] = 1.0f;  // B
+
+    } else {
+        XPlane::log("BimboAircraft::update_from(), unhandled agent type " + to_string( cmd->vcl_condition().agent_type ));
+    }        
+    
+    // Если самолет только что был добавлен, то тут не надо "плавностей". Он же 
+    // только что появился на экране. Должен быть сразу же - таким, какой он есть.
+    
+    if ( acf_condition.is_gear_down ) bimbo->v[ XPMP2::V_CONTROLS_GEAR_RATIO ] = 1.0;
+    bimbo->v[ XPMP2::V_CONTROLS_FLAP_RATIO ] = acf_condition.flaps_position;
+    bimbo->v[ XPMP2::V_CONTROLS_SPEED_BRAKE_RATIO ] = acf_condition.speed_brake_position;
+    bimbo->v[ XPMP2::V_CONTROLS_THRUST_RATIO ] = acf_condition.thrust_position;
+    
+    __agents_mutex.lock();    
+    __bimbos.push_back( bimbo );
+    __agents_mutex.unlock();
+    
+    return bimbo;
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                                 Получена команда о состоянии внешнего самолета                                    *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
-        
-    __agents_mutex.lock();
-    
+void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {            
+            
     BimboAircraft * bimbo = nullptr;
     bool was_appended = false;
     
-    Logger::log("agent_uuid=" + cmd->agent_uuid());
-        
     for ( auto b : __bimbos ) {
         if ( b->agent_uuid() == cmd->agent_uuid() ) {
-            Logger::log("uuid was found, ok");
             bimbo = b;
             break;
         };
     };
-    
-    auto acf_condition = cmd->acf_condition();    
-    
+        
     if ( ! bimbo ) {
-        
         // Самолетика нет, он только что создается.
-        
-        Logger::log("Create new one");
-        bimbo = new BimboAircraft(
-            acf_condition.icao_type, acf_condition.icao_airline, acf_condition.livery
-        );
-        was_appended = true;
-        __bimbos.push_back( bimbo );
-        
-        bimbo->label = cmd->vcl_condition().agent_name;
-        if ( cmd->vcl_condition().agent_type == AGENT_AIRCRAFT ) {
-            // Данный самолет является отражением внешнего агента.            
-            bimbo->colLabel[0] = 0.0f;  // R
-            bimbo->colLabel[1] = 1.0f;  // G
-            bimbo->colLabel[2] = 0.0f;  // B
-
-        } else if ( cmd->vcl_condition().agent_type == AGENT_XPLANE ) {
-            // Данный самолет - это человек, зашедший по сети в X-Plane.
-            bimbo->colLabel[0] = 0.0f;  // R
-            bimbo->colLabel[1] = 0.0f;  // G
-            bimbo->colLabel[2] = 1.0f;  // B
-
-        } else {
-            XPlane::log("BimboAircraft::update_from(), unhandled agent type " + to_string( cmd->vcl_condition().agent_type ));
-        }        
-        
-        // Если самолет только что был добавлен, то тут не надо "плавностей". Он же 
-        // только что появился на экране. Должен быть сразу же - таким, какой он есть.
-        
-        if ( acf_condition.is_gear_down ) bimbo->v[ XPMP2::V_CONTROLS_GEAR_RATIO ] = 1.0;
-        bimbo->v[ XPMP2::V_CONTROLS_FLAP_RATIO ] = acf_condition.flaps_position;
-        bimbo->v[ XPMP2::V_CONTROLS_SPEED_BRAKE_RATIO ] = acf_condition.speed_brake_position;
-        bimbo->v[ XPMP2::V_CONTROLS_THRUST_RATIO ] = acf_condition.thrust_position;
+        bimbo = __add_one_aircraft( cmd );                        
     };
-    
-    XPlane::log(
-        "Bimbo: type=" + acf_condition.icao_type + ", airline=" + acf_condition.icao_airline + ", livery=" + acf_condition.livery 
-    );
-
-    
-    ((AbstractVehicle * ) bimbo )->update_from( cmd->vcl_condition() );
-    bimbo->update_from( acf_condition );
-    
-    __agents_mutex.unlock();
+        
+    bimbo->update_from( cmd->vcl_condition(), cmd->acf_condition() );        
     
 }
 
@@ -538,17 +538,25 @@ XPlanePlugin::~XPlanePlugin() {
     
     if ( __communicator ) {
         if ( __communicator->is_connected() ) __communicator->disconnect();
-        delete( __communicator );
-        __communicator = nullptr;
+        // delete( __communicator );
+        // __communicator = nullptr;
     }
     
+    /*
+    __agents_mutex.lock();
     // Корректное освобождение памяти, выделенной под самоходки.
     for ( auto vcl : __vehicles ) {
         delete( vcl );
     }
+    __vehicles.clear();
+    
     // Корректное освобождение памяти под самолеты.
     for ( auto bimbo : __bimbos ) {
         delete bimbo;
     }
+    __bimbos.clear();
+    
+    __agents_mutex.unlock();
+    */
     
 }

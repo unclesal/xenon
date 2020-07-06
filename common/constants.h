@@ -45,7 +45,7 @@ namespace xenon {
     
     // Количество циклов (тиков), после которых агент сообщает о 
     // своем новом местоположении и параметрах.
-    constexpr unsigned int CYCLES_PER_CRY = 4;
+    constexpr unsigned int CYCLES_PER_CRY = 75;
 
     /**
      * @short Использование ВПП.

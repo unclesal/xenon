@@ -9,6 +9,7 @@
 // System includes.
 #include <string>
 #include <deque>
+#include <mutex>
 
 // My own includes.
 #include "abstract_vehicle.h"
@@ -47,14 +48,15 @@ namespace xenon {
             
             virtual void move( float meters ) {};
             
-            virtual void update_from( const aircraft_condition_t & ac );
+            virtual void update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac );
             virtual void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) {};
             
         protected:
             
             deque<waypoint_t> _flight_plan;
             
-            aircraft_parameters_t _params;                   
+            aircraft_parameters_t _params;
+            std::mutex _acf_mutex;
 
         private:
                         

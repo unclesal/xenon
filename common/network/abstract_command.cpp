@@ -57,6 +57,11 @@ void AbstractCommand::to_json ( JSON & json ) {
     json["latitude"] = _vcl_condition.location.latitude;
     json["longitude"] = _vcl_condition.location.longitude;
     json["altitude"] = _vcl_condition.location.altitude;
+    
+    json["current_state"] = (uint16_t) _vcl_condition.current_state;
+    json["current_action"] = (uint16_t) _vcl_condition.current_action;
+
+        
 }
 
 // *********************************************************************************************************************
@@ -83,7 +88,10 @@ void AbstractCommand::from_json ( JSON & json ) {
     _vcl_condition.location.latitude = json.value( "latitude", 0.0 );
     _vcl_condition.location.longitude = json.value( "longitude", 0.0 );
     _vcl_condition.location.altitude = json.value( "altitude", 0.0 );
-
+    
+    _vcl_condition.current_state = (aircraft_state_t) json.value( "current_state", 0 );
+    _vcl_condition.current_action = ( aircraft_action_t ) json.value( "current_action", 0 );
+    
 }
 
 // *********************************************************************************************************************

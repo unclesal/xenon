@@ -95,7 +95,7 @@ namespace xenon {
 #endif
             ;
 
-            void update_from( const aircraft_condition_t & ac ) override;
+            void update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac ) override;
 
             // Освещение вкл-выкл
             void set_taxi_lites(bool on) override {

@@ -126,6 +126,7 @@ namespace xenon {
             void __ai_controlled_aircraft_was_loaded( int index );
             
             void __command_received( CmdAircraftCondition * cmd );
+            BimboAircraft * __add_one_aircraft( CmdAircraftCondition * cmd );
 
     }; // class XPlanePlugin
 };

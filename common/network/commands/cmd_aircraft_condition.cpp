@@ -90,7 +90,7 @@ void CmdAircraftCondition::to_json( JSON & json ) {
     json[ "flaps_position" ] = _acf_condition.flaps_position;
     json[ "speed_brake_position" ] = _acf_condition.speed_brake_position;
     json[ "thrust_position" ] = _acf_condition.thrust_position;
-
+    
 }
 
 // *********************************************************************************************************************
@@ -137,7 +137,7 @@ void CmdAircraftCondition::from_json( JSON & json ) {
     
     // Считается на приемной стороне.
     _acf_condition.vertical_speed_fpm = xenon::meters_per_seconds_to_feet_per_min( _acf_condition.vertical_speed );
-    
+        
 };
 
 // *********************************************************************************************************************

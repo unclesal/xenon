@@ -95,9 +95,9 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
         
         auto where_i_am = __ptr_acf->get_location();    
-        auto way = usss.get_taxi_way_for_departure( where_i_am );
-        Logger::log("Got " + to_string(way.size()) + " points in FP");
+        auto way = usss.get_taxi_way_for_departure( where_i_am );        
         __ptr_acf->prepare_for_take_off( way );
+        __ptr_acf->test__fly();
         __ptr_acf->choose_next_action();
     }
 
@@ -128,11 +128,15 @@ void AgentAircraft::run() {
         
         if ( __cycles >= CYCLES_PER_CRY ) {
             __cycles = 0;
-            CmdAircraftCondition * cmd = new CmdAircraftCondition(
-                __ptr_acf->vcl_condition, __ptr_acf->acf_condition
-            );
-            _communicator->request( cmd );
-            Logger::log("New state sended for " + __ptr_acf->vcl_condition.agent_name);
+            
+            if ( _communicator->is_connected() ) {
+                CmdAircraftCondition * cmd = new CmdAircraftCondition(
+                    __ptr_acf->vcl_condition, __ptr_acf->acf_condition
+                );
+                _communicator->request( cmd );
+                Logger::log("New state sended for " + __ptr_acf->vcl_condition.agent_name);
+            }
+            
         }
 
     }

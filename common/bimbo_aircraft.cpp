@@ -630,12 +630,14 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
     
+    _acf_mutex.lock();
     __graph->update( elapsed_since_last_call );
 
 #ifdef INSIDE_XPLANE
     __update_actuators(elapsed_since_last_call);
     if ( vcl_condition.is_clamped_to_ground ) clamp_to_ground();
 #endif
+    _acf_mutex.unlock();
 
 }
 
@@ -720,8 +722,30 @@ void BimboAircraft::prepare_flight_plan(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::update_from( const aircraft_condition_t & ac ) {
-    AbstractAircraft::update_from( ac );
+void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac ) {
+    
+    _acf_mutex.lock();
+    
+    AbstractAircraft::update_from( vc, ac );
+    
+    if ( ! __graph->current_state_is( vc.current_state ))
+        __graph->set_active_state( vc.current_state );
+    
+    if ( ! __graph->current_action_is( vc.current_action ) ) {
+        
+        auto action_descriptor = __graph->get_action_outgoing_from_current_state( vc.current_action );
+        try {
+            __graph->set_active_action( action_descriptor );
+        } catch ( const std::runtime_error & e ) {
+            Logger::log(
+                "BimboAircraft::update_from(), could not find action for state " 
+                + to_string( vc.current_state ) + ", action " + to_string( vc.current_action )
+            );            
+        }
+        
+    }    
+
+    _acf_mutex.unlock();
 }
 
 // *********************************************************************************************************************
@@ -822,57 +846,57 @@ void BimboAircraft::test__fly() {
     
     deque< waypoint_t > fp;
     
-////     При вылете с полосы 08L
-////     SS028
-//    waypoint_t ss028 = {
-//        .name = "SS028",
-//        .type = WAYPOINT_FLYING,
-//        .location = {
-//            .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
-//            .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
-//            .altitude = 1100.0
-//        },
-//        .speed = 240.0,
-//        .incomming_heading = 0.0,
-//        .outgoing_heading = 0.0,
-//        .distance_to_next_wp = 0.0,
-//        .action_to_achieve = ACF_DOES_FLYING
-//    };
-//    fp.push_back( ss028 );
+//     При вылете с полосы 08L
+//     SS028
+   waypoint_t ss028 = {
+       .name = "SS028",
+       .type = WAYPOINT_FLYING,
+       .location = {
+           .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
+           .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
+           .altitude = 1100.0
+       },
+       .speed = 240.0,
+       .incomming_heading = 0.0,
+       .outgoing_heading = 0.0,
+       .distance_to_next_wp = 0.0,
+       .action_to_achieve = ACF_DOES_FLYING
+   };
+   fp.push_back( ss028 );
     
-////     D237K
-//    waypoint_t d237k = {
-//        .name = "D237K",
-//        .type = WAYPOINT_FLYING,
-//        .location = {
-//            .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
-//            .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
-//            .altitude = 1100.0
-//        },
-//        .speed = 240.0,
-//        .incomming_heading = 0.0,
-//        .outgoing_heading = 0.0,
-//        .distance_to_next_wp = 0.0,
-//        .action_to_achieve = ACF_DOES_FLYING
-//    };
-//    fp.push_back( d237k );
+//     D237K
+   waypoint_t d237k = {
+       .name = "D237K",
+       .type = WAYPOINT_FLYING,
+       .location = {
+           .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
+           .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
+           .altitude = 1100.0
+       },
+       .speed = 240.0,
+       .incomming_heading = 0.0,
+       .outgoing_heading = 0.0,
+       .distance_to_next_wp = 0.0,
+       .action_to_achieve = ACF_DOES_FLYING
+   };
+   fp.push_back( d237k );
      
-//    // SS025
-//    waypoint_t ss025 = {
-//        .name = "SS025",
-//        .type = WAYPOINT_FLYING,
-//        .location = {
-//            .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
-//            .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
-//            .altitude = 1100.0
-//        },
-//        .speed = 240.0,
-//        .incomming_heading = 0.0,
-//        .outgoing_heading = 0.0,
-//        .distance_to_next_wp = 0.0,
-//        .action_to_achieve = ACF_DOES_FLYING
-//    };
-//    fp.push_back( ss025 );
+   // SS025
+   waypoint_t ss025 = {
+       .name = "SS025",
+       .type = WAYPOINT_FLYING,
+       .location = {
+           .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
+           .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
+           .altitude = 1100.0
+       },
+       .speed = 240.0,
+       .incomming_heading = 0.0,
+       .outgoing_heading = 0.0,
+       .distance_to_next_wp = 0.0,
+       .action_to_achieve = ACF_DOES_FLYING
+   };
+   fp.push_back( ss025 );
     
     // CF08L
     waypoint_t cf08l = {
@@ -928,41 +952,41 @@ void BimboAircraft::test__fly() {
     vector< std::string > alternate;
     alternate.push_back("USCC");
     prepare_flight_plan( "TEST1", "USSS", "USSS", alternate, 5000.0f, fp );
-        
-    vcl_condition.is_clamped_to_ground = false;
-
-    // -------------- Какие-то похожие на правду скорости ------------------
-    vcl_condition.acceleration = 2.0;
-    vcl_condition.target_speed = 102.889; // 200 kph
-    vcl_condition.speed = 100.0;
-
-    acf_condition.vertical_acceleration = 0.6f;
-    acf_condition.target_vertical_speed = feet_per_min_to_meters_per_second( _params.vertical_climb_speed );
-    // ---------------------------------------------------------------------
-
-//    // Для теста встаем на последнюю точку ВПП по горизонтали,
-//    // но - в небе, типа только что взлетели.
     
+//     vcl_condition.is_clamped_to_ground = false;
+// 
+//     -------------- Какие-то похожие на правду скорости ------------------
+//     vcl_condition.acceleration = 2.0;
+//     vcl_condition.target_speed = 102.889; // 200 kph
+//     vcl_condition.speed = 100.0;
+// 
+//     acf_condition.vertical_acceleration = 0.6f;
+//     acf_condition.target_vertical_speed = feet_per_min_to_meters_per_second( _params.vertical_climb_speed );
+//     ---------------------------------------------------------------------
+// 
+//    Для теста встаем на последнюю точку ВПП по горизонтали,
+//    но - в небе, типа только что взлетели.
+//     
 //    location_t start_point = {
 //        .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
 //        .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
 //        .altitude = 600.0
 //    };
 //    set_location( start_point );
-    
-    // Это если хочется на первую точку полетного плана.
-    set_location( fp.at(0).location );
-   
-    auto rotation = get_rotation();
-    rotation.heading = 80.0;
-    rotation.pitch = 1.0;
-    set_rotation( rotation );
-    
+//     
+//     Это если хочется на первую точку полетного плана.
+//     set_location( fp.at(0).location );
+//    
+//     auto rotation = get_rotation();
+//     rotation.heading = 80.0;
+//     rotation.pitch = 1.0;
+//     set_rotation( rotation );
+//     
 //    v[ V_CONTROLS_GEAR_RATIO ] = 0.0;
 //    v[ V_CONTROLS_SPEED_BRAKE_RATIO ] = 0.0;
-
-    // Состояние AIRBORNED имеет только одно исходящее действие, это полет.
-    __graph->set_active_state( ACF_STATE_AIRBORNED );
+// 
+//     Состояние AIRBORNED имеет только одно исходящее действие, это полет.
+//     __graph->set_active_state( ACF_STATE_AIRBORNED );
     
 }
 

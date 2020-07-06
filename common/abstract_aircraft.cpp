@@ -27,7 +27,9 @@ AbstractAircraft::AbstractAircraft()
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AbstractAircraft::update_from( const aircraft_condition_t & ac ) {
+void AbstractAircraft::update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac ) {
+    
+    AbstractVehicle::update_from( vc );
     acf_condition = ac;
 #ifdef INSIDE_XPLANE
 
