@@ -37,6 +37,7 @@ namespace xenon {
         private:
 
             long int __previous_time;
+            unsigned int __cycles;
 
             BimboAircraft * __ptr_acf;
             void __step();

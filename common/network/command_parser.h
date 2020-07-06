@@ -24,7 +24,7 @@ namespace xenon {
             
             CommandParser();
             ~CommandParser() = default;
-            AbstractCommand * parse( char * buffer, const ssize_t & len, std::string & command_name );            
+            AbstractCommand * parse( char * buffer, ssize_t & len, std::string & command_name );
             
         private:
             

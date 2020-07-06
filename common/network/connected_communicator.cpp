@@ -175,9 +175,17 @@ void ConnectedCommunicator::request( AbstractCommand * cmd ) {
 void ConnectedCommunicator::__read_from_socket() {
         
     if ( __socket < 0 ) return;
+    
+    uint16_t len = 0;
+    ssize_t bytes = ::read( __socket, & len, sizeof(len));
+    if ( bytes != sizeof(len) ) {
+        __close_socket();
+        return;
+    }
+    
     memset( __rx_buffer, 0, sizeof( __rx_buffer) );
-    ssize_t bytes = ::read( __socket, __rx_buffer, sizeof( __rx_buffer ) );
-    if ( bytes <= 0 ) {        
+    bytes = ::read( __socket, __rx_buffer, len );
+    if ( bytes != len ) {        
         // __reactor->on_error("ConnectedCommunicator::__read_from_socket: received " + std::to_string(bytes));
         __close_socket();
         return;

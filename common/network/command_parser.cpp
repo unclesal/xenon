@@ -10,6 +10,7 @@
 #include "cmd_vehicle_condition.h"
 
 using namespace xenon;
+using namespace std;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -29,7 +30,7 @@ CommandParser::CommandParser() {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AbstractCommand * CommandParser::parse( char * buffer, const ssize_t & len, std::string & command_name ) {
+AbstractCommand * CommandParser::parse( char * buffer, ssize_t & len, std::string & command_name ) {
     command_name = "";
     if ( ! len ) return nullptr;
     // Здесь пока ничего лучшего не придумал.
@@ -37,8 +38,7 @@ AbstractCommand * CommandParser::parse( char * buffer, const ssize_t & len, std:
     for ( int i=0; i<len; ++i ) {
         v_ubjson.push_back( buffer[i] );
     }
-    try {
-        
+    try {        
         JSON json = JSON::from_ubjson(v_ubjson);
         command_name = json.value("command_name", "");
         if ( command_name.empty() ) return nullptr;
@@ -47,7 +47,7 @@ AbstractCommand * CommandParser::parse( char * buffer, const ssize_t & len, std:
         if ( instance ) instance->from_json( json );
         return instance;
         
-    } catch ( JSON::parse_error & err ) {
+    } catch ( JSON::parse_error & err ) {                
     } catch ( const std::runtime_error & re ) {
     } catch ( ... ) {
     }

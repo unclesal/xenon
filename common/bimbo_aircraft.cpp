@@ -398,7 +398,7 @@ void BimboAircraft::__acf_parameters_correction() {
         
         _params.length = 45.0;
         _params.wingspan = 34.0;
-        _params.shift_from_ramp = -15.0;
+        _params.shift_from_ramp = -20.0;
 
         _params.v1 = 100.0;
         _params.v2 = 120.0;
@@ -722,32 +722,6 @@ void BimboAircraft::prepare_flight_plan(
 
 void BimboAircraft::update_from( const aircraft_condition_t & ac ) {
     AbstractAircraft::update_from( ac );
-
-#ifdef INSIDE_XPLANE    
-    if ( label != vcl_condition.agent_name ) {
-        label = vcl_condition.agent_name;
-        if ( vcl_condition.agent_type == AGENT_AIRCRAFT ) {
-
-            // Данный самолет является отражением внешнего агента.
-            
-            colLabel[0] = 0.0f;  // R
-            colLabel[1] = 1.0f;  // G
-            colLabel[2] = 0.0f;  // B
-
-        } else if ( vcl_condition.agent_type == AGENT_XPLANE ) {
-
-            // Данный самолет - это человек, зашедший по сети в X-Plane.
-
-            colLabel[0] = 0.0f;  // R
-            colLabel[1] = 0.0f;  // G
-            colLabel[2] = 1.0f;  // B
-
-        } else {
-            XPlane::log("BimboAircraft::update_from(), unhandled agent type " + to_string( vcl_condition.agent_type ));
-        }
-    }
-#endif
-
 }
 
 // *********************************************************************************************************************

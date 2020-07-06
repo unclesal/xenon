@@ -26,7 +26,7 @@ using namespace std;
 
 XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
 
-    Airport::read_all();
+    // Airport::read_all();
     
     // Remember ID of our plugin for the future communications between plugins.
     __this_plugin_id = this_plugin_id;
@@ -111,7 +111,7 @@ void XPlanePlugin::__init_around() {
     if ( __communicator ) return;
     
     // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
-    if ( ! Airport::airports_was_readed() ) return;
+    // if ( ! Airport::airports_was_readed() ) return;
 
     // Коммуникатор можно порождать только тогда, когда все остальное уже готово
     // (инициализировано). Это потому, что в коммуникаторе есть потоки, он тут
@@ -119,11 +119,11 @@ void XPlanePlugin::__init_around() {
 
     __communicator = new ConnectedCommunicator( this );
     
-    auto acf1 = new BimboAircraft("B772", "UAE", "UAE");
-    auto usss = Airport::get_by_icao("USSS");
-    auto gate = usss.get_startup_locations()["15"];
-    acf1->place_on_ground( gate );    
-    __bimbos.push_back( acf1 );
+//     auto acf1 = new BimboAircraft("B772", "UAE", "UAE");
+//     auto usss = Airport::get_by_icao("USSS");
+//     auto gate = usss.get_startup_locations()["15"];
+//     acf1->place_on_ground( gate );    
+//     __bimbos.push_back( acf1 );
         
 //    // Порождаем самолетик для пробы.
 //    XPlane::log("Init one bimbo...");
@@ -465,9 +465,12 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     
     BimboAircraft * bimbo = nullptr;
     bool was_appended = false;
+    
+    Logger::log("agent_uuid=" + cmd->agent_uuid());
         
     for ( auto b : __bimbos ) {
         if ( b->agent_uuid() == cmd->agent_uuid() ) {
+            Logger::log("uuid was found, ok");
             bimbo = b;
             break;
         };
@@ -476,22 +479,32 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     auto acf_condition = cmd->acf_condition();    
     
     if ( ! bimbo ) {
+        
+        // Самолетика нет, он только что создается.
+        
+        Logger::log("Create new one");
         bimbo = new BimboAircraft(
             acf_condition.icao_type, acf_condition.icao_airline, acf_condition.livery
         );
         was_appended = true;
         __bimbos.push_back( bimbo );
-    };
-    
-    XPlane::log(
-        "Bimbo: type=" + acf_condition.icao_type + ", airline=" + acf_condition.icao_airline + ", livery=" + acf_condition.livery 
-    );
+        
+        bimbo->label = cmd->vcl_condition().agent_name;
+        if ( cmd->vcl_condition().agent_type == AGENT_AIRCRAFT ) {
+            // Данный самолет является отражением внешнего агента.            
+            bimbo->colLabel[0] = 0.0f;  // R
+            bimbo->colLabel[1] = 1.0f;  // G
+            bimbo->colLabel[2] = 0.0f;  // B
 
-    
-    ((AbstractVehicle * ) bimbo )->update_from( cmd->vcl_condition() );
-    bimbo->update_from( acf_condition );
-    
-    if ( was_appended ) {
+        } else if ( cmd->vcl_condition().agent_type == AGENT_XPLANE ) {
+            // Данный самолет - это человек, зашедший по сети в X-Plane.
+            bimbo->colLabel[0] = 0.0f;  // R
+            bimbo->colLabel[1] = 0.0f;  // G
+            bimbo->colLabel[2] = 1.0f;  // B
+
+        } else {
+            XPlane::log("BimboAircraft::update_from(), unhandled agent type " + to_string( cmd->vcl_condition().agent_type ));
+        }        
         
         // Если самолет только что был добавлен, то тут не надо "плавностей". Он же 
         // только что появился на экране. Должен быть сразу же - таким, какой он есть.
@@ -501,6 +514,14 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
         bimbo->v[ XPMP2::V_CONTROLS_SPEED_BRAKE_RATIO ] = acf_condition.speed_brake_position;
         bimbo->v[ XPMP2::V_CONTROLS_THRUST_RATIO ] = acf_condition.thrust_position;
     };
+    
+    XPlane::log(
+        "Bimbo: type=" + acf_condition.icao_type + ", airline=" + acf_condition.icao_airline + ", livery=" + acf_condition.livery 
+    );
+
+    
+    ((AbstractVehicle * ) bimbo )->update_from( cmd->vcl_condition() );
+    bimbo->update_from( acf_condition );
     
     __agents_mutex.unlock();
     

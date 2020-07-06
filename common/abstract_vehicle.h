@@ -40,9 +40,13 @@ namespace xenon {
             void update_from( const vehicle_condition_t & vc ) {
                 vcl_condition = vc;
                 set_location( vc.location );
+                Logger::log("Lat=" + to_string(vc.location.latitude) + ", long=" + to_string(vc.location.longitude) );
                 set_rotation( vc.rotation );
 #ifdef INSIDE_XPLANE
-                if ( vcl_condition.is_clamped_to_ground ) clamp_to_ground();
+                if ( vcl_condition.is_clamped_to_ground ) {
+                    Logger::log("yes, on the ground");
+                    clamp_to_ground();
+                };
 #endif                                
             };
 

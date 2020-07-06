@@ -19,6 +19,8 @@ using namespace std;
 
 AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     
+    __cycles = 0;
+    
     if ( ! Airport::airports_was_readed() ) {
         Airport::read_all();
     }
@@ -49,15 +51,13 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
 
 void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid ) {
     
+    auto usss = Airport::get_by_icao("USSS");
+    
     if ( uuid == B738_AFF ) {        
         
         __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
         __ptr_acf->vcl_condition.agent_name = "Boeing 737-800 AFF";
-        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
-        
-        // Пока что все вручную и для отладки.
-        auto usss = Airport::get_by_icao("USSS");
-
+                
         auto gate = usss.get_startup_locations()["15"];
         __ptr_acf->place_on_ground( gate );
 
@@ -68,9 +68,8 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         
         __ptr_acf = new BimboAircraft("A321", "AFL", "AFL");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 AFL";
-        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
         
-        auto usss = Airport::get_by_icao("USSS");
+        
         auto gate = usss.get_startup_locations()["13"];
         __ptr_acf->place_on_ground( gate );
         
@@ -78,9 +77,7 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         
         __ptr_acf = new BimboAircraft("A321", "SVR", "SVR");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 SVR";
-        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
         
-        auto usss = Airport::get_by_icao("USSS");
         auto gate = usss.get_startup_locations()["12"];
         __ptr_acf->place_on_ground( gate );
         
@@ -88,11 +85,20 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         
         __ptr_acf = new BimboAircraft("B772", "UAE", "UAE");
         __ptr_acf->vcl_condition.agent_name = "Boeing 777-200 UAE";
-        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
         
-        auto usss = Airport::get_by_icao("USSS");
         auto gate = usss.get_startup_locations()["11"];
         __ptr_acf->place_on_ground( gate );
+    }
+    
+    if ( __ptr_acf ) {
+        __ptr_acf->vcl_condition.agent_uuid = uuid;
+        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;
+        
+        auto where_i_am = __ptr_acf->get_location();    
+        auto way = usss.get_taxi_way_for_departure( where_i_am );
+        Logger::log("Got " + to_string(way.size()) + " points in FP");
+        __ptr_acf->prepare_for_take_off( way );
+        __ptr_acf->choose_next_action();
     }
 
 }
@@ -112,11 +118,23 @@ void AgentAircraft::run() {
     }
 
     __previous_time = xenon::get_system_time_ms();
+    __cycles = 0;
     
     for (;;) {
         // Время - в микросекундах.
         usleep( AGENT_TICK );
         __step();
+        __cycles ++;
+        
+        if ( __cycles >= CYCLES_PER_CRY ) {
+            __cycles = 0;
+            CmdAircraftCondition * cmd = new CmdAircraftCondition(
+                __ptr_acf->vcl_condition, __ptr_acf->acf_condition
+            );
+            _communicator->request( cmd );
+            Logger::log("New state sended for " + __ptr_acf->vcl_condition.agent_name);
+        }
+
     }
     
 }

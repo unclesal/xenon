@@ -41,7 +41,15 @@ namespace xenon {
                     // Нам нужен char *
                     std::copy( trx.begin(), trx.end(), __tx_buffer );
                 
-                    ssize_t sent = ::write( __socket, __tx_buffer, trx.size() );
+                    // Длина передаваемого UBJSONа.
+                    uint16_t len = trx.size();
+                    ssize_t sent = ::write( __socket, (char * ) & len, sizeof(len));
+                    if ( sent != sizeof(len)) {
+                        error = "Can not send lenght of packet";
+                        return false;
+                    }
+                    
+                    sent = ::write( __socket, __tx_buffer, trx.size() );
                     if ( sent != trx.size() ) {
                         error = "want " + std::to_string( trx.size() )
                         + ", but sent " + std::to_string( sent );
