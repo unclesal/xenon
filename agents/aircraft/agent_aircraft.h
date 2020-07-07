@@ -59,11 +59,8 @@ namespace xenon {
             BimboAircraft * __ptr_acf;
             map<aircraft_state_t, deque<StateFrame *>> __state_frames;
             
-            /**
-             * @short Счетчик полученных по сети пакетов для начальной инициализации.
-             */
-            int __condition_packets_received;
-            bool __inited;
+            long int __start_time;
+            bool __started;
             
             void __init_parking_frames();
             void __step();

@@ -23,8 +23,9 @@ using namespace std;
 AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     
     __cycles = 0;
-    __condition_packets_received = 0;
-    __inited = false;
+    
+    __started = false;
+    __start_time = get_system_time_ms();
     
     if ( ! Airport::airports_was_readed() ) {
         Airport::read_all();
@@ -78,12 +79,14 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf = new BimboAircraft("B738", "AFF", "AFF");
         __ptr_acf->vcl_condition.agent_name = "Boeing 737-800 AFF";
         gate = usss.get_startup_locations()["15"];        
+        __start_time += 10000;
         
     } else if ( uuid == A321_AFL ) {
         
         __ptr_acf = new BimboAircraft("A321", "AFL", "AFL");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 AFL";                
         gate = usss.get_startup_locations()["13"];
+        __start_time += 20000;
         
         
     } else if ( uuid == A321_SVR ) { 
@@ -91,12 +94,14 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf = new BimboAircraft("A321", "SVR", "SVR");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 SVR";                
         gate = usss.get_startup_locations()["12"];        
+        __start_time += 30000;
         
     } else if ( uuid == B772_UAE ) {
         
         __ptr_acf = new BimboAircraft("B772", "UAE", "UAE");
         __ptr_acf->vcl_condition.agent_name = "Boeing 777-200 UAE";        
         gate = usss.get_startup_locations()["11"];        
+        __start_time += 40000;
     }
     
     if ( __ptr_acf ) {
@@ -139,6 +144,15 @@ void AgentAircraft::run() {
     for (;;) {
         // Время - в микросекундах.
         usleep( AGENT_TICK );
+        
+        if ( ! __started ) {
+            long int current_time = get_system_time_ms();
+            if ( current_time >= __start_time ) {
+                __started = true;
+                cout << __ptr_acf->vcl_condition.agent_name << " started" << endl;                
+            }
+        }        
+        
         __step();
         __cycles ++;
         
@@ -278,7 +292,7 @@ void AgentAircraft::action_started( void * action ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::action_finished( void * action ) {
-    __decision();
+    if ( __started ) __decision();
 }
 
 // *********************************************************************************************************************
@@ -308,16 +322,7 @@ void AgentAircraft::on_received( void * abstract_command ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
-    
-    // Начальную инициализацию нельзя проводить до тех пор, пока непонятно окружение.
-    if ( ! __inited ) {
-        __condition_packets_received ++;
-        if ( __condition_packets_received >= 10 ) {
-            __inited = true;
-            __decision();
-        };
-    }
-    
+        
     auto current_state_object = __ptr_acf->graph->get_current_state();
     auto node = __ptr_acf->graph->get_node_for( current_state_object );
     
@@ -328,6 +333,8 @@ void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
             frame->update( cmd );
         }
     }
+    
+    if ( __started ) __decision();
 };
 
 // *********************************************************************************************************************
@@ -419,12 +426,11 @@ void AgentAircraft::__decision() {
         });
         
         // Нулевой элемент - это следующее действие.
-        auto next_action = result[0].action;
-        
-        cout << "next action " << next_action << ", likeliness=" << result[0].likeliness << endl;
+        auto next_action = result[0].action;                
         
         // Возможно, именно оно сейчас и выполняется, тогда ничего не делаем.
         if ( __ptr_acf->graph->current_action_is( next_action )) return;
+        
         // Будем переставлять. Правда, тут еще есть вопрос: а доступно ли оно из текущего состояния?
         auto action_descriptor = __ptr_acf->graph->get_action_outgoing_from_current_state( next_action );
         try {
