@@ -101,7 +101,7 @@ namespace xenon {
             AircraftAbstractState * get_current_state() {
                 return __current_state;
             };
-            
+                        
             AircraftAbstractAction * get_current_action() {
                 return __current_action;
             };

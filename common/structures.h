@@ -342,5 +342,11 @@ namespace xenon {
         std::string uuid = "";
         agent_t type = AGENT_UNKNOWN;
     };
+    
+    // Структура для принятия решения о следующем шаге (действии)
+    struct next_action_t {
+        aircraft_action_t action = ACF_DOES_NOTHING;
+        int likeliness = 0;
+    };
 
 };  // namespace xenon

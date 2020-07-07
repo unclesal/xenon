@@ -38,6 +38,10 @@ namespace xenon {
                 }
             };
             
+            template <class T> void set( const std::string & key, const T & value ) {
+                __attributes[key] = value;
+            };                        
+            
         protected:
             
         private:

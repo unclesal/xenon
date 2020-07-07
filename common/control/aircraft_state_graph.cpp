@@ -180,6 +180,9 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
         if ( __current_state ) {
             __current_state->__activate();
         }
+#ifdef INSIDE_AGENT            
+        if ( __ptr_acf->agent ) __ptr_acf->agent->state_changed( __current_state );
+#endif        
     } catch ( const std::range_error & re ) {
         Logger::log("ERROR: AircraftStateGraph::set_active_state called with incorrect vertex descriptor");
     }
@@ -218,6 +221,9 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
 
         // Это единственное место, где должен вызываться старт. Поэтому сам старт сделан приватным.
         if ( __current_action ) __current_action->__start();
+#ifdef INSIDE_AGENT        
+        if ( __ptr_acf->agent ) __ptr_acf->agent->action_started( __current_action );
+#endif        
 
     } catch ( const std::range_error & re ) {
         Logger::log("ERROR: AircraftStateGraph::set_active_action() called with invalid edge descriptor.");

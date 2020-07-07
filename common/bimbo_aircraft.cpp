@@ -62,7 +62,7 @@ BimboAircraft::BimboAircraft(
     
 #endif
 
-    __graph = new AircraftStateGraph( this );
+    graph = new AircraftStateGraph( this );
     __taxing_prepared = false;
     
     // Коррекция параметров для данного самолета.
@@ -89,13 +89,13 @@ void BimboAircraft::__start_fp0_action() {
     aircraft_state_graph::graph_t::edge_descriptor fake;
     try {
         aircraft_state_graph::graph_t::edge_descriptor action 
-            = __graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
+            = graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
             
         if ( action == fake ) {
             Logger::log("ERROR: __start_fp0_action got fake edge descriptor");
             return;
         }
-        __graph->set_active_action( action );
+        graph->set_active_action( action );
 
     } catch ( const std::range_error & re ) {
         Logger::log(
@@ -109,92 +109,6 @@ void BimboAircraft::__start_fp0_action() {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                            Выбор следующего действия                                              *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-#ifdef INSIDE_AGENT
-void BimboAircraft::choose_next_action() {  
-    
-    string current_state_name = "Unknown state";
-    auto current_state = __graph->get_current_state();
-    if ( current_state ) {
-        auto node = __graph->get_node_for( current_state );
-        current_state_name = node.name;
-    }
-    
-    Logger::log("choose_next_action(), state=" + current_state_name + ", fp size=" + to_string( _flight_plan.size() ) );
-    
-    if (
-        ( __graph->current_state_is( ACF_STATE_PARKING )) 
-        && ( __graph->current_action_is( ACF_DOES_NOTHING ))
-        && ( __taxing_prepared )
-        && ( ! _flight_plan.empty() )
-    ) {
-        // На парковке и "ничего не делает", и при этом рулежка уже
-        // подготовлена - поехали по полетному плану.
-        __start_fp0_action();
-        return;
-    }
-        
-    if (
-        ( __graph->current_state_is( ACF_STATE_READY_FOR_TAXING ) )
-        && ( __taxing_prepared )
-    ) {
-        // Если готов к рулению - пока что поехали. 
-        // TODO: всякая фигня типа заведения двигателей, разрешения на руление и др.
-        __start_fp0_action();
-        return;
-    } 
-    
-    if ( __graph->current_state_is( ACF_STATE_HP ) ) {
-        __start_fp0_action();
-        return;
-    }
-    
-    if ( __graph->current_state_is( ACF_STATE_READY_FOR_TAKE_OFF ) ) {
-        __start_fp0_action();
-        return;
-    };
-    
-    if ( __graph->current_state_is( ACF_STATE_AIRBORNED ) ) {
-        
-        aircraft_state_graph::graph_t::edge_descriptor action 
-            = __graph->get_action_outgoing_from_current_state( ACF_DOES_FLYING );
-            
-        __graph->set_active_action( action );
-        
-        return;
-    };
-    
-    if ( __graph->current_state_is ( ACF_STATE_ON_FINAL ) ) {
-        __start_fp0_action();
-        return;
-    }
-
-    if ( __graph->current_state_is( ACF_STATE_LANDED )) {
-        if ( !_flight_plan.empty() ) __start_fp0_action();
-        else Logger::log("BimboAircraft::choose_next_action(), ACF_STATE_LANDED, but FP is empty");
-        return;
-    }
-    
-    if ( __graph->current_state_is( ACF_STATE_RUNWAY_LEAVED )) {
-        __start_fp0_action();
-        return;
-    };
-    
-    if ( __graph->current_state_is( ACF_STATE_BEFORE_PARKING )) {
-        __start_fp0_action();
-        return;
-    };
-    
-    Logger::log("ERROR: BimboAircraft::choose_next_action(), action was not determined");    
-};
-
-#endif
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
 // *                            Действие было завершено, переход в следующее состояние                                 *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -203,10 +117,11 @@ void BimboAircraft::choose_next_action() {
 void BimboAircraft::_action_finished( void * action ) {
     
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
-    aircraft_state_graph::edge_t edge = __graph->get_edge_for( ptr_abstract_action );
+    aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );
     Logger::log("Action " + edge.name + " finished.");
-    __graph->action_finished( ptr_abstract_action );
-    choose_next_action();
+    graph->action_finished( ptr_abstract_action );
+    
+    AbstractVehicle::_action_finished( action );
     
 };
 #endif
@@ -336,7 +251,7 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     // Сдвиг относительно начала стоянки
     move( _params.shift_from_ramp );
     // В графе состояний отмечаем, что мы встали на стоянку.
-    __graph->place_on_parking();
+    graph->place_on_parking();
 
 }
 
@@ -499,7 +414,7 @@ void BimboAircraft::__acf_parameters_correction() {
 void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     
     // Если самолет не на стоянке, то это ошибка.
-    if ( ! __graph->current_state_is( ACF_STATE_PARKING ) ) {
+    if ( ! graph->current_state_is( ACF_STATE_PARKING ) ) {
         Logger::log("ERROR: BimboAircraft::prepare_for_take_off, but aircraft is not parked.");
         return;
     }
@@ -631,11 +546,13 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
     
     _acf_mutex.lock();
-    __graph->update( elapsed_since_last_call );
+    graph->update( elapsed_since_last_call );
 
 #ifdef INSIDE_XPLANE
     __update_actuators(elapsed_since_last_call);
-    if ( vcl_condition.is_clamped_to_ground ) clamp_to_ground();
+    if ( vcl_condition.is_clamped_to_ground ) {
+        clamp_to_ground();
+    }
 #endif
     _acf_mutex.unlock();
 
@@ -728,14 +645,14 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     
     AbstractAircraft::update_from( vc, ac );
     
-    if ( ! __graph->current_state_is( vc.current_state ))
-        __graph->set_active_state( vc.current_state );
+    if ( ! graph->current_state_is( vc.current_state ))
+        graph->set_active_state( vc.current_state );
     
-    if ( ! __graph->current_action_is( vc.current_action ) ) {
+    if ( ! graph->current_action_is( vc.current_action ) ) {
         
-        auto action_descriptor = __graph->get_action_outgoing_from_current_state( vc.current_action );
+        auto action_descriptor = graph->get_action_outgoing_from_current_state( vc.current_action );
         try {
-            __graph->set_active_action( action_descriptor );
+            graph->set_active_action( action_descriptor );
         } catch ( const std::runtime_error & e ) {
             Logger::log(
                 "BimboAircraft::update_from(), could not find action for state " 
@@ -784,8 +701,8 @@ void BimboAircraft::test__place_on_hp() {
         return;
     };
     
-    auto on_hp = __graph->get_node_for( ACF_STATE_HP );
-    __graph->set_active_state( on_hp );
+    auto on_hp = graph->get_node_for( ACF_STATE_HP );
+    graph->set_active_state( on_hp );
     
     __start_fp0_action();
     
@@ -986,7 +903,7 @@ void BimboAircraft::test__fly() {
 //    v[ V_CONTROLS_SPEED_BRAKE_RATIO ] = 0.0;
 // 
 //     Состояние AIRBORNED имеет только одно исходящее действие, это полет.
-//     __graph->set_active_state( ACF_STATE_AIRBORNED );
+//     graph->set_active_state( ACF_STATE_AIRBORNED );
     
 }
 
@@ -1022,6 +939,6 @@ void BimboAircraft::test__taxing() {
     _params.destination = "USSS";
     acf_condition.icao_type = "B738";
 
-    __graph->set_active_state( ACF_STATE_LANDED );
+    graph->set_active_state( ACF_STATE_LANDED );
 
 }

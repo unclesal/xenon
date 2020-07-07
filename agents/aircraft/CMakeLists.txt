@@ -18,7 +18,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Release")
     add_compile_options( -O3 )
 endif()
 
-# Сборка - именно для серверной части.
+# Сборка - именно для агента.
 add_definitions( -DINSIDE_AGENT )
 
 # С отладкой или без нее. Без отладки - сразу же уйдет в fork().
@@ -27,7 +27,7 @@ add_definitions( -DDEBUG )
 set(COMMON ../../common)
 set(CONTROL ${COMMON}/control)
 set(NET ${COMMON}/network)
-set(FRAMES ${COMMON}/frames)
+set(FRAMES ../frames)
 set(NETCMD ${NET}/commands)
 
 include_directories(
@@ -52,6 +52,8 @@ set(SOURCES
     
     ${FRAMES}/abstract_frame.cpp
     ${FRAMES}/entity_frame.cpp
+    ${FRAMES}/state_frame.cpp
+    ${FRAMES}/push_back_allowed.cpp
     
     ${NET}/abstract_command.cpp
     ${NET}/command_parser.cpp

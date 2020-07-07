@@ -24,6 +24,10 @@ AbstractVehicle::AbstractVehicle() {
 #ifdef INSIDE_XPLANE    
    __terrain_ref = XPLMCreateProbe( xplm_ProbeY );
 #endif    
+   
+#ifdef INSIDE_AGENT
+   agent = nullptr;
+#endif
     
 }
 

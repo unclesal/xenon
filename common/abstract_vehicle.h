@@ -8,21 +8,31 @@
 #include "structures.h"
 #include "utils.hpp"
 #include "logger.h"
-#include "entity_frame.h"
+#include "connected_communicator.h"
 
 #ifdef INSIDE_XPLANE
 #include "XPLMScenery.h"
 #endif
 
+#ifdef INSIDE_AGENT
+#include "agent_interface.h"
+#endif
+
 namespace xenon {
 
-    class AbstractVehicle : public EntityFrame {
+    class AbstractVehicle {
 
         public:
 
             AbstractVehicle();
             virtual ~AbstractVehicle();
 
+#ifdef INSIDE_AGENT
+            void set_agent(AgentInterface * a ) {                
+                agent = a;                
+            };
+#endif
+            
 #ifdef INSIDE_XPLANE
             virtual position_t get_position() = 0;
             virtual void set_position( const position_t & position ) = 0;
@@ -40,10 +50,14 @@ namespace xenon {
             void update_from( const vehicle_condition_t & vc ) {
                 
                 vcl_condition = vc;
-                set_location( vc.location );                
+                auto new_location = vc.location;
+#ifdef INSIDE_XPLANE
+                if ( vc.is_clamped_to_ground ) hit_to_ground( new_location );
+#endif                
+                set_location( new_location );                
                 set_rotation( vc.rotation );
                                 
-            };
+            };                        
 
 #ifdef INSIDE_XPLANE
             virtual void observe() {};
@@ -68,17 +82,25 @@ namespace xenon {
              * Является публичным членом, т.к. к нему обращаются все: и сама самоходка, и граф, и его узлы/грани.
              */
             vehicle_condition_t vcl_condition;
+            
+#ifdef INSIDE_AGENT
+           AgentInterface * agent;
+#endif
 
         protected:                    
             
-            virtual void _action_finished( void * action ) {};
+            virtual void _action_finished( void * action ) {
+#ifdef INSIDE_AGENT
+                if ( agent ) agent->action_finished( action );
+#endif                
+            };            
 
         private:
             
 #ifdef INSIDE_XPLANE
            XPLMProbeRef __terrain_ref;
 #endif
-
+           
     };
 
 }; // namespace xenon

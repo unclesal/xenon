@@ -8,14 +8,19 @@
 #include <unistd.h>
 
 #include <string>
+#include <map>
+#include <deque>
 
 #include "airport.h"
 #include "abstract_agent.h"
+#include "agent_interface.h"
 #include "bimbo_aircraft.h"
+#include "aircraft_abstract_state.h"
+#include "state_frame.h"
 
 namespace xenon {
     
-    class AgentAircraft : public AbstractAgent {
+    class AgentAircraft : public AbstractAgent, public AgentInterface {
         
         public:
             
@@ -32,6 +37,17 @@ namespace xenon {
             
             void on_error( std::string message ) override;
             
+            virtual void action_started( void * action ) override;            
+            virtual void action_finished( void * action ) override;            
+            virtual void state_changed( void * state ) override;
+            
+            /**
+             * @short Прореветь об изменении своего состояния
+             * Посылка пакета CmdAircraftState, если коммуникатор соединен.
+             */
+            void scream_about_me();
+            virtual void on_received( void * abstract_command ) override;
+            
         protected:                        
             
         private:
@@ -40,10 +56,17 @@ namespace xenon {
             unsigned int __cycles;
 
             BimboAircraft * __ptr_acf;
+            void __init_parking_frames();
             void __step();
 
             // void __test();
             void __temporary_make_aircraft_by_uuid( const std::string & uuid );
+            
+            void __choose_next_action();
+            void __decision();
+            
+            map<aircraft_state_t, deque<StateFrame *>> __state_frames;
+            
             
     };
     

@@ -36,6 +36,10 @@ namespace xenon {
         , public XPMP2::Aircraft
 #endif
     {
+        
+#ifdef INSIDE_AGENT
+        friend class AgentAircraft;
+#endif        
 
         public:
 
@@ -78,7 +82,7 @@ namespace xenon {
             void  SetHeading (float _deg)   { vcl_condition.rotation.heading = _deg; };
             float GetRoll () const          { return vcl_condition.rotation.roll;    };
             void  SetRoll (float _deg)      { vcl_condition.rotation.roll = _deg;    };
-
+            
 #endif // INSIDE_XPLANE
 
             rotation_t get_rotation() override;
@@ -210,10 +214,6 @@ namespace xenon {
                 deque<waypoint_t> & fp
             );
             
-#ifdef INSIDE_AGENT            
-            void choose_next_action();
-#endif
-
             void test__fly();
             void test__taxing();
 
@@ -228,6 +228,9 @@ namespace xenon {
              */
             void hit_to_ground( position_t & position ) override;
 #endif
+            
+            // Граф состояний самолета.
+            AircraftStateGraph * graph;
 
         protected:
 
@@ -239,10 +242,7 @@ namespace xenon {
 #endif
             
         private:
-
-            
-            // Граф состояний самолета.
-            AircraftStateGraph * __graph;
+                        
             
             bool __taxing_prepared;
 
