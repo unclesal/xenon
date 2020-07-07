@@ -47,6 +47,7 @@ namespace xenon {
              */
             void scream_about_me();
             virtual void on_received( void * abstract_command ) override;
+            void on_received( CmdAircraftCondition * cmd );
             
         protected:                        
             
@@ -56,6 +57,14 @@ namespace xenon {
             unsigned int __cycles;
 
             BimboAircraft * __ptr_acf;
+            map<aircraft_state_t, deque<StateFrame *>> __state_frames;
+            
+            /**
+             * @short Счетчик полученных по сети пакетов для начальной инициализации.
+             */
+            int __condition_packets_received;
+            bool __inited;
+            
             void __init_parking_frames();
             void __step();
 
@@ -65,7 +74,7 @@ namespace xenon {
             void __choose_next_action();
             void __decision();
             
-            map<aircraft_state_t, deque<StateFrame *>> __state_frames;
+            
             
             
     };

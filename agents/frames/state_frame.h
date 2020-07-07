@@ -6,9 +6,9 @@
 #pragma once
 #include "abstract_frame.h"
 #include "aircraft_abstract_state.h"
-#include "abstract_command.h"
 #include "connected_communicator_reactor.h"
 #include "bimbo_aircraft.h"
+#include "cmd_aircraft_condition.h"
 
 namespace xenon {
     
@@ -20,7 +20,7 @@ namespace xenon {
             virtual ~StateFrame() override = default;
             
             
-            virtual void update( AbstractCommand * cmd ) = 0;
+            virtual void update( CmdAircraftCondition * cmd ) = 0;
             virtual void result( next_action_t & next_action );
             
         protected:

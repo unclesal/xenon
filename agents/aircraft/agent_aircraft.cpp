@@ -23,6 +23,8 @@ using namespace std;
 AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     
     __cycles = 0;
+    __condition_packets_received = 0;
+    __inited = false;
     
     if ( ! Airport::airports_was_readed() ) {
         Airport::read_all();
@@ -132,10 +134,7 @@ void AgentAircraft::run() {
     }
 
     __previous_time = xenon::get_system_time_ms();
-    __cycles = 0;
-    
-    // Первый запуск графа поведения.
-    __decision();
+    __cycles = 0;        
     
     for (;;) {
         // Время - в микросекундах.
@@ -293,6 +292,32 @@ void AgentAircraft::on_received( void * abstract_command ) {
     AbstractAgent::on_received( abstract_command );
     
     AbstractCommand * cmd = ( AbstractCommand * ) abstract_command;
+    
+    CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * > ( cmd );
+    if ( cmd_aircraft_condition ) {
+        on_received( cmd_aircraft_condition );
+        return;
+    }        
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                         Из сети была получена команда состояния какого-то самолета.                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
+    
+    // Начальную инициализацию нельзя проводить до тех пор, пока непонятно окружение.
+    if ( ! __inited ) {
+        __condition_packets_received ++;
+        if ( __condition_packets_received >= 10 ) {
+            __inited = true;
+            __decision();
+        };
+    }
+    
     auto current_state_object = __ptr_acf->graph->get_current_state();
     auto node = __ptr_acf->graph->get_node_for( current_state_object );
     
@@ -303,9 +328,7 @@ void AgentAircraft::on_received( void * abstract_command ) {
             frame->update( cmd );
         }
     }
-    
-}
-
+};
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
