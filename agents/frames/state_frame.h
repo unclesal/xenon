@@ -25,8 +25,7 @@ namespace xenon {
             
         protected:
             
-            aircraft_action_t _action;
-            int _likeliness;
+            next_action_t _next_action;
             
             ConnectedCommunicatorReactor * _environment;
             BimboAircraft * _ptr_acf;

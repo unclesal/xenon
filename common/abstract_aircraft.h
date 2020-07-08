@@ -51,8 +51,14 @@ namespace xenon {
             virtual void update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac );
             virtual void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) {};
             
-            const waypoint_t & front_waypoint() {
+            inline const waypoint_t & front_waypoint() {
                 if ( ! _flight_plan.empty() ) return _flight_plan.at(0);
+                static waypoint_t wp;
+                return wp;
+            };
+            
+            inline const waypoint_t & first_waypoint() {
+                if ( _flight_plan.size() >= 2 ) return _flight_plan.at(1);
                 static waypoint_t wp;
                 return wp;
             };

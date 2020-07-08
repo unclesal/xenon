@@ -1,19 +1,18 @@
 // *********************************************************************************************************************
-// *                       Запрет выталкивания, если рядом уже есть самолет, который двигается                         *
+// *                          Фрейм, отслеживающий соблюдение дистанции между самолетами при рулении                   *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 07 jul 2020 at 13:21 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 08 jul 2020 at 17:00 *
 // *********************************************************************************************************************
 #pragma once
-
 #include "state_frame.h"
+
 namespace xenon {
-    
-    class PushBackAllowed : public StateFrame {
+    class TaxingDistance : public StateFrame {
         
         public:
             
-            PushBackAllowed( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment);
-            ~PushBackAllowed() override = default;
+            TaxingDistance( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
+            ~TaxingDistance() override = default;
             
             void update( CmdAircraftCondition * cmd ) override;
             
@@ -21,6 +20,5 @@ namespace xenon {
             
         private:
             
-    };
-    
+    }; // class TaxingDistance
 }; // namespace xenon

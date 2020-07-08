@@ -18,10 +18,8 @@ StateFrame::StateFrame(BimboAircraft * bimbo, ConnectedCommunicatorReactor * env
 {
     _environment = environment;
     _ptr_acf = bimbo;
-    
-    _action = ACF_DOES_NOTHING;
-    _likeliness = 0;
-    
+        
+    _next_action.action = ACF_DOES_NOTHING;
 };
 
 // *********************************************************************************************************************
@@ -31,6 +29,5 @@ StateFrame::StateFrame(BimboAircraft * bimbo, ConnectedCommunicatorReactor * env
 // *********************************************************************************************************************
 
 void StateFrame::result( next_action_t & next_action ) {
-    next_action.action = _action;
-    next_action.likeliness = _likeliness;
+    next_action = _next_action;
 }

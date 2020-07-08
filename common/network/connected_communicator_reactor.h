@@ -16,11 +16,36 @@ namespace xenon {
         public:
 
             struct another_agent_t {
+                
                 vehicle_condition_t vcl_condition;
+                
                 aircraft_condition_t * acf_condition = nullptr;
                 
                 const std::string & agent_uuid() {
                     return vcl_condition.agent_uuid;
+                };
+                
+                bool is_aircraft() {
+                    return (
+                        vcl_condition.agent_type == AGENT_AIRCRAFT
+                        || vcl_condition.agent_type == AGENT_XPLANE
+                    );
+                };
+                
+                /**
+                 * @short Находится ли данный агент в состоянии руления?
+                 */
+                bool is_on_taxiway () {
+                                        
+                    return (
+                        vcl_condition.current_action == ACF_DOES_PUSH_BACK
+                        || vcl_condition.current_action == ACF_DOES_SLOW_TAXING
+                        || vcl_condition.current_action == ACF_DOES_NORMAL_TAXING
+                        || (
+                                vcl_condition.current_state != ACF_STATE_PARKING
+                                && vcl_condition.current_state != ACF_STATE_UNKNOWN
+                        )
+                    );
                 };
             };
             

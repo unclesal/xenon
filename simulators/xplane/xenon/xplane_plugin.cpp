@@ -49,7 +49,7 @@ XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
 // *********************************************************************************************************************
 
 void XPlanePlugin::enable() {
-    __enabled = true;
+    __enabled = true;    
 }
 
 // *********************************************************************************************************************
@@ -60,6 +60,9 @@ void XPlanePlugin::enable() {
 
 void XPlanePlugin::disable() {
     __enabled = false;    
+    if ( __communicator ) {
+        if ( __communicator->is_connected() ) __communicator->disconnect();
+    }
 }
 
 // *********************************************************************************************************************
@@ -538,10 +541,9 @@ XPlanePlugin::~XPlanePlugin() {
     
     if ( __communicator ) {
         if ( __communicator->is_connected() ) __communicator->disconnect();
-        // delete( __communicator );
-        // __communicator = nullptr;
+        delete( __communicator );
+        __communicator = nullptr;
     }
-    
     /*
     __agents_mutex.lock();
     // Корректное освобождение памяти, выделенной под самоходки.
@@ -558,5 +560,4 @@ XPlanePlugin::~XPlanePlugin() {
     
     __agents_mutex.unlock();
     */
-    
 }

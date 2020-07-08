@@ -82,7 +82,7 @@ namespace xenon {
     
     // Одна точка маршрута.
     struct waypoint_t {
-        std::string name = "";
+        std::string name = "EMPTY";
         xenon::waypoint_type_t type = WAYPOINT_UNKNOWN;
         // Положение в пространстве данной точки. Если установлена
         // высота - то пытается достигаться эта высота. Если 0, то
@@ -346,7 +346,7 @@ namespace xenon {
     // Структура для принятия решения о следующем шаге (действии)
     struct next_action_t {
         aircraft_action_t action = ACF_DOES_NOTHING;
-        int likeliness = 0;
+        int priority = 0;
     };
 
 };  // namespace xenon

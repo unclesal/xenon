@@ -122,7 +122,7 @@ void AircraftDoesParking::__breaking() {
 // *********************************************************************************************************************
 
 void AircraftDoesParking::_internal_step( const float & elapsed_since_last_call ) {
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     switch ( __phase ) {
         case PHASE_BECOMING: __becoming( wp, elapsed_since_last_call ); break;
         case PHASE_TURN: __turn( wp, elapsed_since_last_call ); break;

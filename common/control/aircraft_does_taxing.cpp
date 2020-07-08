@@ -34,7 +34,7 @@ void AircraftDoesTaxing::_internal_start() {
     _ptr_acf->set_beacon_lites( true );
     
     __from_runway_location = location_t();
-    auto front_wp = _get_front_wp();
+    auto front_wp = _ptr_acf->front_waypoint();
     if (
         ( _ptr_acf->vcl_condition.current_state == ACF_STATE_LANDED )
         && ( front_wp.type == WAYPOINT_RUNWAY )
@@ -154,7 +154,7 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
 
             while ( front_wp.type == WAYPOINT_TAXING ) {
                 _front_wp_reached();
-                front_wp = _get_front_wp();
+                front_wp = _ptr_acf->front_waypoint();
             }
             _finish();
             return;
@@ -178,7 +178,7 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
 
 void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call ) {
     
-    auto front_wp = _get_front_wp();
+    auto front_wp = _ptr_acf->front_waypoint();
 
 //    Logger::log(
 //        "Front=" + front_wp.name
@@ -227,7 +227,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         
         // Следующая точка полетного плана.
         
-        front_wp = _get_front_wp();
+        front_wp = _ptr_acf->front_waypoint();
         if ( front_wp.type == WAYPOINT_PARKING ) {
             
             // Если следующая точка уже парковка, то просто выходим.

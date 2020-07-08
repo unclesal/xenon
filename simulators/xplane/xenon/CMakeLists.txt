@@ -86,6 +86,8 @@ add_library(xenon MODULE
         ${CONTROL}/aircraft_does_slow_taxing.cpp
         ${CONTROL}/aircraft_does_take_off.cpp
         ${CONTROL}/aircraft_does_taxing.cpp
+        ${CONTROL}/aircraft_does_taxing_stop.cpp
+        ${CONTROL}/aircraft_does_waiting_push_back.cpp
         ${CONTROL}/aircraft_state_airborned.cpp
         ${CONTROL}/aircraft_state_before_parking.cpp
         ${CONTROL}/aircraft_state_graph.cpp

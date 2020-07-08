@@ -40,6 +40,10 @@ namespace xenon {
     // Если расстояние больше, то агент уже не может "слышать" и пакет ему переправлен не будет.
     constexpr double DISTANCE_STILL_HEARD           = 90000.0;
     
+    // Минимально допустимая дистанция между самолетами в метрах. 
+    // Если меньше или равно, то задний должен остановиться.
+    constexpr float MIN_ALLOWABLE_TAXING_DISTANCE = 100.0;
+    
     // Один "тик" цикла агента в микросекундах.
     constexpr int AGENT_TICK = 20000;
     
@@ -105,6 +109,8 @@ namespace xenon {
     // Действия (ребра графа состояний самолета).
     enum aircraft_action_t {
         ACF_DOES_NOTHING = 0,
+        // Ожидает выталкивания.
+        ACF_DOES_WAITING_PUSH_BACK,
         // Выталкивается.
         ACF_DOES_PUSH_BACK,
         // Рулежка.

@@ -33,7 +33,7 @@ xenon::AircraftDoesLanding::AircraftDoesLanding(
 void AircraftDoesLanding::_internal_start() {
     
     __phase = PHASE_UNKNOWN;
-    auto wp0 = _get_front_wp();
+    auto wp0 = _ptr_acf->front_waypoint();
     if ( ( wp0.type != WAYPOINT_RUNWAY ) || ( wp0.action_to_achieve != ACF_DOES_LANDING ) ) {
         Logger::log(
             "ERROR: incorrect WP for landing, type=" + to_string( wp0.type ) 
@@ -291,7 +291,7 @@ void AircraftDoesLanding::__step__breaking() {
 
 void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call ) {
     
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     auto acf_parameters = _get_acf_parameters();    
     switch ( __phase ) {
         case PHASE_DESCENDING: __step__descending( wp, acf_parameters ); break;

@@ -57,7 +57,7 @@ namespace xenon {
                 if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
                 auto old_position = get_position();
                 auto distance = XPlane::distance2d(old_position, new_position);
-                if ( distance >= 0.5 ) set_position( new_position );
+                if ( distance >= 1.0 ) set_position( new_position );
                 set_rotation( vc.rotation );
 #else               
                 set_location( new_location );                

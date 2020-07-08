@@ -9,7 +9,9 @@
 #include "tested_agents.h"
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
+
 #include "push_back_allowed.h"
+#include "taxing_distance.h"
 
 using namespace xenon;
 using namespace std;
@@ -44,6 +46,7 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     };
     
     __init_parking_frames();
+    __init_taxing_frames();
     
     // Коммуникатор порождаем последним, т.к. там потоки и он может тут же 
     // соединиться. Нужно, чтобы все указатели были уже инициализированы.
@@ -61,6 +64,17 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
 void AgentAircraft::__init_parking_frames() {
     PushBackAllowed * pb = new PushBackAllowed( __ptr_acf, this );
     __state_frames[ ACF_STATE_PARKING ].push_back( pb );
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                        Инициализация фреймов, имеющих отношение к состоянию руления                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__init_taxing_frames() {
+    TaxingDistance * dis = new TaxingDistance( __ptr_acf, this );
+    __state_frames[ ACF_STATE_READY_FOR_TAXING ].push_back( dis );
 }
 
 // *********************************************************************************************************************
@@ -111,7 +125,10 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->place_on_ground( gate );
         
         auto where_i_am = __ptr_acf->get_location();    
-        auto way = usss.get_taxi_way_for_departure( where_i_am );        
+        auto way = usss.get_taxi_way_for_departure( where_i_am );    
+        way[0].name = "0";
+        way[1].name = "1";
+        way[2].name = "2";
         __ptr_acf->prepare_for_take_off( way );
         __ptr_acf->test__fly();    
                 
@@ -160,6 +177,8 @@ void AgentAircraft::run() {
             __cycles = 0;
             scream_about_me();            
         }
+        
+        if ( __started ) __decision();
 
     }
     
@@ -170,7 +189,7 @@ void AgentAircraft::run() {
 // *                                            Выбор следующего действия                                              *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 void AgentAircraft::__choose_next_action() {  
     
     string current_state_name = "Unknown state";
@@ -247,7 +266,7 @@ void AgentAircraft::__choose_next_action() {
     
     Logger::log("ERROR: AgentAircraft::__choose_next_action(), action was not determined");    
 };
-
+*/
 // *********************************************************************************************************************
 // *                                                                                                                   *
 // *                     Отправить в сеть пакет своего состояния, если коммуникатор соединен                           *
@@ -281,7 +300,7 @@ void AgentAircraft::state_changed( void * state ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::action_started( void * action ) {
-    cout << "AgentAircraft::Action started" << endl;
+    cout << "AgentAircraft::action_started" << endl;
     scream_about_me();
 }
 
@@ -292,7 +311,7 @@ void AgentAircraft::action_started( void * action ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::action_finished( void * action ) {
-    if ( __started ) __decision();
+    cout << "AgentAircraft::action_finished" << endl;    
 }
 
 // *********************************************************************************************************************
@@ -302,6 +321,7 @@ void AgentAircraft::action_finished( void * action ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::on_received( void * abstract_command ) {
+        
     // Сначала вызываем родительский метод, он разложит по коллекции внешних агентов.
     AbstractAgent::on_received( abstract_command );
     
@@ -309,10 +329,10 @@ void AgentAircraft::on_received( void * abstract_command ) {
     
     CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * > ( cmd );
     if ( cmd_aircraft_condition ) {
-        on_received( cmd_aircraft_condition );
+        on_received( cmd_aircraft_condition );      
         return;
-    }        
-    
+    }
+        
 }
 
 // *********************************************************************************************************************
@@ -333,8 +353,7 @@ void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
             frame->update( cmd );
         }
     }
-    
-    if ( __started ) __decision();
+        
 };
 
 // *********************************************************************************************************************
@@ -399,16 +418,18 @@ void AgentAircraft::on_error( std::string message ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::__decision() {
-    
+        
     // Текущее состояние.
     
     auto current_state_object = __ptr_acf->graph->get_current_state();
     auto node = __ptr_acf->graph->get_node_for( current_state_object );
     
+    // Есть ли фреймы на данное состояние?
     if ( __state_frames.count( node.state )) {
         
         vector<next_action_t> result;
-        for ( auto frame: __state_frames[ node.state ] ) {
+        
+        for ( auto frame : __state_frames[ node.state ] ) {
             next_action_t his_result;
             frame->result( his_result );
             result.push_back( his_result );
@@ -420,19 +441,34 @@ void AgentAircraft::__decision() {
             return;
         };
         
-        // Сортировка полученного результата по вероятностям.
-        sort( result.begin(), result.end(), []( next_action_t & a, next_action_t & b ) {
-            return ( a.likeliness > b.likeliness );
+        // Сортировка полученного результата по приоритетам.
+        std::sort( result.begin(), result.end(), []( next_action_t & a, next_action_t & b ) {
+            return ( a.priority > b.priority );
         });
         
         // Нулевой элемент - это следующее действие.
-        auto next_action = result[0].action;                
+        auto next_action = result[0].action;
+        // Фрейм - легко - мог ни разу не обновиться. В этом случае он выдаст ACF_DOES_NOTHING.
+        if ( next_action == ACF_DOES_NOTHING ) next_action = __ptr_acf->front_waypoint().action_to_achieve;
         
         // Возможно, именно оно сейчас и выполняется, тогда ничего не делаем.
-        if ( __ptr_acf->graph->current_action_is( next_action )) return;
+        if ( __ptr_acf->graph->current_action_is( next_action )) {
+            return;
+        }
         
         // Будем переставлять. Правда, тут еще есть вопрос: а доступно ли оно из текущего состояния?
+        aircraft_state_graph::graph_t::edge_descriptor fake;
+        
         auto action_descriptor = __ptr_acf->graph->get_action_outgoing_from_current_state( next_action );
+        
+        if ( action_descriptor == fake ) {
+            Logger::log(
+                "AgentAircraft::__decision, got fake descriptor. State=" + node.name 
+                + ", next action=" + to_string(next_action)
+            );
+            return;
+        }
+        
         try {
             __ptr_acf->graph->set_active_action( action_descriptor );
         } catch ( const std::runtime_error & e ) {
@@ -440,9 +476,57 @@ void AgentAircraft::__decision() {
         }
         
     } else {
-        Logger::log("AgentAircraft::__decision(): no frames found for " + node.name );
+        // Logger::log("No frames for " + node.name );
+        // Если фреймов нет, то пока что запускаем действие, предусмотренное фронт-точкой полетного плана.
+        auto action = __ptr_acf->front_waypoint().action_to_achieve;
+        if ( ! __ptr_acf->graph->current_action_is( action ) ) __start_fp0_action();
     }
+    
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                        Старт действия, предусмотренного следующей точкой полетного плана                          *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__start_fp0_action() {
+        
+    auto next_wp = __ptr_acf->front_waypoint();
+    if ( next_wp.action_to_achieve == ACF_DOES_NOTHING ) {
+        Logger::log("AgentAircraft::__start_fp0_action: wp " + next_wp.name + ", nothing to do.");
+        return;
+    }
+    
+    auto current_state = __ptr_acf->graph->get_current_state();
+    auto node = __ptr_acf->graph->get_node_for( current_state );
+    
+    aircraft_state_graph::graph_t::edge_descriptor fake;
+    try {
+        aircraft_state_graph::graph_t::edge_descriptor action 
+            = __ptr_acf->graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
+            
+        if ( action == fake ) {
+            Logger::log(
+                "AgentAircraft: __start_fp0_action got fake edge descriptor. State="
+                + node.name + ", action=" + to_string( next_wp.action_to_achieve)
+            );
+            return;
+        }
+        __ptr_acf->graph->set_active_action( action );
+
+    } catch ( const std::range_error & re ) {
+        
+        Logger::log(
+            "AgentAircraft::__start_fp0_action, invalid descriptor for action " 
+            + to_string( next_wp.action_to_achieve ) 
+            + " from state " + node.name
+            + ", message=" + string( re.what() )
+        );
+    }
+
+}
+
 
 // *********************************************************************************************************************
 // *                                                                                                                   *

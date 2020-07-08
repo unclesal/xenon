@@ -215,7 +215,7 @@ namespace xenon {
             );
             
             void test__fly();
-            void test__taxing();
+            // void test__taxing();
 
 #ifdef INSIDE_XPLANE
             void test__place_on_hp();
@@ -251,12 +251,7 @@ namespace xenon {
 #ifdef INSIDE_XPLANE            
             actuator_motion_t __actuators[ V_COUNT ];            
             void __update_actuators( float elapsedSinceLastCall ); // NOLINT(bugprone-reserved-identifier)
-#endif
-            
-            void __start_fp0_action();                 
-            
-            
-            
+#endif                                                                        
             
     };  // class BimboAircraft
 

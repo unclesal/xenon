@@ -30,13 +30,13 @@ namespace xenon {
             /**
              * @short Вернуть нулевую точку полетного плана.
              */
-            inline waypoint_t & _get_front_wp() {
-                if ( _ptr_acf->_flight_plan.empty() ) {
-                    // XPlane::log("ERROR: AbstractAircrafter::_get_front_wp(), but flight plan is empty");
-                    return __fake_waypoint;
-                }
-                return _ptr_acf->_flight_plan.at(0);        
-            };
+//             inline waypoint_t & _get_front_wp() {
+//                 if ( _ptr_acf->_flight_plan.empty() ) {
+//                     XPlane::log("ERROR: AbstractAircrafter::_get_front_wp(), but flight plan is empty");
+//                     return __fake_waypoint;
+//                 }
+//                 return _ptr_acf->_flight_plan.at(0);        
+//             };
             
             /**
              * @short Заместить, либо добавить нулевую точку полетного плана.
@@ -50,13 +50,13 @@ namespace xenon {
             /**
              * @short Вернуть первую (следующую за нулевой) точку полетного плана.
              */
-            inline waypoint_t & _get_first_wp() {
-                if ( _ptr_acf->_flight_plan.size() >= 2 ) {
-                    return _ptr_acf->_flight_plan.at(1);
-                };
-                Logger::log("ERROR: AbstractAircrafter::_get_first_wp(), but flight plan size=" + to_string( _ptr_acf->_flight_plan.size() ) );
-                return __fake_waypoint;
-            };
+//             inline waypoint_t & _get_first_wp() {
+//                 if ( _ptr_acf->_flight_plan.size() >= 2 ) {
+//                     return _ptr_acf->_flight_plan.at(1);
+//                 };
+//                 Logger::log("ERROR: AbstractAircrafter::_get_first_wp(), but flight plan size=" + to_string( _ptr_acf->_flight_plan.size() ) );
+//                 return __fake_waypoint;
+//             };
             
             inline location_t _get_acf_location() {
                 return _ptr_acf->get_location();                

@@ -1,41 +1,36 @@
 // *********************************************************************************************************************
-// *                                                    Взлет произведен                                               *
+// *                                             Самолет ожидает выталкивания.                                         *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 20 may 2020 at 12:05 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 08 jul 2020 at 20:42 *
 // *********************************************************************************************************************
 
-#include "aircraft_state_airborned.h"
+#include "aircraft_does_waiting_push_back.h"
+using namespace xenon;
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                                     Конструктор                                                   *
+// *                                                   Конструктор                                                     *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AircraftStateAirborned::AircraftStateAirborned(  
-    AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd 
-) : AircraftAbstractState( ptr_acf, nd ) 
+AircraftDoesWaitingPushBack::AircraftDoesWaitingPushBack(
+    AbstractAircraft* ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d
+) : AircraftAbstractAction( ptr_acf, edge_d )
 {
-    
 }
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                           Активация состояния "взлетел"                                           *
+// *                                              Инициализация действия                                               *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftStateAirborned::_internal_activate() {
-    // После взлета убираем все точки полетного плана, которые относились к 
-    // земле, к фазам руления, выравнивания и собственно взлета.
-    auto wp = _ptr_acf->front_waypoint();
-    while (
-        ( wp.type == WAYPOINT_PARKING )
-        || ( wp.type == WAYPOINT_TAXING )
-        || ( wp.type == WAYPOINT_RUNWAY )
-    ) {
-        _front_wp_reached();
-        wp = _ptr_acf->front_waypoint();
-    };
-        
+void AircraftDoesWaitingPushBack::_internal_start() {
+    // Стоим. Действие - простейшее. Просто стоим.
+    _ptr_acf->vcl_condition.speed = 0;
+    _ptr_acf->vcl_condition.target_speed = 0;
+    _ptr_acf->vcl_condition.acceleration = 0;
 }
+
+
+

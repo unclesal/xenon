@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <deque>
+#include <mutex>
 
 #include "airport.h"
 #include "abstract_agent.h"
@@ -57,19 +58,22 @@ namespace xenon {
             unsigned int __cycles;
 
             BimboAircraft * __ptr_acf;
-            map<aircraft_state_t, deque<StateFrame *>> __state_frames;
+            map<aircraft_state_t, vector<StateFrame *>> __state_frames;
             
             long int __start_time;
             bool __started;
             
             void __init_parking_frames();
+            void __init_taxing_frames();
             void __step();
 
             // void __test();
             void __temporary_make_aircraft_by_uuid( const std::string & uuid );
             
-            void __choose_next_action();
+            //void __choose_next_action();
+            
             void __decision();
+            void __start_fp0_action();
             
             
             

@@ -70,42 +70,6 @@ BimboAircraft::BimboAircraft(
 
 }
 
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                        Старт действия, предусмотренного следующей точкой полетного плана                          *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::__start_fp0_action() {
-    
-    if ( _flight_plan.empty() ) {
-        Logger::log("ERROR: BimboAircraft::__start_fp0_action called, but flight plan is empty");
-    };
-    
-    // Проверки на индексы здесь не выполняется, т.к. она сделана
-    // внутри процедуры установки текущего действия графа.
-    
-    auto next_wp = _flight_plan.at(0);    
-    aircraft_state_graph::graph_t::edge_descriptor fake;
-    try {
-        aircraft_state_graph::graph_t::edge_descriptor action 
-            = graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
-            
-        if ( action == fake ) {
-            Logger::log("ERROR: __start_fp0_action got fake edge descriptor");
-            return;
-        }
-        graph->set_active_action( action );
-
-    } catch ( const std::range_error & re ) {
-        Logger::log(
-            "ERROR: __start_fp0_action, invalid descriptor for action type " 
-            + to_string( next_wp.action_to_achieve ) 
-            + ", message=" + string( re.what() )
-        );
-    }
-
-}
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -702,9 +666,7 @@ void BimboAircraft::test__place_on_hp() {
     };
     
     auto on_hp = graph->get_node_for( ACF_STATE_HP );
-    graph->set_active_state( on_hp );
-    
-    __start_fp0_action();
+    graph->set_active_state( on_hp );    
     
 }
 #endif
@@ -912,7 +874,7 @@ void BimboAircraft::test__fly() {
 // *                                         Тестирование руления на стоянку                                           *
 // *                                                                                                                   *
 // *********************************************************************************************************************
-
+/*
 void BimboAircraft::test__taxing() {
 
     auto usss = Airport::get_by_icao("USSS");
@@ -942,3 +904,4 @@ void BimboAircraft::test__taxing() {
     graph->set_active_state( ACF_STATE_LANDED );
 
 }
+*/

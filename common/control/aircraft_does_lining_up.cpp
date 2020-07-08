@@ -63,7 +63,7 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
     // Подруливание на точку осуществляем - сразу же, в "прямолинейной" фазе.
     // _head_steering( elapsed_since_last_call, 25.0 );
 
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     double distance = _calculate_distance_to_wp( wp );      
     
     if (( distance < 75.0 ) && ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED )) {
@@ -85,14 +85,15 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
 
 void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_call ) {
     
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );
     auto heading = _get_acf_rotation().heading;
     auto delta = bearing - heading; 
     
-    Logger::log(
-        "Bearing=" + to_string(bearing) + ", heading=" + to_string( heading ) + ", delta=" + to_string( delta )
-    );
+//     Logger::log(
+//         "Bearing=" + to_string(bearing) + ", heading=" + to_string( heading ) + ", delta=" + to_string( delta )
+//     );
+    
     if ( ( abs(delta) < 3.0 ) && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
         // Тормозим.        
         _taxi_breaking( 0.0, 3.0 );

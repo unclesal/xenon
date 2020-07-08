@@ -114,7 +114,7 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     // Возможно, фаза взлета закончена и надо переходить на следующее действие.
     // Это определяется по расстоянию до дальней конечной точки ВПП.
     
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     auto distance = xenon::distance2d( _get_acf_location(), wp.location );
     if ( distance < 100.0 ) {
         Logger::log("Take off done");

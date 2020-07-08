@@ -11,27 +11,7 @@
 #include "abstract_aircraft.h"
 #include "aircraft_state_graph_definition.h"
 #include "aircraft_abstract_state.h"
-
-#include "aircraft_state_airborned.h"
-#include "aircraft_state_before_parking.h"
-#include "aircraft_state_landed.h"
-#include "aircraft_state_on_final.h"
-#include "aircraft_state_on_hp.h"
-#include "aircraft_state_parking.h"
-#include "aircraft_state_ready_for_take_off.h"
-#include "aircraft_state_ready_for_taxing.h"
-#include "aircraft_state_runway_leaved.h"
-
-#include "aircraft_does_flying.h"
-#include "aircraft_does_landing.h"
-#include "aircraft_does_lining_up.h"
-#include "aircraft_does_nothing.h"
-#include "aircraft_does_parking.h"
-#include "aircraft_does_push_back.h"
-#include "aircraft_does_runway_leaving.h"
-#include "aircraft_does_slow_taxing.h"
-#include "aircraft_does_take_off.h"
-#include "aircraft_does_taxing.h"
+#include "aircraft_abstract_action.h"
 
 namespace xenon {
 

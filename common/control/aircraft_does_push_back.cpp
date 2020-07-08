@@ -54,7 +54,7 @@ void AircraftDoesPushBack::_internal_start() {
 
 void AircraftDoesPushBack::__internal_step__phase_straight() {
     
-    waypoint_t wp = _get_front_wp();
+    waypoint_t wp = _ptr_acf->front_waypoint();
     if ( _taxi_turn_started(wp) ) __current_phase = PHASE_TURN;
     
 
@@ -102,7 +102,7 @@ void AircraftDoesPushBack::__internal_step__phase_straight() {
 // *********************************************************************************************************************
 
 void AircraftDoesPushBack::__internal_step__phase_turn() {
-    waypoint_t wp = _get_front_wp();
+    waypoint_t wp = _ptr_acf->front_waypoint();
     double delta = _get_delta_to_target_heading( wp );
     normalize_degrees( delta );
     // Порог разницы в курсах, ниже которого мы считаем, что выровнялись.
@@ -111,7 +111,6 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
     if ( (delta >= 360 - threshold ) || ( delta <= threshold ) ) {
         
         // Останавливаемся.
-        Logger::log("go to phase stop");
         _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;
         _ptr_acf->vcl_condition.heading_acceleration = 0.0;        
         _taxi_breaking( 0.0, 5.0 );
@@ -130,7 +129,9 @@ void AircraftDoesPushBack::__internal_step__phase_stop() {
     
     if ( abs( _ptr_acf->vcl_condition.speed ) < 0.2 ) {
         // Завершено полностью.
-        _front_wp_reached();        
+        Logger::log("does_push_back finished");
+        _front_wp_reached();
+        Logger::log("front_wp_reached was called, call finish...");
         _finish();        
     }
 

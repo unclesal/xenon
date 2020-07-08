@@ -30,7 +30,7 @@ AircraftDoesFlying::AircraftDoesFlying(
 
 void AircraftDoesFlying::_internal_start() {
     
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     if ( wp.type == WAYPOINT_UNKNOWN ) {
         Logger::log("AircraftDoesFlying::_internal_start(), WP0 have UNKNOWN type.");
         return;
@@ -126,7 +126,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         Logger::log("FLY: flaps to TO");
     };
     
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     _head_bearing( wp );
     
     // Logger::log("After bearing phase=" + to_string( __phase ) );    
@@ -140,7 +140,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         _front_wp_reached();
         
         // Следующая точка полетного плана для определения, что делать дальше.
-        wp = _get_front_wp();
+        wp = _ptr_acf->front_waypoint();
         Logger::log(
             "Does FLYING, next wp: " + wp.name + ", alt=" + to_string( wp.location.altitude ) 
             + ", type=" + to_string( wp.type ) + ", action=" + to_string( wp.action_to_achieve )

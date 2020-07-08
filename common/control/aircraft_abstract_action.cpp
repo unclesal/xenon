@@ -43,7 +43,7 @@ void AircraftAbstractAction::__start() {
         __total_duration = 0.0;
         __total_distance = 0.0;
         
-        auto wp = _get_front_wp();
+        auto wp = _ptr_acf->front_waypoint();
         auto distance_to_front = (int) _calculate_distance_to_wp( wp );
                 
         for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
@@ -243,7 +243,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
         __control_of_angles( elapsed_since_last_call );
         
         // До перемещения - запоминаем предыдущее положение.
-        auto front_wp = _get_front_wp();
+        auto front_wp = _ptr_acf->front_waypoint();
         
 //         for ( int i = PREVIOUS_ARRAY_SIZE - 2; i>=0; -- i ) {
 //             __previous_distance_to_front_wp[i + 1] = __previous_distance_to_front_wp[i];
@@ -275,7 +275,7 @@ void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, doub
         return;
     };
     
-    auto wp = _get_front_wp();
+    auto wp = _ptr_acf->front_waypoint();
     auto bearing = xenon::bearing( _get_acf_location(), wp.location );    
     auto delta = _get_delta_bearing( wp );
 
