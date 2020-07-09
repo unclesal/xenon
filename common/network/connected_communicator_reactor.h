@@ -9,6 +9,8 @@
 #include <vector>
 #include <mutex>
 
+#include "flight_plan.h"
+
 namespace xenon {
 
     class ConnectedCommunicatorReactor {
@@ -20,6 +22,8 @@ namespace xenon {
                 vehicle_condition_t vcl_condition;
                 
                 aircraft_condition_t * acf_condition = nullptr;
+                
+                FlightPlan * flight_plan = nullptr;
                 
                 const std::string & agent_uuid() {
                     return vcl_condition.agent_uuid;
@@ -41,10 +45,7 @@ namespace xenon {
                         vcl_condition.current_action == ACF_DOES_PUSH_BACK
                         || vcl_condition.current_action == ACF_DOES_SLOW_TAXING
                         || vcl_condition.current_action == ACF_DOES_NORMAL_TAXING
-                        || (
-                                vcl_condition.current_state != ACF_STATE_PARKING
-                                && vcl_condition.current_state != ACF_STATE_UNKNOWN
-                        )
+                        || vcl_condition.current_state == ACF_STATE_READY_FOR_TAXING
                     );
                 };
             };

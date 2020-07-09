@@ -6,14 +6,14 @@
 #pragma once
 
 #include "aircraft_state_graph_definition.h"
-#include "abstract_aircrafter.h"
 #include "logger.h"
+#include "abstract_aircraft.h"
 
 #define PREVIOUS_ARRAY_SIZE 50
 
 namespace xenon {
     
-    class AircraftAbstractAction : public AbstractAircrafter {
+    class AircraftAbstractAction {
         
         friend class AircraftStateGraph;
         
@@ -39,6 +39,8 @@ namespace xenon {
         
         protected:
             
+            AbstractAircraft * _ptr_acf;
+            
             aircraft_state_graph::graph_t::edge_descriptor _edge_d;                        
             
             virtual void _internal_step( const float & elapsed_since_last_call ) = 0;
@@ -46,8 +48,9 @@ namespace xenon {
                         
             inline void _finish() {
                 __finished = true;
-                _action_has_been_finished( this );
+                _ptr_acf->action_finished( this );                
             };
+            
                         
             /**
              * @short Нулевая точка плана - удаляется, а не приближается, как оно должно быть в "штатном" режиме.

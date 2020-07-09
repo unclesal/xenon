@@ -53,6 +53,11 @@ AbstractAgent::~AbstractAgent() {
             delete( agent.acf_condition );
             agent.acf_condition = nullptr;
         };
+        
+        if ( agent.flight_plan ) {
+            delete ( agent.flight_plan );
+            agent.flight_plan = nullptr;
+        };
 
     }
 }

@@ -61,7 +61,7 @@ namespace xenon {
                 const std::string & livery
             );
 
-            ~BimboAircraft() override = default;
+            ~BimboAircraft() override = default;                        
 
 #ifdef INSIDE_XPLANE
             // Мы находимся внутри плагина X-Plane.
@@ -200,20 +200,7 @@ namespace xenon {
             void prepare_for_take_off( const deque<waypoint_t> & taxi_way );
             
             void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) override;
-            
-            /**
-             * @param cruise_altitude высота в футах. Она не сильно необходима в подготовке полетного
-             * плана, но просто чтобы не забывать, что ее нужно устанавливать на полетный план.
-             */
-            void prepare_flight_plan(
-                const std::string & flight_number,
-                const std::string & departure,
-                const std::string & destination,
-                const vector <std::string> & alternate,
-                const float & cruise_altitude,
-                deque<waypoint_t> & fp
-            );
-            
+                        
             void test__fly();
             // void test__taxing();
 
@@ -232,14 +219,12 @@ namespace xenon {
             // Граф состояний самолета.
             AircraftStateGraph * graph;
 
-        protected:
-
-#ifdef INSIDE_AGENT            
             /**
              * @short Текущее действие было завершено.
              */
-            void _action_finished( void * action ) override;
-#endif
+            void action_finished( void * action ) override;
+
+        protected:
             
         private:
                         

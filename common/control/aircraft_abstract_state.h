@@ -5,12 +5,12 @@
 // *********************************************************************************************************************
 #pragma once
 
-#include "abstract_aircrafter.h"
 #include "aircraft_state_graph_definition.h"
+#include "abstract_aircraft.h"
 
 namespace xenon {
     
-    class AircraftAbstractState : public AbstractAircrafter {
+    class AircraftAbstractState {
         
         friend class AircraftStateGraph;
         
@@ -25,6 +25,7 @@ namespace xenon {
             
         protected:
             
+            AbstractAircraft * _ptr_acf;
             aircraft_state_graph::graph_t::vertex_descriptor _node_d;
             
             virtual void _internal_activate() = 0;

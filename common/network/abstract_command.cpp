@@ -129,7 +129,8 @@ void AbstractCommand::execute_on_agent( ConnectedCommunicatorReactor * current_a
     if ( ! exists ) {
         ConnectedCommunicatorReactor::another_agent_t a;
         a.vcl_condition = _vcl_condition;
-        a.acf_condition = nullptr;        
+        a.acf_condition = nullptr;   
+        a.flight_plan = nullptr;
         current_agent->agents.push_back( a ); 
     }
 

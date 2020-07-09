@@ -15,8 +15,8 @@ using namespace xenon;
 
 AircraftAbstractState::AircraftAbstractState(
     AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::vertex_descriptor & nd 
-) : AbstractAircrafter( ptr_acf ) 
-{
+) {
+    _ptr_acf = ptr_acf;
     _node_d = nd;
 }
 

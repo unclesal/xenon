@@ -16,9 +16,8 @@ using namespace xenon;
 
 AircraftAbstractAction::AircraftAbstractAction (
     AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
-): AbstractAircrafter( ptr_acf ) 
-
-{
+) {
+    _ptr_acf = ptr_acf;
     _edge_d = edge_d;
         
     __total_duration = 0.0;
@@ -43,8 +42,9 @@ void AircraftAbstractAction::__start() {
         __total_duration = 0.0;
         __total_distance = 0.0;
         
-        auto wp = _ptr_acf->front_waypoint();
-        auto distance_to_front = (int) _calculate_distance_to_wp( wp );
+        auto wp = _ptr_acf->flight_plan.get(0);
+        auto location = _ptr_acf->get_location();
+        auto distance_to_front = (int) xenon::distance2d( location, wp.location );
                 
         for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
             
@@ -243,7 +243,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
         __control_of_angles( elapsed_since_last_call );
         
         // До перемещения - запоминаем предыдущее положение.
-        auto front_wp = _ptr_acf->front_waypoint();
+        auto front_wp = _ptr_acf->flight_plan.get(0);
         
 //         for ( int i = PREVIOUS_ARRAY_SIZE - 2; i>=0; -- i ) {
 //             __previous_distance_to_front_wp[i + 1] = __previous_distance_to_front_wp[i];
@@ -270,13 +270,13 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
 
 void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, double kp ) {
 
-    if ( _is_flight_plan_empty() ) {
+    if ( _ptr_acf->flight_plan.is_empty() ) {
         Logger::log("ERROR: AircraftAbstractAction::_head_steering, but FP is empty");
         return;
     };
     
-    auto wp = _ptr_acf->front_waypoint();
-    auto bearing = xenon::bearing( _get_acf_location(), wp.location );    
+    auto wp = _ptr_acf->flight_plan.get(0);
+    auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );    
     auto delta = _get_delta_bearing( wp );
 
     _ptr_acf->vcl_condition.target_heading = bearing;
@@ -292,14 +292,14 @@ void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, doub
 
 void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
     
-    auto rotation = _get_acf_rotation();
+    auto rotation = _ptr_acf->get_rotation();
     
     if ( wp.type == WAYPOINT_UNKNOWN ) {
         Logger::log("ERROR: AircraftDoesFlying::__head_bearing(), type of front FP waypoint is UNKNOWN...");
         return;
     };
     
-    auto heading = _get_acf_rotation().heading;
+    auto heading = rotation.heading;
     
 //     auto location = _get_acf_location();    
 //     auto bearing = xenon::bearing( location, wp.location );
@@ -364,8 +364,8 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
 
 void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude, const float & time_to_achieve ) {
     
-    auto location = _get_acf_location();
-    auto acf_rotation = _get_acf_rotation();
+    auto location = _ptr_acf->get_location();
+    auto acf_rotation = _ptr_acf->get_rotation();
     auto current_altitude = location.altitude;
 
     auto da = target_altitude - current_altitude;        
@@ -445,8 +445,8 @@ void AircraftAbstractAction::_speed_adjustment( const float & target_speed, cons
 
 double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
     
-    auto bearing = xenon::bearing( _get_acf_location(), wp.location );    
-    auto heading = _get_acf_rotation().heading;
+    auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );    
+    auto heading = _ptr_acf->get_rotation().heading;
     auto delta = bearing - heading;
     if ( abs(delta) >= 180.0 ) {
 
@@ -521,7 +521,7 @@ void AircraftAbstractAction::_taxi_breaking( const float & to_speed, const float
 bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination ) {
     
     // Точка, где мы сейчас находимся.
-    auto me = _get_acf_location();
+    auto me = _ptr_acf->get_location();
     
     // Точка, сдвинутая метров на сколько-нибудь от destination для описания сегмента.
     auto wp1 = xenon::shift( destination.location, 25.0, destination.outgoing_heading );
@@ -548,7 +548,7 @@ bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination 
     // едет или назад. И похоже что это - длина самолета.
 
     float threshold = 2.5;
-    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _get_acf_parameters().length * 2.0 / 3.5;
+    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _ptr_acf->parameters().length * 2.0 / 3.5;
     
     if ( dist_shifted_me_to_segment <= threshold ) {
         // Длина дуги, которую нам надо пройти.

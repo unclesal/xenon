@@ -29,6 +29,9 @@ AircraftDoesPushBack::AircraftDoesPushBack(
 
 void AircraftDoesPushBack::_internal_start() {
     
+    // Раз пошел push back - значит, мы покинули стоянку.
+    _ptr_acf->acf_condition.parking = "";
+    
     _ptr_acf->vcl_condition.is_clamped_to_ground = true;
     
     _ptr_acf->set_nav_lites( true );
@@ -54,7 +57,7 @@ void AircraftDoesPushBack::_internal_start() {
 
 void AircraftDoesPushBack::__internal_step__phase_straight() {
     
-    waypoint_t wp = _ptr_acf->front_waypoint();
+    waypoint_t wp = _ptr_acf->flight_plan.get(0);
     if ( _taxi_turn_started(wp) ) __current_phase = PHASE_TURN;
     
 
@@ -102,7 +105,7 @@ void AircraftDoesPushBack::__internal_step__phase_straight() {
 // *********************************************************************************************************************
 
 void AircraftDoesPushBack::__internal_step__phase_turn() {
-    waypoint_t wp = _ptr_acf->front_waypoint();
+    waypoint_t wp = _ptr_acf->flight_plan.get(0);
     double delta = _get_delta_to_target_heading( wp );
     normalize_degrees( delta );
     // Порог разницы в курсах, ниже которого мы считаем, что выровнялись.
@@ -130,7 +133,7 @@ void AircraftDoesPushBack::__internal_step__phase_stop() {
     if ( abs( _ptr_acf->vcl_condition.speed ) < 0.2 ) {
         // Завершено полностью.
         Logger::log("does_push_back finished");
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
         Logger::log("front_wp_reached was called, call finish...");
         _finish();        
     }

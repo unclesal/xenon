@@ -33,7 +33,7 @@ xenon::AircraftDoesLanding::AircraftDoesLanding(
 void AircraftDoesLanding::_internal_start() {
     
     __phase = PHASE_UNKNOWN;
-    auto wp0 = _ptr_acf->front_waypoint();
+    auto wp0 = _ptr_acf->flight_plan.get(0);
     if ( ( wp0.type != WAYPOINT_RUNWAY ) || ( wp0.action_to_achieve != ACF_DOES_LANDING ) ) {
         Logger::log(
             "ERROR: incorrect WP for landing, type=" + to_string( wp0.type ) 
@@ -68,7 +68,7 @@ void AircraftDoesLanding::_internal_start() {
     _ptr_acf->hit_to_ground( wp0.location );    
     // Плюс сколько-нибудь метров над ней, чтобы начать выравнивание и выдерживание.
     wp0.location.altitude += 10.0;
-    _set_front_wp( wp0 );
+    _ptr_acf->flight_plan.set( 0, wp0 );
     
 #endif    
 }
@@ -82,8 +82,8 @@ void AircraftDoesLanding::_internal_start() {
 void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters ) {
     
     _head_bearing( wp );
-    auto acf_location = _get_acf_location();
-    auto acf_rotation = _get_acf_rotation();
+    auto acf_location = _ptr_acf->get_location();
+    auto acf_rotation = _ptr_acf->get_rotation();
     
     auto distance = xenon::distance2d( acf_location, wp.location );
     if ( _ptr_acf->vcl_condition.speed != 0.0 ) {
@@ -148,7 +148,8 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
 
         Logger::log( "jump to ALIGNMENT" );
         
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
+        
         __phase = PHASE_ALIGNMENT;
         
         // Убираем имеющиеся ускорения. Фаза выравнивания будет подруливать сама.
@@ -168,9 +169,9 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
                 
         // Целевой угол, на который мы должны выйти - это достаточно большой 
         // угол, но такой, при котором хвост еще не касается земли.        
-        _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().take_off_angle;
+        _ptr_acf->acf_condition.target_pitch = _ptr_acf->parameters().take_off_angle;
         
-        auto acf_rotation = _get_acf_rotation();        
+        auto acf_rotation = _ptr_acf->get_rotation();        
         if ( acf_rotation.pitch < _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = 2.0f;
          else _ptr_acf->acf_condition.pitch_acceleration = 2.0f;
         
@@ -195,7 +196,7 @@ void AircraftDoesLanding::__step__alignment(
 
 #ifdef INSIDE_XPLANE
     
-    auto acf_position = _get_acf_position();
+    auto acf_position = _ptr_acf->get_position();
     
     // Где земля?
     auto ground_pos = acf_position;
@@ -208,7 +209,7 @@ void AircraftDoesLanding::__step__alignment(
     // Выстота (расстояние до земли)
     auto height = acf_position.y - ground_pos.y;
 #else
-    auto acf_location = _get_acf_location();
+    auto acf_location = _ptr_acf->get_location();
     // Выстота (расстояние до земли)
     auto height = acf_location.altitude - wp.location.altitude;
 #endif
@@ -221,11 +222,11 @@ void AircraftDoesLanding::__step__alignment(
         // Переходим в фазу торможения.
         __phase = PHASE_BREAKING;
         
-        auto rotation = _get_acf_rotation();
+        auto rotation = _ptr_acf->get_rotation();
         
         // При переходе в торможение сразу устанавливаем 
         // нужное нам положение тангажа и опускаем нос.
-        _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().taxing_pitch;
+        _ptr_acf->acf_condition.target_pitch = _ptr_acf->parameters().taxing_pitch;
         if ( rotation.pitch > _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = -0.9f;
         else _ptr_acf->acf_condition.pitch_acceleration = 0.9f;
         
@@ -266,9 +267,10 @@ void AircraftDoesLanding::__step__breaking() {
     
     if ( _ptr_acf->vcl_condition.speed < TAXI_NORMAL_SPEED + 0.5 ) {
         Logger::log("DONE");
+        
         // Точка, на которую "целились", т.е. конечная 
         // точка ВПП в плане полета - нам больше не нужна.
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
         
         // Убирание реверса.
         _ptr_acf->set_reverse_on( false );
@@ -291,8 +293,8 @@ void AircraftDoesLanding::__step__breaking() {
 
 void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call ) {
     
-    auto wp = _ptr_acf->front_waypoint();
-    auto acf_parameters = _get_acf_parameters();    
+    auto wp = _ptr_acf->flight_plan.get(0);
+    auto acf_parameters = _ptr_acf->parameters();
     switch ( __phase ) {
         case PHASE_DESCENDING: __step__descending( wp, acf_parameters ); break;
         case PHASE_ALIGNMENT: __step__alignment( wp, acf_parameters, elapsed_since_last_call ); break;

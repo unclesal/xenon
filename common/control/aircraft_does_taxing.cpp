@@ -34,7 +34,7 @@ void AircraftDoesTaxing::_internal_start() {
     _ptr_acf->set_beacon_lites( true );
     
     __from_runway_location = location_t();
-    auto front_wp = _ptr_acf->front_waypoint();
+    auto front_wp = _ptr_acf->flight_plan.get(0);
     if (
         ( _ptr_acf->vcl_condition.current_state == ACF_STATE_LANDED )
         && ( front_wp.type == WAYPOINT_RUNWAY )
@@ -53,7 +53,7 @@ void AircraftDoesTaxing::_internal_start() {
 void AircraftDoesTaxing::__choose_speed() {
     
     waypoint_t turned_wp;
-    auto distance_to_turn = _calculate_distance_to_turn( turned_wp );
+    auto distance_to_turn = _ptr_acf->flight_plan.distance_to_turn( _ptr_acf->get_location(), turned_wp );
     // XPlane::log("Distance to turn=" + to_string( distance_to_turn ));
         
     if ( distance_to_turn >= 100.0 ) {                
@@ -109,7 +109,8 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
     // не первая точка из полетного плана, т.к. между RWY и нами
     // могут быть еще точки руления, которые будут проигнорированы.
 
-    auto distance_to_rwy = _calculate_distance_to_runway();
+    auto here = _ptr_acf->get_location();
+    auto distance_to_rwy = _ptr_acf->flight_plan.distance_to_runway( here );
     if (( distance_to_rwy > 0.0 ) && ( distance_to_rwy <= 200.0 ) ) {
 
         // подходим к HP.
@@ -153,8 +154,8 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
             // Действие было полностью выполнено, выходим.
 
             while ( front_wp.type == WAYPOINT_TAXING ) {
-                _front_wp_reached();
-                front_wp = _ptr_acf->front_waypoint();
+                _ptr_acf->flight_plan.pop_front();
+                front_wp = _ptr_acf->flight_plan.get(0);
             }
             _finish();
             return;
@@ -178,7 +179,7 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
 
 void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call ) {
     
-    auto front_wp = _ptr_acf->front_waypoint();
+    auto front_wp = _ptr_acf->flight_plan.get(0);
 
 //    Logger::log(
 //        "Front=" + front_wp.name
@@ -192,7 +193,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
     else
         __choose_speed();
     
-    double distance = _calculate_distance_to_wp( front_wp );
+    double distance = xenon::distance2d( _ptr_acf->get_location(), front_wp.location );
     
     if ( 
         ( _ptr_acf->vcl_condition.current_state == ACF_STATE_LANDED ) // то есть мы только что приземлились
@@ -201,7 +202,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         && ( front_wp.type != WAYPOINT_RUNWAY ) // то есть мы и правда слезли уже со взлетки
     ) {
         // Если мы сели, то пробуем уйти в состояние "освободил ВПП".
-        auto disposal = xenon::distance2d( _get_acf_location(), __from_runway_location );
+        auto disposal = xenon::distance2d( _ptr_acf->get_location(), __from_runway_location );
         if ( disposal >= 50 ) {
             _finish();
             return;
@@ -211,7 +212,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
     if ( distance < 32.0 ) {
         
         auto reached_wp_type = front_wp.type;
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
         
         // Если точка, которая только что была достигнута, это 
         // уход с ВПП - то переходим в состояние ухода с ВПП, т.к. 
@@ -227,7 +228,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         
         // Следующая точка полетного плана.
         
-        front_wp = _ptr_acf->front_waypoint();
+        front_wp = _ptr_acf->flight_plan.get(0);
         if ( front_wp.type == WAYPOINT_PARKING ) {
             
             // Если следующая точка уже парковка, то просто выходим.

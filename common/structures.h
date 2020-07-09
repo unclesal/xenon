@@ -303,6 +303,7 @@ namespace xenon {
         std::string icao_type;
         std::string icao_airline;
         std::string livery;
+        std::string parking;
         
         // Вертикальная скорость, метров в секунду.
         float vertical_speed = 0.0;

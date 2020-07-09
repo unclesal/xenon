@@ -8,6 +8,7 @@
 #include "cmd_aircraft_condition.h"
 #include "cmd_query_around.h"
 #include "cmd_vehicle_condition.h"
+#include "cmd_flight_plan.h"
 
 using namespace xenon;
 using namespace std;
@@ -22,6 +23,7 @@ CommandParser::CommandParser() {
     __register< CmdVehicleCondition >( "CmdVehicleCondition" );
     __register< CmdQueryAround >( "CmdQueryAround" );
     __register< CmdAircraftCondition >( "CmdAircraftCondition" );    
+    __register< CmdFlightPlan > ( "CmdFlightPlan" );
 }
 
 // *********************************************************************************************************************

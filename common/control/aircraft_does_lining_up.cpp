@@ -48,7 +48,7 @@ void AircraftDoesLiningUp::_internal_start() {
     _ptr_acf->set_nav_lites( true );
     
     // Типа "взлетное положение"
-    _ptr_acf->set_flaps_position( _get_acf_parameters().flaps_take_off_position );
+    _ptr_acf->set_flaps_position( _ptr_acf->parameters().flaps_take_off_position );
     
 }
 
@@ -63,8 +63,8 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
     // Подруливание на точку осуществляем - сразу же, в "прямолинейной" фазе.
     // _head_steering( elapsed_since_last_call, 25.0 );
 
-    auto wp = _ptr_acf->front_waypoint();
-    double distance = _calculate_distance_to_wp( wp );      
+    auto wp = _ptr_acf->flight_plan.get(0);
+    double distance = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     
     if (( distance < 75.0 ) && ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED )) {
         _taxi_breaking( TAXI_SLOW_SPEED, 3.0 );        
@@ -73,7 +73,7 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
     if ( _taxi_turn_started( wp ) ) {        
         __phase = PHASE_ROTATION;
         // Убираем ближнюю точку ВПП, мы ее достигли.
-        _front_wp_reached();                
+        _ptr_acf->flight_plan.pop_front();
     }
 }
 
@@ -85,9 +85,9 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
 
 void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_call ) {
     
-    auto wp = _ptr_acf->front_waypoint();
-    auto bearing = xenon::bearing( _get_acf_location(), wp.location );
-    auto heading = _get_acf_rotation().heading;
+    auto wp = _ptr_acf->flight_plan.get(0);
+    auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );
+    auto heading = _ptr_acf->get_rotation().heading;
     auto delta = bearing - heading; 
     
 //     Logger::log(

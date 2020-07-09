@@ -30,7 +30,7 @@ AircraftDoesFlying::AircraftDoesFlying(
 
 void AircraftDoesFlying::_internal_start() {
     
-    auto wp = _ptr_acf->front_waypoint();
+    auto wp = _ptr_acf->flight_plan.get(0);
     if ( wp.type == WAYPOINT_UNKNOWN ) {
         Logger::log("AircraftDoesFlying::_internal_start(), WP0 have UNKNOWN type.");
         return;
@@ -106,7 +106,7 @@ void AircraftDoesFlying::__control_of_speed (
 void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call ) {
     
     // Положение закрылков в полете.
-    auto acf_params = _get_acf_parameters();
+    auto acf_params = _ptr_acf->parameters();
     
     if (
         ( _ptr_acf->vcl_condition.speed >= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed ))
@@ -126,21 +126,21 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         Logger::log("FLY: flaps to TO");
     };
     
-    auto wp = _ptr_acf->front_waypoint();
+    auto wp = _ptr_acf->flight_plan.get(0);
     _head_bearing( wp );
     
     // Logger::log("After bearing phase=" + to_string( __phase ) );    
     
-    auto distance = xenon::distance2d( _get_acf_location(), wp.location );
+    auto distance = xenon::distance2d( _ptr_acf->get_location(), wp.location );
         
     // Logger::log( "after distance phase=" + to_string( __phase ) + ", distance=" + to_string(distance) );
     
     if ( distance <= 1000.0 ) {
         Logger::log("Does FLYING, " + wp.name + " reached, distance=" + to_string( distance ) );
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
         
         // Следующая точка полетного плана для определения, что делать дальше.
-        wp = _ptr_acf->front_waypoint();
+        wp = _ptr_acf->flight_plan.get(0);
         Logger::log(
             "Does FLYING, next wp: " + wp.name + ", alt=" + to_string( wp.location.altitude ) 
             + ", type=" + to_string( wp.type ) + ", action=" + to_string( wp.action_to_achieve )

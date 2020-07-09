@@ -28,6 +28,7 @@
 
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
+#include "cmd_flight_plan.h"
 
 namespace xenon {
 
@@ -126,6 +127,7 @@ namespace xenon {
             void __ai_controlled_aircraft_was_loaded( int index );
             
             void __command_received( CmdAircraftCondition * cmd );
+            void __command_received( CmdFlightPlan * cmd );
             BimboAircraft * __add_one_aircraft( CmdAircraftCondition * cmd );
 
     }; // class XPlanePlugin

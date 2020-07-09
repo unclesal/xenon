@@ -50,7 +50,7 @@ void AircraftDoesParking::_internal_start() {
 void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elapsed_since_last_call ) {
     
     auto loc1 = xenon::shift( wp.location, 25, wp.incomming_heading );
-    auto dis = xenon::distance_to_segment( _get_acf_location(), wp.location, loc1 );
+    auto dis = xenon::distance_to_segment( _ptr_acf->get_location(), wp.location, loc1 );
     auto delta = _get_delta_bearing( wp );
     
     if ( dis <= 30.0 ) {
@@ -81,14 +81,15 @@ void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_s
 
 void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elapsed_since_last_call ) {
     _head_steering( elapsed_since_last_call, 10.0);
-    auto dis = _calculate_distance_to_wp( wp );
+    
+    auto dis = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     
     auto speed = _ptr_acf->vcl_condition.speed;
     if ( speed == 0.0 ) {
         // На ноль делить нельзя, поэтому фазы торможения и не будет вообще.
         _ptr_acf->vcl_condition.acceleration = 0.0;
         _ptr_acf->vcl_condition.speed = 0.0;
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
         _finish();
         return;
     };
@@ -110,7 +111,7 @@ void AircraftDoesParking::__breaking() {
     if ( _ptr_acf->vcl_condition.speed <= 0.1 ) {
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.acceleration = 0.0;
-        _front_wp_reached();
+        _ptr_acf->flight_plan.pop_front();
         _finish();
     }
 }
@@ -122,7 +123,7 @@ void AircraftDoesParking::__breaking() {
 // *********************************************************************************************************************
 
 void AircraftDoesParking::_internal_step( const float & elapsed_since_last_call ) {
-    auto wp = _ptr_acf->front_waypoint();
+    auto wp = _ptr_acf->flight_plan.get(0);
     switch ( __phase ) {
         case PHASE_BECOMING: __becoming( wp, elapsed_since_last_call ); break;
         case PHASE_TURN: __turn( wp, elapsed_since_last_call ); break;

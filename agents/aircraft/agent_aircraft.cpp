@@ -9,6 +9,7 @@
 #include "tested_agents.h"
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
+#include "cmd_flight_plan.h"
 
 #include "push_back_allowed.h"
 #include "taxing_distance.h"
@@ -367,6 +368,10 @@ void AgentAircraft::on_connect() {
     // Даем свое состояние коммуникатору.
     scream_about_me();    
     
+    // Полетный план.
+    CmdFlightPlan * cmd_flight_plan = new CmdFlightPlan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan );
+    _communicator->request( cmd_flight_plan );
+    
     // Спрашиваем наше окружение - тех агентов, которых мы можем "слышать".
     CmdQueryAround * cmd_around = new CmdQueryAround( __ptr_acf->vcl_condition );
     _communicator->request( cmd_around );    
@@ -449,7 +454,7 @@ void AgentAircraft::__decision() {
         // Нулевой элемент - это следующее действие.
         auto next_action = result[0].action;
         // Фрейм - легко - мог ни разу не обновиться. В этом случае он выдаст ACF_DOES_NOTHING.
-        if ( next_action == ACF_DOES_NOTHING ) next_action = __ptr_acf->front_waypoint().action_to_achieve;
+        if ( next_action == ACF_DOES_NOTHING ) next_action = __ptr_acf->flight_plan.get(0).action_to_achieve;
         
         // Возможно, именно оно сейчас и выполняется, тогда ничего не делаем.
         if ( __ptr_acf->graph->current_action_is( next_action )) {
@@ -478,7 +483,7 @@ void AgentAircraft::__decision() {
     } else {
         // Logger::log("No frames for " + node.name );
         // Если фреймов нет, то пока что запускаем действие, предусмотренное фронт-точкой полетного плана.
-        auto action = __ptr_acf->front_waypoint().action_to_achieve;
+        auto action = __ptr_acf->flight_plan.get(0).action_to_achieve;
         if ( ! __ptr_acf->graph->current_action_is( action ) ) __start_fp0_action();
     }
     
@@ -492,7 +497,7 @@ void AgentAircraft::__decision() {
 
 void AgentAircraft::__start_fp0_action() {
         
-    auto next_wp = __ptr_acf->front_waypoint();
+    auto next_wp = __ptr_acf->flight_plan.get(0);
     if ( next_wp.action_to_achieve == ACF_DOES_NOTHING ) {
         Logger::log("AgentAircraft::__start_fp0_action: wp " + next_wp.name + ", nothing to do.");
         return;

@@ -209,10 +209,16 @@ void XPlanePlugin::on_received( void * abstract_command ) {
     if ( ! abstract_command ) return;
     AbstractCommand * cmd = ( AbstractCommand * ) abstract_command;
     
-    // Порядок - имеет значение!!!
+    // Порядок - имеет значение!!! Наследование потому что.
     CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * >( cmd );
     if ( cmd_aircraft_condition ) {
         __command_received( cmd_aircraft_condition );
+        return;
+    };
+    
+    CmdFlightPlan * cmd_flight_plan = dynamic_cast< CmdFlightPlan * > ( cmd );
+    if ( cmd_flight_plan ) {
+        __command_received( cmd_flight_plan );
         return;
     };
     
@@ -530,6 +536,28 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     
 }
 
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                    Получен полетный план внешнего самолета                                        *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::__command_received( CmdFlightPlan * cmd ) {
+        
+    __agents_mutex.lock();
+    bool found = false;
+    for ( auto bimbo: __bimbos ) {
+        if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
+            found = true;
+            bimbo->flight_plan = cmd->flight_plan();
+            break;
+        };
+    };
+    __agents_mutex.unlock();
+    if ( ! found ) {
+        Logger::log("CmdFlightPlan received, agent " + cmd->agent_uuid() + " not found in collection");
+    };
+}
 
 // *********************************************************************************************************************
 // *                                                                                                                   *

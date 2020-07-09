@@ -49,6 +49,7 @@ set(SOURCES
     ${COMMON}/bimbo_aircraft.cpp
     ${COMMON}/airport_network.cpp
     ${COMMON}/airport.cpp
+    ${COMMON}/flight_plan.cpp
     
     ${FRAMES}/abstract_frame.cpp
     ${FRAMES}/entity_frame.cpp
@@ -63,8 +64,8 @@ set(SOURCES
     ${NETCMD}/cmd_vehicle_condition.cpp
     ${NETCMD}/cmd_query_around.cpp
     ${NETCMD}/cmd_aircraft_condition.cpp
+    ${NETCMD}/cmd_flight_plan.cpp
 
-    ${CONTROL}/abstract_aircrafter.cpp
     ${CONTROL}/aircraft_abstract_action.cpp
     ${CONTROL}/aircraft_abstract_state.cpp
     ${CONTROL}/aircraft_does_flying.cpp

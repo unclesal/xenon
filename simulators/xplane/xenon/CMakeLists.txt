@@ -58,12 +58,12 @@ add_library(xenon MODULE
         ${COMMON}/abstract_aircraft.cpp
         ${COMMON}/abstract_vehicle.cpp
         ${COMMON}/bimbo_aircraft.cpp
-        ${COMMON}/airport.cpp
-        ${COMMON}/airport_network.cpp
+        ${COMMON}/flight_plan.cpp
                 
         ${NETCMD}/cmd_aircraft_condition.cpp
         ${NETCMD}/cmd_query_around.cpp
         ${NETCMD}/cmd_vehicle_condition.cpp
+        ${NETCMD}/cmd_flight_plan.cpp
         
         ${NETWORK}/abstract_command.cpp
         ${NETWORK}/Ambient.cpp
@@ -73,7 +73,6 @@ add_library(xenon MODULE
         ${NETWORK}/CommandAutopilotState.cpp
         
         # Управление. 
-        ${CONTROL}/abstract_aircrafter.cpp
         ${CONTROL}/aircraft_abstract_action.cpp
         ${CONTROL}/aircraft_abstract_state.cpp 
         ${CONTROL}/aircraft_does_flying.cpp

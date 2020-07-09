@@ -45,7 +45,7 @@ void AircraftDoesTakeOff::_internal_start() {
     // только один раз за весь взлет.
     
     _ptr_acf->vcl_condition.acceleration = 2.0;    
-    _ptr_acf->vcl_condition.target_speed = knots_to_merets_per_second( _get_acf_parameters().v2 );
+    _ptr_acf->vcl_condition.target_speed = knots_to_merets_per_second( _ptr_acf->parameters().v2 );
 
 }
 
@@ -57,11 +57,11 @@ void AircraftDoesTakeOff::_internal_start() {
 
 void AircraftDoesTakeOff::__step__run_up( const float & elapsed_since_last_call ) {
     
-    if ( _ptr_acf->vcl_condition.speed_kts > _get_acf_parameters().v1 ) {
+    if ( _ptr_acf->vcl_condition.speed_kts > _ptr_acf->parameters().v1 ) {
         
         __phase = PHASE_BREAK_AWAY;        
         // Нос пошел вверх. Не слишком высоко, чтобы не царапал хвостом ВПП.
-        _ptr_acf->acf_condition.target_pitch = _get_acf_parameters().take_off_angle;
+        _ptr_acf->acf_condition.target_pitch = _ptr_acf->parameters().take_off_angle;
         _ptr_acf->acf_condition.pitch_acceleration = 2.5f;
         
     }
@@ -75,7 +75,7 @@ void AircraftDoesTakeOff::__step__run_up( const float & elapsed_since_last_call 
 
 void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_call ) {
     
-    if ( _ptr_acf->vcl_condition.speed_kts >= _get_acf_parameters().v2 ) {
+    if ( _ptr_acf->vcl_condition.speed_kts >= _ptr_acf->parameters().v2 ) {
         
         __phase = PHASE_CLIMBING;
         _ptr_acf->vcl_condition.is_clamped_to_ground = false;
@@ -89,14 +89,14 @@ void AircraftDoesTakeOff::__step__break_away( const float & elapsed_since_last_c
         // уже в действии полета (фаза нахождения в воздухе).
 
         _ptr_acf->acf_condition.vertical_acceleration = 0.6f;
-        _ptr_acf->acf_condition.target_vertical_speed = feet_per_min_to_meters_per_second( _get_acf_parameters().vertical_climb_speed );
+        _ptr_acf->acf_condition.target_vertical_speed = feet_per_min_to_meters_per_second( _ptr_acf->parameters().vertical_climb_speed );
         
         // Высота, на которой включим уборку шасси.
 #ifdef INSIDE_XPLANE
-        auto position = _get_acf_position();
+        auto position = _ptr_acf->get_position();
         __gear_up_altitude = position.y + 10.0;
 #else
-        auto location = _get_acf_location();
+        auto location = _ptr_acf->get_location();
         __gear_up_altitude = location.altitude + 10.0;
 #endif
         
@@ -114,8 +114,8 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     // Возможно, фаза взлета закончена и надо переходить на следующее действие.
     // Это определяется по расстоянию до дальней конечной точки ВПП.
     
-    auto wp = _ptr_acf->front_waypoint();
-    auto distance = xenon::distance2d( _get_acf_location(), wp.location );
+    auto wp = _ptr_acf->flight_plan.get(0);
+    auto distance = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     if ( distance < 100.0 ) {
         Logger::log("Take off done");
         __phase = PHASE_NOTHING;
@@ -126,9 +126,9 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     // Если фаза еще не закончилась, то может быть надо убрать шасси.
     if ( __gear_up_altitude != 0.0 ) {
 #ifdef INSIDE_XPLANE
-        auto current_altitude = _get_acf_position().y;
+        auto current_altitude = _ptr_acf->get_position().y;
 #else
-        auto current_altitude = _get_acf_location().altitude;
+        auto current_altitude = _ptr_acf->get_location().altitude;
 #endif
         if ( current_altitude >= __gear_up_altitude ) {
             // Поднимаем шасси и запоминаем, что мы его подняли,

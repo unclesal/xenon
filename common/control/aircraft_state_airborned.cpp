@@ -28,14 +28,14 @@ AircraftStateAirborned::AircraftStateAirborned(
 void AircraftStateAirborned::_internal_activate() {
     // После взлета убираем все точки полетного плана, которые относились к 
     // земле, к фазам руления, выравнивания и собственно взлета.
-    auto wp = _ptr_acf->front_waypoint();
+    auto wp = _ptr_acf->flight_plan.get(0);
     while (
         ( wp.type == WAYPOINT_PARKING )
         || ( wp.type == WAYPOINT_TAXING )
         || ( wp.type == WAYPOINT_RUNWAY )
     ) {
-        _front_wp_reached();
-        wp = _ptr_acf->front_waypoint();
+        _ptr_acf->flight_plan.pop_front();
+        wp = _ptr_acf->flight_plan.get(0);
     };
         
 }

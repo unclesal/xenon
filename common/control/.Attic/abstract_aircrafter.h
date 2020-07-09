@@ -47,16 +47,6 @@ namespace xenon {
                 else _ptr_acf->_flight_plan.push_front( wp );
             };
             
-            /**
-             * @short Вернуть первую (следующую за нулевой) точку полетного плана.
-             */
-//             inline waypoint_t & _get_first_wp() {
-//                 if ( _ptr_acf->_flight_plan.size() >= 2 ) {
-//                     return _ptr_acf->_flight_plan.at(1);
-//                 };
-//                 Logger::log("ERROR: AbstractAircrafter::_get_first_wp(), but flight plan size=" + to_string( _ptr_acf->_flight_plan.size() ) );
-//                 return __fake_waypoint;
-//             };
             
             inline location_t _get_acf_location() {
                 return _ptr_acf->get_location();                
@@ -103,34 +93,11 @@ namespace xenon {
              * @short Посчитать расстояние до "достаточно крутого поворота"
              */
 
-            inline double _calculate_distance_to_turn( waypoint_t & turned_wp ) {
-    
-                auto location = _get_acf_location();
-                for ( int i=0; i < ( (int) _ptr_acf->_flight_plan.size() ); i++ ) {
-                    auto wp = _ptr_acf->_flight_plan.at(i);
-                    double change = wp.incomming_heading - wp.outgoing_heading;
-                    if ( abs(change) >= 20.0 ) {
-                        turned_wp = wp;
-                        return xenon::distance2d(location, wp.location);
-                    }
-                }
-                return 0.0;
-            };
 
             /**
              * @short Посчитать расстояние до точки, которая принадлежит ВПП
              */
 
-            inline double _calculate_distance_to_runway() {
-                auto location = _get_acf_location();
-                for ( int i=0; i<_ptr_acf->_flight_plan.size(); i++ ) {
-                    auto wp = _ptr_acf->_flight_plan.at(i);
-                    if ( wp.type == WAYPOINT_RUNWAY ) {
-                        return xenon::distance2d( location, wp.location );
-                    }
-                };
-                return 0.0;
-            };
             
             /**
              * @short Действие было завершено.

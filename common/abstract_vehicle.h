@@ -94,14 +94,14 @@ namespace xenon {
            AgentInterface * agent;
 #endif
 
-        protected:                    
-            
-            virtual void _action_finished( void * action ) {
+            virtual void action_finished( void * action ) {
 #ifdef INSIDE_AGENT
                 if ( agent ) agent->action_finished( action );
 #endif                
             };            
 
+        protected:                    
+            
         private:
             
 #ifdef INSIDE_XPLANE

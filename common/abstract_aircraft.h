@@ -13,6 +13,7 @@
 
 // My own includes.
 #include "abstract_vehicle.h"
+#include "flight_plan.h"
 
 using namespace std;
 
@@ -20,8 +21,6 @@ namespace xenon {
 
     class AbstractAircraft : public AbstractVehicle {
         
-        friend class AbstractAircrafter;
-
         /**
          * Абстрактрый самолет, как пользовательский, так и внутри симулятора.
          */
@@ -51,21 +50,11 @@ namespace xenon {
             virtual void update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac );
             virtual void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) {};
             
-            inline const waypoint_t & front_waypoint() {
-                if ( ! _flight_plan.empty() ) return _flight_plan.at(0);
-                static waypoint_t wp;
-                return wp;
-            };
+            FlightPlan flight_plan;
             
-            inline const waypoint_t & first_waypoint() {
-                if ( _flight_plan.size() >= 2 ) return _flight_plan.at(1);
-                static waypoint_t wp;
-                return wp;
-            };
-            
+            const aircraft_parameters_t & parameters() { return _params; };
+                        
         protected:
-            
-            deque<waypoint_t> _flight_plan;
             
             aircraft_parameters_t _params;
             std::mutex _acf_mutex;

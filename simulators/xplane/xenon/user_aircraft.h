@@ -48,10 +48,11 @@ namespace xenon {
              */
             void update_conditions();
             
-        protected:
-            
-            void _action_finished( void * action ) override {
+            void action_finished( void * action ) override {
             };                        
+            
+        protected:            
+            
             
         private:
 

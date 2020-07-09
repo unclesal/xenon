@@ -77,18 +77,17 @@ BimboAircraft::BimboAircraft(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-#ifdef INSIDE_AGENT
-void BimboAircraft::_action_finished( void * action ) {
+void BimboAircraft::action_finished( void * action ) {
     
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
     aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );
     Logger::log("Action " + edge.name + " finished.");
     graph->action_finished( ptr_abstract_action );
-    
-    AbstractVehicle::_action_finished( action );
+    Logger::log("Before vehicle finished...");
+    AbstractVehicle::action_finished( action );
+    Logger::log("Vehicle finished done.");
     
 };
-#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -216,6 +215,8 @@ void BimboAircraft::place_on_ground( const startup_location_t & ramp ) {
     move( _params.shift_from_ramp );
     // В графе состояний отмечаем, что мы встали на стоянку.
     graph->place_on_parking();
+    
+    acf_condition.parking = ramp.name;
 
 }
 
@@ -388,19 +389,19 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     waypoint_t wp = taxi_way.at( taxi_way.size() - 1 );
     wp.action_to_achieve = ACF_DOES_TAKE_OFF;
     wp.location.altitude = 150.0;
-    _flight_plan.push_front( wp );
+    flight_plan.push_front( wp );
         
     // Вторая точка - это ближний конец ВПП. На нее выходим из состояния HP
     // выравниванием ( lining up )
     wp = taxi_way.at( taxi_way.size() - 2 );
     wp.action_to_achieve = ACF_DOES_LINING_UP;
-    _flight_plan.push_front( wp );
+    flight_plan.push_front( wp );
 
     // Дальше все точки - это рулежка.    
     for ( int i = (int) taxi_way.size() - 3; i>=0; -- i) {
         wp = taxi_way.at(i);
         wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
-        _flight_plan.push_front( wp );
+        flight_plan.push_front( wp );
     }
     
     // До самой первой точки руления можно добраться либо выруливанием,
@@ -408,12 +409,17 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
     // спереди или сзади и можно ли до нее доехать самостоятельно.
     
     location_t current_location = get_location();
-    double azimuth = xenon::bearing( current_location, _flight_plan.at(0).location );
-    if ( ( azimuth <= 60.0 ) || ( azimuth >= 300.0 ) )
+    double azimuth = xenon::bearing( current_location, flight_plan.get(0).location );
+    if ( ( azimuth <= 60.0 ) || ( azimuth >= 300.0 ) ) {
         // Это "выруливание", потому что точка у нас перед носом.
-        _flight_plan.at( 0 ).action_to_achieve = ACF_DOES_SLOW_TAXING;
-    else
-        _flight_plan.at( 0 ).action_to_achieve = ACF_DOES_PUSH_BACK;
+        wp = flight_plan.get( 0 );
+        wp.action_to_achieve = ACF_DOES_SLOW_TAXING;
+        flight_plan.set(0, wp );
+    } else {
+        wp = flight_plan.get( 0 );
+        wp.action_to_achieve = ACF_DOES_PUSH_BACK;
+        flight_plan.set( 0, wp );
+    }
     
     __taxing_prepared = true;
             
@@ -428,15 +434,15 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
 void BimboAircraft::prepare_for_taxing( const deque < xenon::waypoint_t > & taxi_way) {
     
     for ( int i=0; i<taxi_way.size(); i++ ) {
-        _flight_plan.push_back( taxi_way.at(i) );
+        flight_plan.push_back( taxi_way.at(i) );
     }
     
     // Если последняя точка парковка - то ее нужно сместить в зависимости от типа ВС.
-    auto wpp = _flight_plan.at( _flight_plan.size() - 1 );
+    auto wpp = flight_plan.get( flight_plan.size() - 1 );
     if ( wpp.type == WAYPOINT_PARKING ) {
         auto dest = xenon::shift( wpp.location, _params.shift_from_ramp, wpp.incomming_heading );
         wpp.location = dest;
-        _flight_plan.at( _flight_plan.size() - 1 ) = wpp;
+        flight_plan.set( flight_plan.size() - 1, wpp );
     }
     
 }
@@ -556,49 +562,6 @@ void BimboAircraft::move( float meters ) {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                           Добавить точки в полетный план.                                         *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-void BimboAircraft::prepare_flight_plan(
-    const std::string & flight_number,
-    const std::string & departure,
-    const std::string & destination,
-    const std::vector < std::string > & alternate,
-    const float & cruise_altitude,
-    deque < waypoint_t > & fp
-) {
-    
-    // Прямо по входному массиву - ничего страшного.
-    // Потому что выходной массив, т.е. действующий полетный план,
-    // вообще-то уже может что-то содержать.
-    
-    for ( int i=0; i < (int) fp.size() - 1; ++i ) {
-        waypoint_t & at_i = fp.at( i );
-        waypoint_t & at_n = fp.at( i + 1 );
-        at_i.distance_to_next_wp = xenon::distance2d(at_i.location, at_n.location );
-        auto bearing = xenon::bearing( at_i.location, at_n.location );
-        at_i.outgoing_heading = bearing;
-        at_n.incomming_heading = bearing;
-    };
-    
-    // TODO: вообще-то - не факт, наверное, что в самый конец,
-    // они могут и перетасовываться же?
-
-    for ( int i=0; i < (int) fp.size(); ++ i ) {
-        _flight_plan.push_back( fp.at( i ) );
-    };
-    
-    _params.cruise_altitude = cruise_altitude;
-    _params.departure = departure;
-    _params.destination = destination;
-    _params.alternate = alternate;
-    _params.flight_number = flight_number;
-
-}
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
 // *                          Изменение состояния самолета от пришедшей по сети структуры                              *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -614,15 +577,18 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     
     if ( ! graph->current_action_is( vc.current_action ) ) {
         
+        aircraft_state_graph::graph_t::edge_descriptor fake;
         auto action_descriptor = graph->get_action_outgoing_from_current_state( vc.current_action );
-        try {
-            graph->set_active_action( action_descriptor );
-        } catch ( const std::runtime_error & e ) {
-            Logger::log(
-                "BimboAircraft::update_from(), could not find action for state " 
-                + to_string( vc.current_state ) + ", action " + to_string( vc.current_action )
-            );            
-        }
+        if ( action_descriptor != fake ) {
+            try {
+                graph->set_active_action( action_descriptor );
+            } catch ( const std::runtime_error & e ) {
+                Logger::log(
+                    "BimboAircraft::update_from(), could not find action for state " 
+                    + to_string( vc.current_state ) + ", action " + to_string( vc.current_action )
+                );            
+            }
+        };
         
     }    
 
@@ -650,14 +616,14 @@ void BimboAircraft::test__place_on_hp() {
     
     place_on_ground( position, rotation, true );
     
-    auto wp = _flight_plan.at(0);
+    auto wp = flight_plan.get(0);
     while ( 
         ( wp.type != WAYPOINT_RUNWAY ) 
         && ( wp.action_to_achieve != ACF_DOES_LINING_UP ) 
-        && ( ! _flight_plan.empty()) 
+        && ( ! flight_plan.is_empty()) 
     ) {
-        _flight_plan.pop_front();
-        if ( ! _flight_plan.empty() ) wp = _flight_plan.at( 0 ); 
+        flight_plan.pop_front();
+        if ( ! flight_plan.is_empty() ) wp = flight_plan.get( 0 ); 
     }
     
     if ( wp.action_to_achieve != ACF_DOES_LINING_UP ) {
@@ -681,8 +647,8 @@ void BimboAircraft::test__place_on_hp() {
 void BimboAircraft::test__place_on_rwy_end() {
     
     int i = 0;
-    for ( i=0; i<_flight_plan.size(); i++ ) {
-        auto wp = _flight_plan.at(i);
+    for ( i=0; i<flight_plan.size(); i++ ) {
+        auto wp = flight_plan.get(i);
         if ( 
             ( wp.type == WAYPOINT_RUNWAY ) 
             && ( wp.action_to_achieve == ACF_DOES_TAKE_OFF ) 
@@ -692,13 +658,13 @@ void BimboAircraft::test__place_on_rwy_end() {
         }
     }
     
-    if ( i >= _flight_plan.size() ) {
+    if ( i >= flight_plan.size() ) {
         Logger::log("ERROR: end point of RWY can not does not exists in FP");
         return;
     };
     
-    for ( int k=0; k<i; k++ ) _flight_plan.pop_front();    
-    auto wp = _flight_plan.front();
+    for ( int k=0; k<i; k++ ) flight_plan.pop_front();
+    auto wp = flight_plan.get(0);
     if ( ( wp.type != WAYPOINT_RUNWAY ) || ( wp.action_to_achieve != ACF_DOES_TAKE_OFF ) ) {
         Logger::log("ERROR: waypoint for end runway was not found");
         return;
@@ -722,9 +688,7 @@ void BimboAircraft::test__place_on_rwy_end() {
 
 
 void BimboAircraft::test__fly() {
-    
-    deque< waypoint_t > fp;
-    
+        
 //     При вылете с полосы 08L
 //     SS028
    waypoint_t ss028 = {
@@ -741,7 +705,7 @@ void BimboAircraft::test__fly() {
        .distance_to_next_wp = 0.0,
        .action_to_achieve = ACF_DOES_FLYING
    };
-   fp.push_back( ss028 );
+   flight_plan.push_back( ss028 );
     
 //     D237K
    waypoint_t d237k = {
@@ -758,7 +722,7 @@ void BimboAircraft::test__fly() {
        .distance_to_next_wp = 0.0,
        .action_to_achieve = ACF_DOES_FLYING
    };
-   fp.push_back( d237k );
+   flight_plan.push_back( d237k );
      
    // SS025
    waypoint_t ss025 = {
@@ -775,7 +739,7 @@ void BimboAircraft::test__fly() {
        .distance_to_next_wp = 0.0,
        .action_to_achieve = ACF_DOES_FLYING
    };
-   fp.push_back( ss025 );
+   flight_plan.push_back( ss025 );
     
     // CF08L
     waypoint_t cf08l = {
@@ -792,7 +756,7 @@ void BimboAircraft::test__fly() {
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_FLYING
     };
-    fp.push_back( cf08l );
+    flight_plan.push_back( cf08l );
 
     // RW08L - торец ВПП.    
     waypoint_t rwy08l = {
@@ -809,7 +773,7 @@ void BimboAircraft::test__fly() {
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_LANDING
     };    
-    fp.push_back( rwy08l );
+    flight_plan.push_back( rwy08l );
     
     // RWY26R - только для обеспечения посадки, для установки курса и торможения на ВПП.
     waypoint_t rwy26r = {
@@ -826,12 +790,16 @@ void BimboAircraft::test__fly() {
         .distance_to_next_wp = 0.0,
         .action_to_achieve = ACF_DOES_LANDING
     };
-    fp.push_back( rwy26r );
+    flight_plan.push_back( rwy26r );
      
     vector< std::string > alternate;
     alternate.push_back("USCC");
-    prepare_flight_plan( "TEST1", "USSS", "USSS", alternate, 5000.0f, fp );
-    
+    flight_plan.set_alternate( alternate );
+    flight_plan.set_flight_number("TEST1");
+    flight_plan.set_departure("USSS");
+    flight_plan.set_destination("USSS");
+    flight_plan.set_cruise_altitude( 5000.0f );
+        
 //     vcl_condition.is_clamped_to_ground = false;
 // 
 //     -------------- Какие-то похожие на правду скорости ------------------
