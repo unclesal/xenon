@@ -37,7 +37,7 @@ namespace xenon {
             
             void push_front( const waypoint_t & wp );
             void pop_front();
-            void push_back( const waypoint_t & wp );
+            void push_back( const waypoint_t & wp );            
             
             // void remove( const int & index );            
             
@@ -60,7 +60,7 @@ namespace xenon {
             void set_destination( const std::string & des ) { __destination = des; };
             void set_cruise_altitude( const float & a ) { __cruise_altitude = a; };
             void set_alternate( const vector<std::string> & alt ) { __alternate = alt; };
-            
+
         protected:
             
         private:

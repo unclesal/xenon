@@ -591,6 +591,34 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
         };
         
     }    
+    
+    auto new_location = vc.location;
+#ifdef INSIDE_XPLANE
+    // Попытка убрать дергание меток, раздражает сильно.
+    auto lbl = label;
+    label = "";
+    auto new_position = XPlane::location_to_position( vc.location );
+    if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
+    auto old_position = get_position();
+    auto distance = XPlane::distance2d(old_position, new_position);
+    if ( distance >= 1.0 ) {
+        auto current_state = graph->get_current_state();
+        auto node = graph->get_node_for( current_state );
+        
+        if ( node.state == ACF_STATE_ON_FINAL ) {
+            // Переставляем - без высоты. Потому что высОты 
+            // скорректированы в X-Plane под текущий уровень земли.
+            drawInfo.x = new_position.x;
+            drawInfo.z = new_position.z;
+        } else set_position( new_position );
+    }
+    set_rotation( vc.rotation );
+    label = lbl;
+#else               
+    set_location( new_location );                
+    set_rotation( vc.rotation );
+#endif                
+
 
     _acf_mutex.unlock();
 }

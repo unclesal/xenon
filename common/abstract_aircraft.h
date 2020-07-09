@@ -51,6 +51,10 @@ namespace xenon {
             virtual void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) {};
             
             FlightPlan flight_plan;
+
+#ifdef INSIDE_XPLANE            
+            void correct_flight_plan_altitudes();
+#endif            
             
             const aircraft_parameters_t & parameters() { return _params; };
                         

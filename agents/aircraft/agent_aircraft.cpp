@@ -13,6 +13,7 @@
 
 #include "push_back_allowed.h"
 #include "taxing_distance.h"
+#include "aircraft_state_landed.h"
 
 using namespace xenon;
 using namespace std;
@@ -292,6 +293,47 @@ void AgentAircraft::scream_about_me() {
 void AgentAircraft::state_changed( void * state ) {
     cout << "AgentAircraft::state_changed" << endl;
     scream_about_me();
+    
+    // После посадки нужно определить стоянку.
+    AircraftAbstractState * abstract_state = ( AircraftAbstractState * ) state;
+    AircraftStateLanded * landed = dynamic_cast< AircraftStateLanded * >( abstract_state );
+    if ( landed ) {
+        
+        auto acf_parameters = __ptr_acf->parameters();        
+        auto our_location = __ptr_acf->get_location();    
+        auto our_heading = __ptr_acf->get_rotation().heading;
+    
+        
+        if ( acf_parameters.destination.empty() ) {
+            Logger::log("AgentAircraft::state_changed, AircraftStateLanded::_internal_acitvate(), FP without destination.");
+            return;
+        }
+        
+        auto airport = Airport::get_by_icao( acf_parameters.destination );
+
+        if ( __ptr_acf->acf_condition.icao_type.empty() ) {
+            Logger::log("AircraftStateLanded::_internal_activate(), aircraft ICAO type empty.");
+            return;
+        };
+        
+        startup_location_t parking;
+        
+        if ( __ptr_acf->agent_uuid() == B738_AFF ) parking = airport.get_startup_locations()["15"];
+        else if ( __ptr_acf->agent_uuid() == A321_AFL ) parking = airport.get_startup_locations()["13"];
+        else if ( __ptr_acf->agent_uuid() == A321_SVR ) parking = airport.get_startup_locations()["12"];
+        else if ( __ptr_acf->agent_uuid() == B772_UAE ) parking = airport.get_startup_locations()["11"];
+        
+        __ptr_acf->acf_condition.parking = parking.name;
+        
+        auto way = airport.get_taxi_way_for_parking( our_location, our_heading, parking );
+        __ptr_acf->prepare_for_taxing( way );
+        
+        if (( _communicator ) && ( _communicator->is_connected() )) {
+            CmdFlightPlan * cmd_flight_plan = new CmdFlightPlan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan);
+            _communicator->request( cmd_flight_plan );
+        }
+        
+    };
 }
 
 // *********************************************************************************************************************

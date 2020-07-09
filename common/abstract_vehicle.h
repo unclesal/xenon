@@ -45,25 +45,10 @@ namespace xenon {
             
             const std::string & agent_uuid() {
                 return vcl_condition.agent_uuid;
-            };
+            };                        
             
-            void update_from( const vehicle_condition_t & vc ) {
-                
-                vcl_condition = vc;
-                auto new_location = vc.location;
-#ifdef INSIDE_XPLANE
-                // Попытка убрать дергание меток, раздражает сильно.
-                auto new_position = XPlane::location_to_position( vc.location );
-                if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
-                auto old_position = get_position();
-                auto distance = XPlane::distance2d(old_position, new_position);
-                if ( distance >= 1.0 ) set_position( new_position );
-                set_rotation( vc.rotation );
-#else               
-                set_location( new_location );                
-                set_rotation( vc.rotation );
-#endif                
-                                
+            void update_from( const vehicle_condition_t & vc ) {                
+                vcl_condition = vc;   
             };                        
 
 #ifdef INSIDE_XPLANE

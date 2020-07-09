@@ -282,4 +282,3 @@ double FlightPlan::distance_to_turn( const location_t & from, waypoint_t & turne
     return result;
     
 };
-

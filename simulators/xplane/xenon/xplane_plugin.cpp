@@ -550,6 +550,7 @@ void XPlanePlugin::__command_received( CmdFlightPlan * cmd ) {
         if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
             found = true;
             bimbo->flight_plan = cmd->flight_plan();
+            bimbo->correct_flight_plan_altitudes();
             break;
         };
     };

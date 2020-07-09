@@ -223,7 +223,7 @@ namespace xenon {
              * @short Текущее действие было завершено.
              */
             void action_finished( void * action ) override;
-
+            
         protected:
             
         private:
