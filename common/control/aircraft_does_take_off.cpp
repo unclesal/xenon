@@ -29,6 +29,8 @@ AircraftDoesTakeOff::AircraftDoesTakeOff(
 
 void AircraftDoesTakeOff::_internal_start() {
     
+    Logger::log( _ptr_acf->vcl_condition.agent_name + ", TO internal start");
+    
     __phase = PHASE_RUN_UP;
     
     __gear_up_altitude = 0.0;

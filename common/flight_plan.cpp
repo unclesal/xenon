@@ -21,6 +21,10 @@ FlightPlan::FlightPlan() {
     __alternate = std::vector<std::string>();
     __cruise_altitude = 0.0;
     __way = std::deque<waypoint_t>();
+
+#ifdef INSIDE_AGENT
+    __agent = nullptr;
+#endif    
 }
 
 
@@ -98,9 +102,18 @@ void FlightPlan::push_front( const waypoint_t & wp ) {
 void FlightPlan::pop_front() {
     
     __mutex.lock();
+
+#ifdef INSIDE_AGENT
+    waypoint_t front_wp = __way.at(0);
+#endif    
+
     __way.pop_front();
     __mutex.unlock();
     
+#ifdef INSIDE_AGENT
+    if ( __agent ) __agent->wp_reached( front_wp );    
+#endif    
+
 }
 
 

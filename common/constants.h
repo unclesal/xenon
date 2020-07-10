@@ -33,8 +33,8 @@ namespace xenon {
     const float TAXI_TURN_RADIUS = 13.0;
 
     // Ускорение при старте руления или остановке.
-    const float TAXI_SLOW_ACCELERATION = 0.1;
-    const float TAXI_NORMAL_ACCELERATION = 0.4;
+    const float TAXI_SLOW_ACCELERATION = 0.4;
+    const float TAXI_NORMAL_ACCELERATION = 0.8;
     
     // Радиус круга (в метрах), в котором два агента могут еще "слышать" друг друга.
     // Если расстояние больше, то агент уже не может "слышать" и пакет ему переправлен не будет.
@@ -42,7 +42,13 @@ namespace xenon {
     
     // Минимально допустимая дистанция между самолетами в метрах. 
     // Если меньше или равно, то задний должен остановиться.
-    constexpr float MIN_ALLOWABLE_TAXING_DISTANCE = 100.0;
+    constexpr float MIN_ALLOWABLE_TAXING_DISTANCE = 120.0f;
+    
+    // Минимально допустимая дистанция до ранее взлетевшего самолета.
+    constexpr float MIN_ALLOWABLE_TAKE_OFF_DISTANCE = 5000.0f;
+    
+    // Минимально допустимая дистанция между самолетами в метрах - в воздухе.
+    constexpr float MIN_ALLOWABLE_FLYING_DISTANCE = 10000.0f;
     
     // Один "тик" цикла агента в микросекундах.
     constexpr int AGENT_TICK = 20000;
@@ -65,6 +71,7 @@ namespace xenon {
         WAYPOINT_UNKNOWN = 0,
         WAYPOINT_PARKING,
         WAYPOINT_TAXING,
+        WAYPOINT_HP,
         WAYPOINT_RUNWAY,
         WAYPOINT_RUNWAY_LEAVED,
         WAYPOINT_SID,                
@@ -120,7 +127,7 @@ namespace xenon {
         // тормозит вплоть до полной его остановки.
         ACF_DOES_TAXING_STOP,
 
-        // Скорее всего - стоит на HP. Но не факт,
+        // Скорее всего - стоит на HP или LU. Но не факт,
         // разрешение на взлет может быть получено сразу.
         ACF_DOES_WAITING_TAKE_OFF_APPROVAL,
         // Выходит на взлетку.
@@ -135,7 +142,7 @@ namespace xenon {
         ACF_DOES_LANDING,
         // Посадку произвел и освобождает ВПП.
         ACF_DOES_RUNWAY_LEAVING,
-        ACF_DOES_PARKING,
+        ACF_DOES_PARKING
     };
     
     // Типы возможных агентов

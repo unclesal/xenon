@@ -53,9 +53,11 @@ set(SOURCES
     
     ${FRAMES}/abstract_frame.cpp
     ${FRAMES}/entity_frame.cpp
+    ${FRAMES}/hp_lu_occupated.cpp
+    ${FRAMES}/lu_before_take_off.cpp
     ${FRAMES}/state_frame.cpp
     ${FRAMES}/push_back_allowed.cpp
-    ${FRAMES}/taxing_distance.cpp
+    ${FRAMES}/taxing_distance.cpp    
     
     ${NET}/abstract_command.cpp
     ${NET}/command_parser.cpp
@@ -80,6 +82,7 @@ set(SOURCES
     ${CONTROL}/aircraft_does_taxing.cpp
     ${CONTROL}/aircraft_does_taxing_stop.cpp
     ${CONTROL}/aircraft_does_waiting_push_back.cpp
+    ${CONTROL}/aircraft_does_waiting_take_off_approval.cpp
     ${CONTROL}/aircraft_state_airborned.cpp
     ${CONTROL}/aircraft_state_before_parking.cpp
     ${CONTROL}/aircraft_state_graph.cpp

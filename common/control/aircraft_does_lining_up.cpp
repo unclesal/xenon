@@ -29,12 +29,10 @@ AircraftDoesLiningUp::AircraftDoesLiningUp(
 
 void AircraftDoesLiningUp::_internal_start() {
     
+    Logger::log( _ptr_acf->vcl_condition.agent_name + ", LU internal start");
     __phase = PHASE_STRAIGHT;
     // Поехали потихоньку.
-    
-    // _ptr_acf->condition.tug = TAXI_NORMAL_TUG;
-    // _ptr_acf->vcl_condition.target_acceleration = TAXI_NORMAL_ACCELERATION;
-    
+        
     _ptr_acf->vcl_condition.acceleration = TAXI_NORMAL_ACCELERATION;
     _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
     
@@ -94,7 +92,7 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
 //         "Bearing=" + to_string(bearing) + ", heading=" + to_string( heading ) + ", delta=" + to_string( delta )
 //     );
     
-    if ( ( abs(delta) < 3.0 ) && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
+    if ( abs(delta) < 5.0 ) {  // && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
         // Тормозим.        
         _taxi_breaking( 0.0, 3.0 );
         // И фиксируем текущий курс, больше крутиться не будем.
@@ -120,6 +118,23 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
 // *********************************************************************************************************************
 
 void AircraftDoesLiningUp::_internal_step( const float & elapsed_since_last_call ) {
+    
+    /*
+    Logger::log( 
+        _ptr_acf->vcl_condition.agent_name + ", LU accel=" + to_string( _ptr_acf->vcl_condition.acceleration )
+        + ", speed=" + to_string( _ptr_acf->vcl_condition.speed )
+    );
+    */
+    
+    /*
+    // Видимо, оно после старта может быть сбито фреймом? Не совсем понял, что происходит, сделал - "костыль".
+    if ( ( !  _ptr_acf->vcl_condition.acceleration ) || ( ! _ptr_acf->vcl_condition.target_speed ) ) {
+        _ptr_acf->vcl_condition.acceleration = TAXI_NORMAL_ACCELERATION;
+        _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
+    };
+    */
+    
+    if ( __phase == PHASE_NOTHING ) __phase = PHASE_STRAIGHT;
     
     switch ( __phase ) {
         case PHASE_STRAIGHT: __step_straight( elapsed_since_last_call ); break;

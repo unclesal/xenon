@@ -28,7 +28,7 @@ namespace xenon {
             virtual ~AbstractVehicle();
 
 #ifdef INSIDE_AGENT
-            void set_agent(AgentInterface * a ) {                
+            virtual void set_agent(AgentInterface * a ) {                
                 agent = a;                
             };
 #endif

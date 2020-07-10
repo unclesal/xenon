@@ -228,5 +228,41 @@ namespace xenon {
         long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
         return ms;
     };
+    
+    inline std::string action_to_string( const aircraft_action_t & action ) {
+        switch ( action ) {
+            case ACF_DOES_NOTHING : return "ACF_DOES_NOTHING";        
+            case ACF_DOES_WAITING_PUSH_BACK : return "ACF_DOES_WAITING_PUSH_BACK";        
+            case ACF_DOES_PUSH_BACK : return "ACF_DOES_PUSH_BACK";        
+            case ACF_DOES_SLOW_TAXING : return "ACF_DOES_SLOW_TAXING";
+            case ACF_DOES_NORMAL_TAXING : return "ACF_DOES_NORMAL_TAXING";        
+            case ACF_DOES_TAXING_STOP : return "ACF_DOES_TAXING_STOP";
+            case ACF_DOES_WAITING_TAKE_OFF_APPROVAL : return "ACF_DOES_WAITING_TAKE_OFF_APPROVAL";            
+            case ACF_DOES_LINING_UP : return "ACF_DOES_LINING_UP";            
+            case ACF_DOES_TAKE_OFF : return "ACF_DOES_TAKE_OFF";        
+            case ACF_DOES_FLYING : return "ACF_DOES_FLYING";        
+            case ACF_DOES_LANDING : return "ACF_DOES_LANDING";        
+            case ACF_DOES_RUNWAY_LEAVING : return "ACF_DOES_RUNWAY_LEAVING";
+            case ACF_DOES_PARKING : return "ACF_DOES_PARKING";
+            default: return "Unhandled action " + std::to_string( action );
+        };
+    };
+    
+    inline std::string waypoint_to_string( const waypoint_type_t & type ) {
+        switch ( type ) {
+            case WAYPOINT_UNKNOWN : return "WAYPOINT_UNKNOWN";
+            case WAYPOINT_PARKING : return "WAYPOINT_PARKING";
+            case WAYPOINT_TAXING : return "WAYPOINT_TAXING";
+            case WAYPOINT_HP : return "WAYPOINT_HP";
+            case WAYPOINT_RUNWAY : return "WAYPOINT_RUNWAY";
+            case WAYPOINT_RUNWAY_LEAVED : return "WAYPOINT_RUNWAY_LEAVED";
+            case WAYPOINT_SID : return "WAYPOINT_SID";        
+            case WAYPOINT_FLYING : return "WAYPOINT_FLYING";
+            case WAYPOINT_VECTORING : return "WAYPOINT_VECTORING";
+            case WAYPOINT_STAR : return "WAYPOINT_STAR";        
+            case WAYPOINT_DESTINATION : return "WAYPOINT_DESTINATION";
+            default: return "unhandled waypoint type " + std::to_string( type );
+        };
+    };
 
 }; // namespace xenon

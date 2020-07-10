@@ -28,6 +28,7 @@
 #include "aircraft_does_taxing.h"
 #include "aircraft_does_taxing_stop.h"
 #include "aircraft_does_waiting_push_back.h"
+#include "aircraft_does_waiting_take_off_approval.h"
 
 using namespace xenon;
 using namespace xenon::aircraft_state_graph;
@@ -59,7 +60,8 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     
     // Состояние "предварительный старт".
     auto state_on_hp_d = __create_state< AircraftStateOnHP >( ACF_STATE_HP, "On HP" );
-    // Состояние "готов к взлету"
+    
+    // Состояние "готов к взлету" (исполнительный старт)
     auto state_ready_for_take_off_d = __create_state< AircraftStateReadyForTakeOff >(
         ACF_STATE_READY_FOR_TAKE_OFF, "ReadyForTakeOff"
     );
@@ -127,10 +129,22 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_NORMAL_TAXING, "NormalTaxing", state_ready_for_taxing_d, state_on_hp_d
     );
     
+    // На предварительном старте можно задержаться, ожидая разрешение на взлет.
+    __create_action< AircraftDoesWaitingTakeOffApproval > (
+        ACF_DOES_WAITING_TAKE_OFF_APPROVAL, "WaitingTakeOffApproval", state_on_hp_d, state_on_hp_d
+    );
+    
     // Из состояния "на предварительном старте" можно перейти в состояние
     // "готов к взлету" - выравниванием (lining up)
     __create_action< AircraftDoesLiningUp > (
         ACF_DOES_LINING_UP, "LiningUp", state_on_hp_d, state_ready_for_take_off_d
+    );
+    
+    // "Готов к взлету" (исполнительный старт) может закольцеваться действием
+    // ожидания разрешения на взлет.
+    
+    __create_action< AircraftDoesWaitingTakeOffApproval > (
+        ACF_DOES_WAITING_TAKE_OFF_APPROVAL, "WaitingTakeOffApproval", state_ready_for_take_off_d, state_ready_for_take_off_d
     );
     
     // Из состояния "готов к взлету" можно перейти в
@@ -250,7 +264,7 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
     try {
 
 #ifdef DEBUG        
-        Logger::log("AircraftStateGraph::set_active_action " + __graph[ ed ].name );
+        Logger::log( __ptr_acf->vcl_condition.agent_name + ", set_active_action " + __graph[ ed ].name );
 #endif        
         __graph[ ed ].current_action = true;
         __ptr_acf->vcl_condition.current_action = __graph[ ed ].action;

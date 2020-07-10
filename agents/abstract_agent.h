@@ -25,7 +25,7 @@ namespace xenon {
             virtual ~AbstractAgent();
             
             virtual void run() = 0;
-            virtual void on_received( void * abstract_command ) override;
+            virtual void on_received( void * abstract_command ) override;            
 
         protected:
             

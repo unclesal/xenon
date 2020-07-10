@@ -40,9 +40,15 @@ namespace xenon {
             
             template <class T> void set( const std::string & key, const T & value ) {
                 __attributes[key] = value;
-            };                        
+            };
+            
+            bool was_activated() {
+                return _activated;
+            };
             
         protected:
+            
+            bool _activated;
             
         private:
 

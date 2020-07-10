@@ -29,7 +29,7 @@ namespace xenon {
             location_t __from_runway_location;
             
             void __choose_speed();
-            void __become_to_hp( waypoint_t & front_wp );            
+            // void __become_to_hp( waypoint_t & front_wp );            
 
         
     }; // class AircraftDoesTaxing

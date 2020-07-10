@@ -1,19 +1,22 @@
 // *********************************************************************************************************************
-// *                       Запрет выталкивания, если рядом уже есть самолет, который двигается                         *
+// *                        Фрейм ожидания на предварительном старте, если исполнительный занят                        *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 07 jul 2020 at 13:21 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 10 jul 2020 at 12:18 *
 // *********************************************************************************************************************
 #pragma once
 
 #include "state_frame.h"
+
 namespace xenon {
     
-    class PushBackAllowed : public StateFrame {
+    class HpLuOccupated : public StateFrame {
         
         public:
             
-            PushBackAllowed( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
-            ~PushBackAllowed() override = default;
+            HpLuOccupated(
+                BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment
+            );
+            ~HpLuOccupated() override = default;
             
             void update( CmdAircraftCondition * cmd ) override;
             
@@ -24,3 +27,4 @@ namespace xenon {
     };
     
 }; // namespace xenon
+

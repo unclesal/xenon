@@ -102,7 +102,7 @@ void AircraftDoesTaxing::__choose_speed() {
 // *                                    Отрабатываем подход к предварительному старту                                 *
 // *                                                                                                                  *
 // ********************************************************************************************************************
-
+/*
 void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
 
     // Если в FP нет ВПП, то будет ровно 0. И здесь намеренно берется
@@ -110,6 +110,7 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
     // могут быть еще точки руления, которые будут проигнорированы.
 
     auto here = _ptr_acf->get_location();
+    
     auto distance_to_rwy = _ptr_acf->flight_plan.distance_to_runway( here );
     if (( distance_to_rwy > 0.0 ) && ( distance_to_rwy <= 200.0 ) ) {
 
@@ -170,6 +171,7 @@ void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
     }
 
 }
+*/
 
 // ********************************************************************************************************************
 // *                                                                                                                  *
@@ -186,14 +188,29 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
 //        + ", dis=" + to_string( xenon::distance2d( _get_acf_location(), front_wp.location))
 //    );
 
-    _head_steering( elapsed_since_last_call, 16.0 );
-    
-    if ( _ptr_acf->vcl_condition.current_state != ACF_STATE_LANDED )
-        __become_to_hp( front_wp );
-    else
-        __choose_speed();
+    _head_steering( elapsed_since_last_call, 16.0 );        
+    __choose_speed();
     
     double distance = xenon::distance2d( _ptr_acf->get_location(), front_wp.location );
+    
+    if ( front_wp.type == WAYPOINT_HP ) {
+        
+        if ( distance <= 50 && _ptr_acf->vcl_condition.target_speed ) {
+            // Начинаем торможение 
+            if ( _ptr_acf->vcl_condition.speed ) {
+                auto time = distance / _ptr_acf->vcl_condition.speed;            
+                _ptr_acf->vcl_condition.acceleration = - _ptr_acf->vcl_condition.speed / time;
+                _ptr_acf->vcl_condition.target_speed = 0.0;
+            };
+        };
+        
+        if ( _ptr_acf->vcl_condition.speed <= 0.2 ) {
+            _ptr_acf->flight_plan.pop_front();
+            _finish();
+            return;
+        };
+        
+    };
     
     if ( 
         ( _ptr_acf->vcl_condition.current_state == ACF_STATE_LANDED ) // то есть мы только что приземлились
@@ -226,6 +243,15 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
             return;
         };
         
+        if ( reached_wp_type == WAYPOINT_HP ) {
+            // Остановка. Как-то просмотрели торможение.
+            _ptr_acf->vcl_condition.speed = 0;
+            _ptr_acf->vcl_condition.acceleration = 0;
+            _ptr_acf->vcl_condition.target_speed = 0;
+            _finish();
+            return;
+        };
+        
         // Следующая точка полетного плана.
         
         front_wp = _ptr_acf->flight_plan.get(0);
@@ -237,6 +263,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
             _finish();
             return;
         }
+        
     }
 
 }

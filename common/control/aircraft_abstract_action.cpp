@@ -20,9 +20,7 @@ AircraftAbstractAction::AircraftAbstractAction (
     _ptr_acf = ptr_acf;
     _edge_d = edge_d;
         
-    __total_duration = 0.0;
-    __started = false;
-    __finished = false;        
+    _total_duration = 0.0;
 
 }
 
@@ -34,36 +32,31 @@ AircraftAbstractAction::AircraftAbstractAction (
 
 void AircraftAbstractAction::__start() {
     
-    if ( ! __started ) {
-        
-        // Установка тех переменных, которые суммируются в ходе выполнения данного действия. Одно
-        // и то же действие может быть вызвано - неоднократно. Поэтому при старте их надо обнулять.
-        
-        __total_duration = 0.0;
-        __total_distance = 0.0;
-        
-        auto wp = _ptr_acf->flight_plan.get(0);
-        auto location = _ptr_acf->get_location();
-        auto distance_to_front = (int) xenon::distance2d( location, wp.location );
-                
-        for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
-            
-            // Массив предыдущих дистанций - в начале действия там все
-            // дистанции должны быть равны текущей. Иначе точка сразу же
-            // может начать удаляться.
-            // __previous_distance_to_front_wp[ i ] = (int) distance_to_front;
-            
-            // Массив предыдущих расхождений по курсу для каждой фазы будет свой.
-            __previous_heading_delta[ i ] = 0.0;
-            
-        }
-
-        __started = true;                                
-        
-        _internal_start();
-        
-    };
     
+    // Установка тех переменных, которые суммируются в ходе выполнения данного действия. Одно
+    // и то же действие может быть вызвано - неоднократно. Поэтому при старте их надо обнулять.
+    
+    _total_duration = 0.0;
+    _total_distance = 0.0;
+    
+    auto wp = _ptr_acf->flight_plan.get(0);
+    auto location = _ptr_acf->get_location();
+    auto distance_to_front = (int) xenon::distance2d( location, wp.location );
+            
+    for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
+        
+        // Массив предыдущих дистанций - в начале действия там все
+        // дистанции должны быть равны текущей. Иначе точка сразу же
+        // может начать удаляться.
+        // __previous_distance_to_front_wp[ i ] = (int) distance_to_front;
+        
+        // Массив предыдущих расхождений по курсу для каждой фазы будет свой.
+        __previous_heading_delta[ i ] = 0.0;
+        
+    }
+    
+    _internal_start();
+            
 }
 
 // ********************************************************************************************************************
@@ -145,7 +138,7 @@ void AircraftAbstractAction::__move_straight( const float & elapsed_since_last_c
     // Пройденная дистанция в любом случае увеличивается, даже если
     // самолет при этом двигается назад (при его выталкивании).
 
-    __total_distance += abs(distance);
+    _total_distance += abs(distance);
     
 }
 
@@ -233,17 +226,15 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
 // ********************************************************************************************************************
 
 void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
+            
+        
+    // Управление скоростью - одно для всех фаз (действий).
+    __control_of_speeds( elapsed_since_last_call );
+    // Управление угловым положением самолета.
+    __control_of_angles( elapsed_since_last_call );
     
-    if (( __started ) && ( ! __finished )) {
-        
-        
-        // Управление скоростью - одно для всех фаз (действий).
-        __control_of_speeds( elapsed_since_last_call );
-        // Управление угловым положением самолета.
-        __control_of_angles( elapsed_since_last_call );
-        
-        // До перемещения - запоминаем предыдущее положение.
-        auto front_wp = _ptr_acf->flight_plan.get(0);
+    // До перемещения - запоминаем предыдущее положение.
+    auto front_wp = _ptr_acf->flight_plan.get(0);
         
 //         for ( int i = PREVIOUS_ARRAY_SIZE - 2; i>=0; -- i ) {
 //             __previous_distance_to_front_wp[i + 1] = __previous_distance_to_front_wp[i];
@@ -251,14 +242,13 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
 //               
 //         __previous_distance_to_front_wp[0] = (int) _calculate_distance_to_wp( front_wp );
         
-        // Прямолинейное перемещение самолета 
-        __move_straight( elapsed_since_last_call );
-        
-        // "Внутренний шаг" - пересчет нужных для данного действия параметров.
-        _internal_step( elapsed_since_last_call );
-                
-        __total_duration += elapsed_since_last_call;
-    }
+    // Прямолинейное перемещение самолета 
+    __move_straight( elapsed_since_last_call );
+    
+    // "Внутренний шаг" - пересчет нужных для данного действия параметров.
+    _internal_step( elapsed_since_last_call );
+            
+    _total_duration += elapsed_since_last_call;
     
 }
 

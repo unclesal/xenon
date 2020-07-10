@@ -38,9 +38,10 @@ namespace xenon {
             
             void on_error( std::string message ) override;
             
-            virtual void action_started( void * action ) override;            
-            virtual void action_finished( void * action ) override;            
-            virtual void state_changed( void * state ) override;
+            void action_started( void * action ) override;            
+            void action_finished( void * action ) override;            
+            void state_changed( void * state ) override;
+            void wp_reached( waypoint_t wp ) override;
             
             /**
              * @short Прореветь об изменении своего состояния
@@ -65,6 +66,9 @@ namespace xenon {
             
             void __init_parking_frames();
             void __init_taxing_frames();
+            void __init_hp_frames();
+            void __init_lu_frames();
+            
             void __step();
 
             // void __test();

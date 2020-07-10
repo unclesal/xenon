@@ -1103,14 +1103,31 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
         auto node_itself = __routes.graph()[nd];
         waypoint_t wp;
         wp.type = WAYPOINT_TAXING;
+        wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
         wp.location = node_itself.location;
         wp.location.altitude = evalution_in_meters();
+        
+        // Смысла нет, там имена могут быть довольно страшными и бессмысленными.
+        // wp.name = node_itself.name;
+        
         result.push_back( wp );
     }
     
     // Последний узел найденного пути - это уже сама взлетка.
-    result[ result.size() - 1 ].type = WAYPOINT_RUNWAY;
+    result.at( result.size() - 1 ).type = WAYPOINT_RUNWAY;
+    result.at( result.size() - 1 ).action_to_achieve = ACF_DOES_LINING_UP;
     
+    // Предпоследней точкой поставим HP.
+    waypoint_t hp;
+    auto bearing_to_rwy = xenon::bearing( result[ result.size() - 2 ].location, result[ result.size() - 1 ].location );
+    hp.location = xenon::shift( result[ result.size() - 1 ].location, -100.0, bearing_to_rwy );
+    hp.location.altitude = evalution_in_meters();
+    hp.name = "HP";
+    hp.type = WAYPOINT_HP;
+    hp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
+    auto position = result.end() - 1;
+    result.insert(position, hp);
+        
     // Самолет ничего не знает о геометрии аэропорта. Поэтому
     // ему нужно дать еще и сам взлет, т.е. "дальный торец" ВПП,
     // по отношению к которому будет осущестляться разбег.
@@ -1120,6 +1137,7 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     take_off_wp.type = WAYPOINT_RUNWAY; 
     take_off_wp.location = departure_rwy.farest_end_location;    
     take_off_wp.location.altitude = evalution_in_meters();
+    take_off_wp.action_to_achieve = ACF_DOES_TAKE_OFF;
     result.push_back( take_off_wp );
     
     // Теперь проходимся поочередно по элементам,

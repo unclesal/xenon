@@ -224,6 +224,13 @@ namespace xenon {
              */
             void action_finished( void * action ) override;
             
+#ifdef INSIDE_AGENT
+            void set_agent(AgentInterface * a ) override {
+                AbstractAircraft::set_agent( a );
+                flight_plan.set_agent( a );
+            };
+#endif            
+            
         protected:
             
         private:

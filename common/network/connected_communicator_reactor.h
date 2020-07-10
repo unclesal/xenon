@@ -10,6 +10,7 @@
 #include <mutex>
 
 #include "flight_plan.h"
+#include "utils.hpp"
 
 namespace xenon {
 
@@ -36,6 +37,24 @@ namespace xenon {
                     );
                 };
                 
+                bool ahead_me( const location_t & me, const double & heading ) {
+                    
+                    auto bearing = xenon::bearing( me, vcl_condition.location );
+            
+                    // --------------------------------------------------
+                    // Это - правильная комбинация. Вместе с 
+                    // нормализацией дает именно тот курс, который надо.
+                    // --------------------------------------------------
+             
+                    auto delta = bearing - heading;
+                    xenon::normalize_degrees( delta );
+            
+                    // --------------------------------------------------
+            
+                    return (( delta >= 270 ) || ( delta <= 90 ));
+                    
+                };
+                
                 /**
                  * @short Находится ли данный агент в состоянии руления?
                  */
@@ -45,7 +64,10 @@ namespace xenon {
                         vcl_condition.current_action == ACF_DOES_PUSH_BACK
                         || vcl_condition.current_action == ACF_DOES_SLOW_TAXING
                         || vcl_condition.current_action == ACF_DOES_NORMAL_TAXING
-                        || vcl_condition.current_state == ACF_STATE_READY_FOR_TAXING
+                        || vcl_condition.current_action == ACF_DOES_TAXING_STOP
+                        || vcl_condition.current_action == ACF_DOES_WAITING_TAKE_OFF_APPROVAL
+                        || vcl_condition.current_action == ACF_DOES_LINING_UP
+                        || vcl_condition.current_action == ACF_DOES_TAKE_OFF
                     );
                 };
             };

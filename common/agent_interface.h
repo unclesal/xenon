@@ -16,6 +16,7 @@ namespace xenon {
             virtual void action_started( void * action ) = 0;
             virtual void action_finished( void * action ) = 0;
             virtual void state_changed( void * state ) = 0;
+            virtual void wp_reached( waypoint_t wp ) = 0;
 
     };
     

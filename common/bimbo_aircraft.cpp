@@ -80,13 +80,10 @@ BimboAircraft::BimboAircraft(
 void BimboAircraft::action_finished( void * action ) {
     
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
-    aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );
-    Logger::log("Action " + edge.name + " finished.");
-    graph->action_finished( ptr_abstract_action );
-    Logger::log("Before vehicle finished...");
+    aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );    
+    graph->action_finished( ptr_abstract_action );    
     AbstractVehicle::action_finished( action );
-    Logger::log("Vehicle finished done.");
-    
+        
 };
 
 // *********************************************************************************************************************
@@ -278,7 +275,7 @@ void BimboAircraft::__acf_parameters_correction() {
         
         _params.length = 45.0;
         _params.wingspan = 34.0;
-        _params.shift_from_ramp = -20.0;
+        _params.shift_from_ramp = -9.0;
 
         _params.v1 = 100.0;
         _params.v2 = 120.0;
@@ -383,27 +380,14 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
         Logger::log("ERROR: BimboAircraft::prepare_for_take_off, but aircraft is not parked.");
         return;
     }
-        
-    // Самая первая с конца точка - дальний конец ВПП.
     
-    waypoint_t wp = taxi_way.at( taxi_way.size() - 1 );
-    wp.action_to_achieve = ACF_DOES_TAKE_OFF;
-    wp.location.altitude = 150.0;
-    flight_plan.push_front( wp );
-        
-    // Вторая точка - это ближний конец ВПП. На нее выходим из состояния HP
-    // выравниванием ( lining up )
-    wp = taxi_way.at( taxi_way.size() - 2 );
-    wp.action_to_achieve = ACF_DOES_LINING_UP;
-    flight_plan.push_front( wp );
-
-    // Дальше все точки - это рулежка.    
-    for ( int i = (int) taxi_way.size() - 3; i>=0; -- i) {
-        wp = taxi_way.at(i);
-        wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
+    waypoint_t wp;
+    
+    for ( int i=taxi_way.size() - 1; i>=0; --i ) {
+        wp = taxi_way.at( i );
         flight_plan.push_front( wp );
-    }
-    
+    };
+            
     // До самой первой точки руления можно добраться либо выруливанием,
     // либо выталкиванием. Зависит от того, где она находится от нас,
     // спереди или сзади и можно ли до нее доехать самостоятельно.
@@ -595,8 +579,7 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     auto new_location = vc.location;
 #ifdef INSIDE_XPLANE
     // Попытка убрать дергание меток, раздражает сильно.
-    auto lbl = label;
-    label = "";
+    
     auto new_position = XPlane::location_to_position( vc.location );
     if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
     auto old_position = get_position();
@@ -612,8 +595,14 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
             drawInfo.z = new_position.z;
         } else set_position( new_position );
     }
-    set_rotation( vc.rotation );
-    label = lbl;
+    // По углам тоже чтобы не сильно дергалась.
+    auto current_rotation = get_rotation();
+    if ( 
+        abs(current_rotation.heading - vc.rotation.heading ) >= 5.0
+        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 5.0
+        || abs( current_rotation.roll - vc.rotation.roll ) >= 5.0
+    ) set_rotation( vc.rotation );
+        
 #else               
     set_location( new_location );                
     set_rotation( vc.rotation );

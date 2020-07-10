@@ -23,15 +23,7 @@ namespace xenon {
                 AbstractAircraft * ptr_acf, const aircraft_state_graph::graph_t::edge_descriptor & edge_d 
             );
             virtual ~AircraftAbstractAction() = default;
-                                    
-            bool is_started() {
-                return __started;
-            };
-            
-            bool is_finished() {
-                return __finished;
-            };        
-            
+                                                            
             aircraft_state_graph::graph_t::edge_descriptor edge_d() {
                 return _edge_d;
             };
@@ -46,8 +38,7 @@ namespace xenon {
             virtual void _internal_step( const float & elapsed_since_last_call ) = 0;
             virtual void _internal_start() = 0;
                         
-            inline void _finish() {
-                __finished = true;
+            inline void _finish() {                
                 _ptr_acf->action_finished( this );                
             };
             
@@ -113,18 +104,15 @@ namespace xenon {
             void _taxi_breaking( const float & to_speed, const float & for_seconds );
 
             
-        private:
-            
-            bool __started;
-            bool __finished;                        
-            
             /** 
              * @short Полное время в секундах, проведенное в данном действии.
              */
 
-            double __total_duration;
-            double __total_distance;
+            double _total_duration;
+            double _total_distance;
             
+        private:
+                        
             /**
              * @short Дистанция до следующей точки полетного плана - в предыдущем "шаге" цикла.
              * С точностью до метра. Иначе там набежки бывают, если оно double. 

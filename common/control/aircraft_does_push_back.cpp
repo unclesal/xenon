@@ -131,10 +131,8 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
 void AircraftDoesPushBack::__internal_step__phase_stop() {
     
     if ( abs( _ptr_acf->vcl_condition.speed ) < 0.2 ) {
-        // Завершено полностью.
-        Logger::log("does_push_back finished");
-        _ptr_acf->flight_plan.pop_front();
-        Logger::log("front_wp_reached was called, call finish...");
+        // Завершено полностью.        
+        _ptr_acf->flight_plan.pop_front();        
         _finish();        
     }
 

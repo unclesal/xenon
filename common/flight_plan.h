@@ -12,6 +12,10 @@
 #include "structures.h"
 #include "logger.h"
 
+#ifdef INSIDE_AGENT
+#include "agent_interface.h"
+#endif
+
 
 namespace xenon {
     
@@ -60,6 +64,12 @@ namespace xenon {
             void set_destination( const std::string & des ) { __destination = des; };
             void set_cruise_altitude( const float & a ) { __cruise_altitude = a; };
             void set_alternate( const vector<std::string> & alt ) { __alternate = alt; };
+            
+#ifdef INSIDE_AGENT
+            void set_agent(AgentInterface * a ) {
+                __agent = a;
+            };
+#endif                        
 
         protected:
             
@@ -73,7 +83,10 @@ namespace xenon {
             
             std::mutex __mutex;
             std::deque < waypoint_t > __way;
-            
+
+#ifdef INSIDE_AGENT
+            AgentInterface * __agent;
+#endif            
         
     }; // class FlightPlan
     

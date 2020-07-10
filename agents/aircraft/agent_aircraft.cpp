@@ -13,6 +13,8 @@
 
 #include "push_back_allowed.h"
 #include "taxing_distance.h"
+#include "hp_lu_occupated.h"
+#include "lu_before_take_off.h"
 #include "aircraft_state_landed.h"
 
 using namespace xenon;
@@ -49,6 +51,8 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     
     __init_parking_frames();
     __init_taxing_frames();
+    __init_hp_frames();
+    __init_lu_frames();
     
     // Коммуникатор порождаем последним, т.к. там потоки и он может тут же 
     // соединиться. Нужно, чтобы все указатели были уже инициализированы.
@@ -64,8 +68,10 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
 // *********************************************************************************************************************
 
 void AgentAircraft::__init_parking_frames() {
+    
     PushBackAllowed * pb = new PushBackAllowed( __ptr_acf, this );
     __state_frames[ ACF_STATE_PARKING ].push_back( pb );
+    
 }
 
 // *********************************************************************************************************************
@@ -75,9 +81,38 @@ void AgentAircraft::__init_parking_frames() {
 // *********************************************************************************************************************
 
 void AgentAircraft::__init_taxing_frames() {
+    
     TaxingDistance * dis = new TaxingDistance( __ptr_acf, this );
     __state_frames[ ACF_STATE_READY_FOR_TAXING ].push_back( dis );
+    
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                       Инициализация фреймов, имеющих отношение к предварительному старту                          *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__init_hp_frames() {
+    
+    HpLuOccupated * hp_lu_occupated = new HpLuOccupated( __ptr_acf, this );
+    __state_frames[ ACF_STATE_HP ].push_back( hp_lu_occupated );
+    
+};
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *         Инициализация фреймов, имеющих отношение к состоянию "готов к взлету" (исполнительный старт)              *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__init_lu_frames() {
+    
+    LUBeforeTakeOff * lub = new LUBeforeTakeOff( __ptr_acf, this );
+    __state_frames[ ACF_STATE_READY_FOR_TAKE_OFF ].push_back( lub );
+    
+}
+
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -127,10 +162,7 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->place_on_ground( gate );
         
         auto where_i_am = __ptr_acf->get_location();    
-        auto way = usss.get_taxi_way_for_departure( where_i_am );    
-        way[0].name = "0";
-        way[1].name = "1";
-        way[2].name = "2";
+        auto way = usss.get_taxi_way_for_departure( where_i_am );            
         __ptr_acf->prepare_for_take_off( way );
         __ptr_acf->test__fly();    
                 
@@ -291,7 +323,7 @@ void AgentAircraft::scream_about_me() {
 // *********************************************************************************************************************
 
 void AgentAircraft::state_changed( void * state ) {
-    cout << "AgentAircraft::state_changed" << endl;
+    
     scream_about_me();
     
     // После посадки нужно определить стоянку.
@@ -342,8 +374,7 @@ void AgentAircraft::state_changed( void * state ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AgentAircraft::action_started( void * action ) {
-    cout << "AgentAircraft::action_started" << endl;
+void AgentAircraft::action_started( void * action ) {    
     scream_about_me();
 }
 
@@ -353,9 +384,20 @@ void AgentAircraft::action_started( void * action ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AgentAircraft::action_finished( void * action ) {
-    cout << "AgentAircraft::action_finished" << endl;    
+void AgentAircraft::action_finished( void * action ) {    
+    __decision();
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *              Нулевая точка полетного плана была достигнута и удалена из самого полетного плана                    *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::wp_reached( waypoint_t wp ) {
+    
+}
+
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -466,6 +508,8 @@ void AgentAircraft::on_error( std::string message ) {
 
 void AgentAircraft::__decision() {
         
+    if ( ! __started ) return;
+    
     // Текущее состояние.
     
     auto current_state_object = __ptr_acf->graph->get_current_state();
@@ -479,12 +523,15 @@ void AgentAircraft::__decision() {
         for ( auto frame : __state_frames[ node.state ] ) {
             next_action_t his_result;
             frame->result( his_result );
-            result.push_back( his_result );
+            if ( his_result.action != ACF_DOES_NOTHING ) result.push_back( his_result );
         }
                 
         if ( result.empty() ) {
-            // У-п-с. Не из чего выбирать.
-            Logger::log("AgentAircraft::__decision(), nothing to select for " + node.name );            
+            // У-п-с. Не из чего выбирать. Ок, берем из полетного плана тогда.
+            
+            auto action = __ptr_acf->flight_plan.get(0).action_to_achieve;
+            if ( ! __ptr_acf->graph->current_action_is( action ) ) __start_fp0_action();            
+            
             return;
         };
         
@@ -525,8 +572,10 @@ void AgentAircraft::__decision() {
     } else {
         // Logger::log("No frames for " + node.name );
         // Если фреймов нет, то пока что запускаем действие, предусмотренное фронт-точкой полетного плана.
+        
         auto action = __ptr_acf->flight_plan.get(0).action_to_achieve;
         if ( ! __ptr_acf->graph->current_action_is( action ) ) __start_fp0_action();
+        
     }
     
 }
@@ -541,12 +590,30 @@ void AgentAircraft::__start_fp0_action() {
         
     auto next_wp = __ptr_acf->flight_plan.get(0);
     if ( next_wp.action_to_achieve == ACF_DOES_NOTHING ) {
-        Logger::log("AgentAircraft::__start_fp0_action: wp " + next_wp.name + ", nothing to do.");
+        Logger::log(
+            "AgentAircraft::__start_fp0_action: wp: " + next_wp.name + ", "
+            + waypoint_to_string( next_wp.type ) 
+            + ", nothing to do."
+        );
         return;
-    }
+    }        
     
     auto current_state = __ptr_acf->graph->get_current_state();
     auto node = __ptr_acf->graph->get_node_for( current_state );
+    
+    if ( node.state == ACF_STATE_READY_FOR_TAXING && next_wp.action_to_achieve == ACF_DOES_LINING_UP ) {
+        // Мы не доехали до HP. HP - это не точка, это расстояние. 
+        // Соответственно, состояние еще не изменилось.
+        // Значит, продолжаем руление.
+        next_wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;
+    };
+    
+    if ( node.state == ACF_STATE_HP && next_wp.action_to_achieve == ACF_DOES_TAKE_OFF ) {
+        // Не закончилась фаза выравнивания.
+        next_wp.action_to_achieve = ACF_DOES_LINING_UP;
+    };
+    
+    if ( __ptr_acf->graph->current_action_is( next_wp.action_to_achieve )) return;
     
     aircraft_state_graph::graph_t::edge_descriptor fake;
     try {
@@ -555,11 +622,14 @@ void AgentAircraft::__start_fp0_action() {
             
         if ( action == fake ) {
             Logger::log(
-                "AgentAircraft: __start_fp0_action got fake edge descriptor. State="
-                + node.name + ", action=" + to_string( next_wp.action_to_achieve)
+                "AgentAircraft: __start_fp0_action got fake edge descriptor. WP=" 
+                + next_wp.name + ", type=" + std::to_string(next_wp.type) 
+                + ", State=" + node.name
+                + ", action=" + to_string( next_wp.action_to_achieve)
             );
             return;
         }
+        
         __ptr_acf->graph->set_active_action( action );
 
     } catch ( const std::range_error & re ) {

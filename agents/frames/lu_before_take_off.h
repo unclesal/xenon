@@ -1,19 +1,19 @@
 // *********************************************************************************************************************
-// *                       Запрет выталкивания, если рядом уже есть самолет, который двигается                         *
+// *                      Фрейм проверки на исполнительном старте на предмет ранее взлетевшего самолета                *
 // *                                                                                                                   *
-// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 07 jul 2020 at 13:21 *
+// * Eugene G. Sysoletin <e.g.sysoletin@gmail.com>                                        Created 10 jul 2020 at 11:16 *
 // *********************************************************************************************************************
 #pragma once
-
 #include "state_frame.h"
+
 namespace xenon {
     
-    class PushBackAllowed : public StateFrame {
+    class LUBeforeTakeOff: public StateFrame {
         
         public:
             
-            PushBackAllowed( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
-            ~PushBackAllowed() override = default;
+            LUBeforeTakeOff( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
+            ~LUBeforeTakeOff() override = default;
             
             void update( CmdAircraftCondition * cmd ) override;
             
@@ -23,4 +23,5 @@ namespace xenon {
             
     };
     
-}; // namespace xenon
+};
+
