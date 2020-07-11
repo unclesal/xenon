@@ -549,8 +549,8 @@ void XPlanePlugin::__command_received( CmdFlightPlan * cmd ) {
     for ( auto bimbo: __bimbos ) {
         if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
             found = true;
-            bimbo->flight_plan = cmd->flight_plan();
-            bimbo->correct_flight_plan_altitudes();
+            // Коррекции высот не происходит, ее сделает действие посадки.
+            bimbo->flight_plan = cmd->flight_plan();            
             break;
         };
     };

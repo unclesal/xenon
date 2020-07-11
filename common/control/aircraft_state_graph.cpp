@@ -7,16 +7,20 @@
 #include "aircraft_state_graph.h"
 
 #include "aircraft_state_airborned.h"
+#include "aircraft_state_approach.h"
 #include "aircraft_state_before_parking.h"
 #include "aircraft_state_landed.h"
 #include "aircraft_state_on_final.h"
 #include "aircraft_state_on_hp.h"
+#include "aircraft_state_on_the_fly.h"
 #include "aircraft_state_parking.h"
 #include "aircraft_state_ready_for_take_off.h"
 #include "aircraft_state_ready_for_taxing.h"
 #include "aircraft_state_runway_leaved.h"
 
+#include "aircraft_does_becoming.h"
 #include "aircraft_does_flying.h"
+#include "aircraft_does_gliding.h"
 #include "aircraft_does_landing.h"
 #include "aircraft_does_lining_up.h"
 #include "aircraft_does_nothing.h"
@@ -69,7 +73,18 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     auto state_airborned_d = __create_state< AircraftStateAirborned > (
         ACF_STATE_AIRBORNED, "Airborned"
     );
-    // Состояние "на глиссаде"
+    
+    // Состояние "в полете"
+    auto state_on_the_fly_d = __create_state< AircraftStateOnTheFly > (
+        ACF_STATE_ON_THE_FLY, "OnTheFly"
+    );
+    
+    // Состояние "на глиссаде" (подход, зашел в растр ILS)
+    auto state_approach_d = __create_state< AircraftStateApproach > (
+        ACF_STATE_APPROACH, "Approach"
+    );
+    
+    // Состояние "на финальной прямой" (посадка)
     auto state_on_final_d = __create_state< AircraftStateOnFinal > (
         ACF_STATE_ON_FINAL, "OnFinal"
     );
@@ -153,12 +168,22 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_TAKE_OFF, "TakeOff", state_ready_for_take_off_d, state_airborned_d
     );
     
-    // Из состояния airborned начинается полет. Который закончится только выходом на глиссаду.
-    __create_action< AircraftDoesFlying > (
-        ACF_DOES_FLYING, "Flying", state_airborned_d, state_on_final_d
+    // Из состояния airborned в состояние "в полете" переходим становлением.
+    __create_action< AircraftDoesBecoming > (
+        ACF_DOES_BECOMING, "Becoming", state_airborned_d, state_on_the_fly_d
     );
     
-    // Из выхода на глиссаду в состояние "приземлился" - выходим посадкой.
+    // Из состояния полета происходит действие полета, которое закончится только выходом на глиссаду.
+    __create_action< AircraftDoesFlying > (
+        ACF_DOES_FLYING, "Flying", state_on_the_fly_d, state_approach_d
+    );
+    
+    // Из состояния "на глиссаде" в состояние "на финальной прямой" выходим глайдингом.
+    __create_action< AircraftDoesGliding > (
+        ACF_DOES_GLIDING, "Gliding", state_approach_d, state_on_final_d
+    );
+    
+    // Из состояния "на финальной прямой" в состояние "приземлился" - выходим посадкой.
     __create_action < AircraftDoesLanding > (
         ACF_DOES_LANDING, "Landing",  state_on_final_d, state_landed_d
     );
@@ -228,9 +253,15 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
         __graph[ nd ].current_state = true;
         __ptr_acf->vcl_condition.current_state = __graph[ nd ].state;
         __current_state = ( AircraftAbstractState * ) __graph[ nd ].ptr_state_class;
+        
         if ( __current_state ) {
             __current_state->__activate();
         }
+        
+#ifdef DEBUG        
+        Logger::log( __ptr_acf->vcl_condition.agent_name + ", set active state " + __graph[ nd ].name );
+#endif        
+        
 #ifdef INSIDE_AGENT            
         if ( __ptr_acf->agent ) __ptr_acf->agent->state_changed( __current_state );
 #endif        
@@ -463,7 +494,7 @@ aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_ou
     };
     
     auto name = __graph[ __current_state->node_d() ].name;
-    Logger::log("ERROR: no outgoing action was found from current " + name + " with type=" + to_string( action ));
+    Logger::log(__ptr_acf->vcl_condition.agent_name + ": no outgoing action was found from current " + name + " with type=" + action_to_string( action ));
     return fake;
 
 }

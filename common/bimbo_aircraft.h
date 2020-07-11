@@ -161,7 +161,7 @@ namespace xenon {
 #endif
                 acf_condition.flaps_position = position;
             };
-            
+                        
             void set_speed_brake_position( const float & position ) override {
 #ifdef INSIDE_XPLANE
                 __actuators[ V_CONTROLS_SPEED_BRAKE_RATIO ].endpoint = position;
@@ -202,6 +202,7 @@ namespace xenon {
             void prepare_for_taxing( const deque< waypoint_t > & taxi_way ) override;
                         
             void test__fly();
+            void test__fp_landing();
             // void test__taxing();
 
 #ifdef INSIDE_XPLANE

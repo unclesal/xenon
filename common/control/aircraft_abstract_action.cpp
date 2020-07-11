@@ -379,8 +379,8 @@ void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude
     // реалистично. Угол тангажа надо ставить в зависимости от вертикальной скорости.
     
     float degrees = 1.0;
-    if ( abs(_ptr_acf->acf_condition.vertical_speed) > 7.0 ) degrees = 10.0;
-    else if ( abs(_ptr_acf->acf_condition.vertical_speed) > 5.0 ) degrees = 5.0;
+    if ( abs(_ptr_acf->acf_condition.vertical_speed) > 7.0 ) degrees = 4.0;
+    else if ( abs(_ptr_acf->acf_condition.vertical_speed) > 5.0 ) degrees = 3.0;
     else if ( abs(_ptr_acf->acf_condition.vertical_speed) > 2.0 ) degrees = 2.0;
     
     // Целевое значение тангажа.
@@ -569,3 +569,67 @@ bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination 
     return false;
 
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                             Управление положением закрылков в зависимости от скорости                             *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftAbstractAction::_control_of_flaps() {
+    
+    auto acf_params = _ptr_acf->parameters();
+    
+    float current_flaps = _ptr_acf->acf_condition.flaps_position;
+    
+    if (
+        ( _ptr_acf->vcl_condition.speed >= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed ))
+        && ( _ptr_acf->vcl_condition.acceleration > 0.0 )
+        && ( current_flaps != 0.0 )
+    ) {
+        _ptr_acf->set_flaps_position(0.0);
+        Logger::log("FLY: laps to 0");
+    }
+    
+    if ( 
+        ( _ptr_acf->vcl_condition.speed )
+        && ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed))
+        && ( _ptr_acf->vcl_condition.speed > xenon::knots_to_merets_per_second( acf_params.flaps_landing_speed ))
+        && ( _ptr_acf->vcl_condition.acceleration < 0.0 )
+        && ( current_flaps != acf_params.flaps_take_off_position )
+    ) {
+        _ptr_acf->set_flaps_position( acf_params.flaps_take_off_position );
+        Logger::log("FLY: flaps to TO");
+    };
+    
+    // Если скорость еще снизилась, то закрылки выпускаем в посадочное положение 
+        
+    if (
+        ( _ptr_acf->vcl_condition.speed )
+        && ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_params.flaps_landing_speed ))
+        && ( _ptr_acf->vcl_condition.acceleration < 0.0 )
+        && ( current_flaps != 1.0 )
+    ) {
+        Logger::log("Flaps to LAND position, was " + to_string(current_flaps));
+        _ptr_acf->set_flaps_position( 1.0 );
+        _ptr_acf->set_gear_down( true );
+    }     
+    
+    if ( _ptr_acf->acf_condition.flaps_position == 1.0 ) {
+        
+        // Если закрылки выпущены в посадочное положение, то считаем, что самолет летит 
+        // уже достаточно медленно. Поэтому выравнивается на положительный тангаж.
+        // При этом будут перекрываться установки по тангажу _altitude_adjustment.
+        
+        _ptr_acf->acf_condition.target_pitch = 3.5;
+        
+        // Нос пошел вверх. 
+        
+        if ( _ptr_acf->vcl_condition.rotation.pitch > _ptr_acf->acf_condition.target_pitch ) 
+            _ptr_acf->acf_condition.pitch_acceleration = -0.3f;
+        else
+            _ptr_acf->acf_condition.pitch_acceleration = 0.3f;
+    }
+
+
+};

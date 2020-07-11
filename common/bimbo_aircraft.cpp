@@ -577,31 +577,46 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     }    
     
     auto new_location = vc.location;
+
 #ifdef INSIDE_XPLANE
+    
     // Попытка убрать дергание меток, раздражает сильно.
     
     auto new_position = XPlane::location_to_position( vc.location );
     if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
+    
     auto old_position = get_position();
     auto distance = XPlane::distance2d(old_position, new_position);
-    if ( distance >= 1.0 ) {
-        auto current_state = graph->get_current_state();
-        auto node = graph->get_node_for( current_state );
-        
-        if ( node.state == ACF_STATE_ON_FINAL ) {
+    if ( distance >= 1.0 ) {                
+        if ( 
+            graph->current_action_is( ACF_DOES_LANDING )
+            || graph->current_action_is( ACF_DOES_TAKE_OFF )
+        ) {
             // Переставляем - без высоты. Потому что высОты 
             // скорректированы в X-Plane под текущий уровень земли.
             drawInfo.x = new_position.x;
             drawInfo.z = new_position.z;
+            // А высоту - сохраняем.
+            vcl_condition.location.altitude = drawInfo.y;
         } else set_position( new_position );
     }
     // По углам тоже чтобы не сильно дергалась.
     auto current_rotation = get_rotation();
-    if ( 
-        abs(current_rotation.heading - vc.rotation.heading ) >= 5.0
-        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 5.0
-        || abs( current_rotation.roll - vc.rotation.roll ) >= 5.0
-    ) set_rotation( vc.rotation );
+     if ( 
+        abs(current_rotation.heading - vc.rotation.heading ) >= 3.0
+        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 3.0
+        || abs( current_rotation.roll - vc.rotation.roll ) >= 3.0
+    ) {
+        if ( 
+            graph->current_action_is( ACF_DOES_LANDING )
+            || graph->current_action_is( ACF_DOES_TAKE_OFF )
+        ) {
+            // Без тангажа, только два остальных угла.
+            drawInfo.roll = vc.rotation.roll;
+            drawInfo.heading = vc.rotation.heading;
+            vcl_condition.rotation.pitch = drawInfo.pitch;        
+        } else set_rotation( vc.rotation );
+     }
         
 #else               
     set_location( new_location );                
@@ -698,6 +713,102 @@ void BimboAircraft::test__place_on_rwy_end() {
 #endif
 
 // *********************************************************************************************************************
+// * *
+// * Тестирование посадочной фазы (только полетный план) *
+// * *
+// *********************************************************************************************************************
+
+void BimboAircraft::test__fp_landing() {
+    
+    // Отсюда начинается этап отладки посадки.
+    // SS025
+    waypoint_t ss025 = {
+        .name = "SS025",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
+            .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
+            .altitude = 1100.0
+        },
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    flight_plan.push_back( ss025 );
+
+    // CF08L
+    waypoint_t cf08l = {
+        .name = "CF08L",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 41.97, 'N' ),
+            .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
+            .altitude = 1100.0
+        },
+        .speed = 240.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_FLYING
+    };
+    flight_plan.push_back( cf08l );
+
+    // FN08L
+    waypoint_t fn08l = {
+        .name = "FN08L",
+        .type = WAYPOINT_FLYING,
+        .location = {
+            .latitude = degrees_to_decimal(56, 44, 40.25, 'N' ),
+            .longitude = degrees_to_decimal(60, 37, 38.34, 'E'),
+            .altitude = 1000.0
+        },
+        .speed = 200.0,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_GLIDING
+    };
+    flight_plan.push_back( fn08l );
+
+    // RW08L - торец ВПП.    
+    waypoint_t rwy08l = {
+        .name = "RWY08L",
+        .type = WAYPOINT_RUNWAY,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 41.41, 'N' ),
+            .longitude = degrees_to_decimal( 60, 46, 40.90, 'E' ),
+            .altitude = 246.0
+        },
+        .speed = _params.landing_speed,
+        .incomming_heading = 0.0,
+        .outgoing_heading = 0.0,          
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_LANDING
+    };    
+    flight_plan.push_back( rwy08l );
+
+    // RWY26R - только для обеспечения посадки, для установки курса и торможения на ВПП.
+    waypoint_t rwy26r = {
+        .name = "RWY26R",
+        .type = WAYPOINT_DESTINATION,
+        .location = {
+            .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
+            .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
+            .altitude = 246.0
+        },
+        .speed = 0.0,
+        .incomming_heading = 0.0,        
+        .outgoing_heading = 0.0,        
+        .distance_to_next_wp = 0.0,
+        .action_to_achieve = ACF_DOES_LANDING
+    };
+    flight_plan.push_back( rwy26r );
+
+};
+
+// *********************************************************************************************************************
 // *                                                                                                                   *
 // *                                           Тестирование полетной фазы                                              *
 // *                                                                                                                   *
@@ -740,75 +851,9 @@ void BimboAircraft::test__fly() {
        .action_to_achieve = ACF_DOES_FLYING
    };
    flight_plan.push_back( d237k );
-     
-   // SS025
-   waypoint_t ss025 = {
-       .name = "SS025",
-       .type = WAYPOINT_FLYING,
-       .location = {
-           .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
-           .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
-           .altitude = 1100.0
-       },
-       .speed = 240.0,
-       .incomming_heading = 0.0,
-       .outgoing_heading = 0.0,
-       .distance_to_next_wp = 0.0,
-       .action_to_achieve = ACF_DOES_FLYING
-   };
-   flight_plan.push_back( ss025 );
-    
-    // CF08L
-    waypoint_t cf08l = {
-        .name = "CF08L",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 41.97, 'N' ),
-            .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
-            .altitude = 1100.0
-        },
-        .speed = 190.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
-    flight_plan.push_back( cf08l );
-
-    // RW08L - торец ВПП.    
-    waypoint_t rwy08l = {
-        .name = "RWY08L",
-        .type = WAYPOINT_RUNWAY,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 41.41, 'N' ),
-            .longitude = degrees_to_decimal( 60, 46, 40.90, 'E' ),
-            .altitude = 170.0
-        },
-        .speed = _params.landing_speed,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,          
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_LANDING
-    };    
-    flight_plan.push_back( rwy08l );
-    
-    // RWY26R - только для обеспечения посадки, для установки курса и торможения на ВПП.
-    waypoint_t rwy26r = {
-        .name = "RWY26R",
-        .type = WAYPOINT_DESTINATION,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
-            .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
-            .altitude = 170.0
-        },
-        .speed = 0.0,
-        .incomming_heading = 0.0,        
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_LANDING
-    };
-    flight_plan.push_back( rwy26r );
-     
+   
+   test__fp_landing();
+          
     vector< std::string > alternate;
     alternate.push_back("USCC");
     flight_plan.set_alternate( alternate );

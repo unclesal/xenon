@@ -70,7 +70,9 @@ set(SOURCES
 
     ${CONTROL}/aircraft_abstract_action.cpp
     ${CONTROL}/aircraft_abstract_state.cpp
+    ${CONTROL}/aircraft_does_becoming.cpp
     ${CONTROL}/aircraft_does_flying.cpp
+    ${CONTROL}/aircraft_does_gliding.cpp
     ${CONTROL}/aircraft_does_landing.cpp
     ${CONTROL}/aircraft_does_lining_up.cpp
     ${CONTROL}/aircraft_does_nothing.cpp
@@ -84,11 +86,13 @@ set(SOURCES
     ${CONTROL}/aircraft_does_waiting_push_back.cpp
     ${CONTROL}/aircraft_does_waiting_take_off_approval.cpp
     ${CONTROL}/aircraft_state_airborned.cpp
+    ${CONTROL}/aircraft_state_approach.cpp
     ${CONTROL}/aircraft_state_before_parking.cpp
     ${CONTROL}/aircraft_state_graph.cpp
     ${CONTROL}/aircraft_state_landed.cpp
     ${CONTROL}/aircraft_state_on_final.cpp
     ${CONTROL}/aircraft_state_on_hp.cpp
+    ${CONTROL}/aircraft_state_on_the_fly.cpp
     ${CONTROL}/aircraft_state_parking.cpp
     ${CONTROL}/aircraft_state_ready_for_take_off.cpp
     ${CONTROL}/aircraft_state_ready_for_taxing.cpp

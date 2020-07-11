@@ -37,10 +37,7 @@ namespace xenon {
                 PHASE_BREAKING                
             };
             
-            phase_t __phase;
-            
-            bool __flaps_to_take_off_position;
-            bool __flaps_to_landing_position;
+            phase_t __phase;                        
                         
             void __step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters );
             void __step__alignment( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters, const float & elapsed_since_last_call );

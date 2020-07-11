@@ -19,9 +19,7 @@ xenon::AircraftDoesLanding::AircraftDoesLanding(
 ) : AircraftAbstractAction( ptr_acf, edge_d )
 {
     __phase = PHASE_UNKNOWN;
-    
-    __flaps_to_take_off_position = false;
-    __flaps_to_landing_position = false;
+        
 }
 
 // *********************************************************************************************************************
@@ -34,12 +32,14 @@ void AircraftDoesLanding::_internal_start() {
     
     __phase = PHASE_UNKNOWN;
     auto wp0 = _ptr_acf->flight_plan.get(0);
-    if ( ( wp0.type != WAYPOINT_RUNWAY ) || ( wp0.action_to_achieve != ACF_DOES_LANDING ) ) {
-        Logger::log(
-            "ERROR: incorrect WP for landing, type=" + to_string( wp0.type ) 
-            + ", action to achieve=" + to_string( wp0.action_to_achieve ) 
-        );
-        return;
+    
+    while ( wp0.action_to_achieve != ACF_DOES_LANDING ) {
+        _ptr_acf->flight_plan.pop_front();
+        wp0 = _ptr_acf->flight_plan.get(0);
+        if ( wp0.action_to_achieve == ACF_DOES_NOTHING || _ptr_acf->flight_plan.is_empty())  {
+            Logger::log("ERROR: WP for landing not found.");
+            return;
+        }
     };
     
     __phase = PHASE_DESCENDING;
@@ -48,29 +48,24 @@ void AircraftDoesLanding::_internal_start() {
     _ptr_acf->set_beacon_lites( true );
     _ptr_acf->set_nav_lites( true );
     _ptr_acf->set_beacon_lites( true );
-    
-    // Механизация самолета. Пока что мы еще летим.
-    // _ptr_acf->v[ XPMP2::V_CONTROLS_FLAP_RATIO ] = 0.0;
-    // _ptr_acf->v[ XPMP2::V_CONTROLS_SPEED_BRAKE_RATIO ] = 0.0;
-    // _ptr_acf->v[ XPMP2::V_CONTROLS_GEAR_RATIO ] = 0.0;
-    
-    __flaps_to_take_off_position = false;
-    __flaps_to_landing_position = false;
-        
+                
     _ptr_acf->vcl_condition.is_clamped_to_ground = false;
-    
+
+/*    
 #ifdef INSIDE_XPLANE
     
     // Если дело происходит внутри симулятора, то следующую
     // точку надо скорректировать по высоте, т.к. мы на 
     // нее собрались реально (зримо) садиться.
     
-    _ptr_acf->hit_to_ground( wp0.location );    
+    _ptr_acf->hit_to_ground( wp0.location );
     // Плюс сколько-нибудь метров над ней, чтобы начать выравнивание и выдерживание.
-    wp0.location.altitude += 10.0;
+    wp0.location.altitude += 8.0;
     _ptr_acf->flight_plan.set( 0, wp0 );
-    
-#endif    
+
+#endif
+*/
+
 }
 
 // *********************************************************************************************************************
@@ -85,64 +80,29 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     auto acf_location = _ptr_acf->get_location();
     auto acf_rotation = _ptr_acf->get_rotation();
     
+    location_t end_rwy_location = wp.location;
+    
+#ifdef INSIDE_XPLANE
+   _ptr_acf->hit_to_ground( end_rwy_location );    
+   end_rwy_location.altitude += _ptr_acf->parameters().on_ground_offset + 1.0;
+#endif
+
+    
     auto distance = xenon::distance2d( acf_location, wp.location );
     if ( _ptr_acf->vcl_condition.speed != 0.0 ) {
         auto time_to_achieve = distance / _ptr_acf->vcl_condition.speed;
-        _altitude_adjustment( wp.location.altitude, time_to_achieve );
-        _speed_adjustment( 
-            xenon::knots_to_merets_per_second( acf_parameters.landing_speed ), time_to_achieve 
-        );
+        _altitude_adjustment( end_rwy_location.altitude, time_to_achieve );
+        _speed_adjustment( xenon::knots_to_merets_per_second( wp.speed ), time_to_achieve );
     }
     
-    // При достижении определенной скорости закрылки выпускаем во взлетное положение.
-    if ( 
-        ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_parameters.flaps_take_off_speed ))
-        && ( ! __flaps_to_take_off_position )
-    ) {
-        __flaps_to_take_off_position = true;
-        _ptr_acf->set_flaps_position( acf_parameters.flaps_take_off_position );
-        Logger::log("Flaps to TO position");
-    }
-    
-    // Если скорость еще снизилась, то закрылки выпускаем в посадочное положение 
-    
-    if (
-        ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_parameters.flaps_landing_speed ))
-        && ( ! __flaps_to_landing_position )
-    ) {
-        Logger::log("Flaps to LAND position");
-        __flaps_to_landing_position = true;
-        _ptr_acf->set_flaps_position( 1.0 );
-        _ptr_acf->set_gear_down( true );                        
-    }     
-    
-    
-    if ( __flaps_to_landing_position ) {
+    _control_of_flaps();        
         
-        // Если закрылки выпущены в посадочное положение, то считаем, что самолет летит 
-        // уже достаточно медленно. Поэтому выравнивается на положительный тангаж.
-        // При этом будут перекрываться установки по тангажу _altitude_adjustment.
-        
-        _ptr_acf->acf_condition.target_pitch = 5.0;
-        
-        // Нос пошел вверх не спеша. Торопиться некуда: это все происходит довольно далеко от ВПП.
-        
-        if ( acf_rotation.pitch > _ptr_acf->acf_condition.target_pitch ) 
-            _ptr_acf->acf_condition.pitch_acceleration = -0.2f;
-        else
-            _ptr_acf->acf_condition.pitch_acceleration = 0.2f;
-    }
-    
-    location_t end_rwy_location = wp.location;
-
-#ifdef INSIDE_XPLANE    
-    _ptr_acf->hit_to_ground( end_rwy_location );
-#endif
-
     // На скольки-нибудь метрах высоты относительно высоты торца ВПП - останавливаемся.
     auto da = acf_location.altitude - end_rwy_location.altitude;
+    
+    // Logger::log("RWY alt=" + to_string( end_rwy_location.altitude ) + ", our alt=" + to_string(acf_location.altitude) + ", da=" + to_string(da));
 
-    if ( da <= 13.0 ) {
+    if ( da <= _ptr_acf->parameters().on_ground_offset + 3.5 ) {
 
         // Переход в фазу выравнивания.
 
@@ -202,10 +162,6 @@ void AircraftDoesLanding::__step__alignment(
     auto ground_pos = acf_position;
     _ptr_acf->hit_to_ground( ground_pos );
     
-
-    // auto target_pos = XPlane::location_to_position( wp.location );
-    // auto distance = XPlane::distance_2d( acf_position, target_pos );
-    
     // Выстота (расстояние до земли)
     auto height = acf_position.y - ground_pos.y;
 #else
@@ -231,7 +187,7 @@ void AircraftDoesLanding::__step__alignment(
         else _ptr_acf->acf_condition.pitch_acceleration = 0.9f;
         
         // Торможение.
-        _ptr_acf->vcl_condition.acceleration = -3.0f;
+        _ptr_acf->vcl_condition.acceleration = -1.6f;
         // До нуля-то не надо, быстрее освободим ВПП.
         _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
         
@@ -293,6 +249,7 @@ void AircraftDoesLanding::__step__breaking() {
 
 void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call ) {
     
+    if ( __phase == PHASE_UNKNOWN ) __phase = PHASE_DESCENDING;
     auto wp = _ptr_acf->flight_plan.get(0);
     auto acf_parameters = _ptr_acf->parameters();
     switch ( __phase ) {

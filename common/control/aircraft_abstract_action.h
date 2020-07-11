@@ -111,6 +111,8 @@ namespace xenon {
             double _total_duration;
             double _total_distance;
             
+            void _control_of_flaps();
+            
         private:
                         
             /**

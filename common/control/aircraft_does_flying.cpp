@@ -104,27 +104,8 @@ void AircraftDoesFlying::__control_of_speed (
 // *********************************************************************************************************************
 
 void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call ) {
-    
-    // Положение закрылков в полете.
-    auto acf_params = _ptr_acf->parameters();
-    
-    if (
-        ( _ptr_acf->vcl_condition.speed >= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed ))
-        && ( _ptr_acf->vcl_condition.acceleration >= 0.0 )
-        && ( _ptr_acf->acf_condition.flaps_position != 0.0 )
-    ) {
-        _ptr_acf->set_flaps_position(0.0);
-        Logger::log("FLY: laps to 0");
-    }
-    
-    if ( 
-        ( _ptr_acf->vcl_condition.speed <= xenon::knots_to_merets_per_second( acf_params.flaps_take_off_speed))
-        && ( _ptr_acf->vcl_condition.acceleration <= 0.0 )
-        && ( _ptr_acf->acf_condition.flaps_position != acf_params.flaps_take_off_position )
-    ) {
-        _ptr_acf->set_flaps_position( acf_params.flaps_take_off_position );
-        Logger::log("FLY: flaps to TO");
-    };
+
+    _control_of_flaps();        
     
     auto wp = _ptr_acf->flight_plan.get(0);
     _head_bearing( wp );
@@ -135,7 +116,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         
     // Logger::log( "after distance phase=" + to_string( __phase ) + ", distance=" + to_string(distance) );
     
-    if ( distance <= 1000.0 ) {
+    if ( distance <= FLY_WAYPOINT_REACHED_DISTANCE ) {
         Logger::log("Does FLYING, " + wp.name + " reached, distance=" + to_string( distance ) );
         _ptr_acf->flight_plan.pop_front();
         
@@ -143,7 +124,7 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         wp = _ptr_acf->flight_plan.get(0);
         Logger::log(
             "Does FLYING, next wp: " + wp.name + ", alt=" + to_string( wp.location.altitude ) 
-            + ", type=" + to_string( wp.type ) + ", action=" + to_string( wp.action_to_achieve )
+            + ", type=" + waypoint_to_string( wp.type ) + ", action=" + action_to_string( wp.action_to_achieve )
         );
         
         if ( wp.type == WAYPOINT_UNKNOWN ) {

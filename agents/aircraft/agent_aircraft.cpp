@@ -157,23 +157,55 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
     
     if ( __ptr_acf ) {
         __ptr_acf->vcl_condition.agent_uuid = uuid;
-        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT;                
-                                       
-        __ptr_acf->place_on_ground( gate );
+        __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT; 
         
-        auto where_i_am = __ptr_acf->get_location();    
-        auto way = usss.get_taxi_way_for_departure( where_i_am );            
-        __ptr_acf->prepare_for_take_off( way );
-        __ptr_acf->test__fly();    
+        __test_landing();
+        
+                                       
+//         __ptr_acf->place_on_ground( gate );
+//         
+//         auto where_i_am = __ptr_acf->get_location();    
+//         auto way = usss.get_taxi_way_for_departure( where_i_am );            
+//         __ptr_acf->prepare_for_take_off( way );
+//         __ptr_acf->test__fly();    
                 
     }
     
-    // Это - тоже времянка. Я их пока что запускаю всех вместе и получается
-    // полная глупость, когда стартуют прям с точностью до милисекунды одновременно.
-    int r = rand();    
-    float rr = r * 100000.0 / (float) RAND_MAX;
-    usleep((int)rr);
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                      Тестирование - только посадочной фазы                                        *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__test_landing() {
+    
+    __ptr_acf->test__fp_landing();
+    waypoint_t first = __ptr_acf->flight_plan.get(0);
+    __ptr_acf->vcl_condition.is_clamped_to_ground = false;
+    __ptr_acf->set_location( first.location );
+    
+    rotation_t rotation;
+    rotation.heading = 80;
+    rotation.pitch = 0;
+    rotation.roll = 0;
+    
+    __ptr_acf->set_rotation( rotation );
+    
+    __ptr_acf->graph->set_active_state( ACF_STATE_ON_THE_FLY );
+    auto action = __ptr_acf->graph->get_action_outgoing_from_current_state( ACF_DOES_FLYING );
+    __ptr_acf->graph->set_active_action( action );
+    
+    __ptr_acf->vcl_condition.speed = __ptr_acf->parameters().cruise_speed;
+    __ptr_acf->vcl_condition.target_speed = __ptr_acf->vcl_condition.speed;
+    __ptr_acf->vcl_condition.acceleration = 0.0;
+    
+    __ptr_acf->flight_plan.set_departure("USSS");
+    __ptr_acf->flight_plan.set_destination("USSS");    
+
+}
+
 
 
 // *********************************************************************************************************************
@@ -328,23 +360,32 @@ void AgentAircraft::state_changed( void * state ) {
     
     // После посадки нужно определить стоянку.
     AircraftAbstractState * abstract_state = ( AircraftAbstractState * ) state;
+    
+    cout << __ptr_acf->vcl_condition.agent_name << ", AgentAircraft::state_changed to " << __ptr_acf->graph->get_node_for( abstract_state ).name << endl;
+    
     AircraftStateLanded * landed = dynamic_cast< AircraftStateLanded * >( abstract_state );
     if ( landed ) {
+                
+        waypoint_t wp = __ptr_acf->flight_plan.get(0);
+        while ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
+            __ptr_acf->flight_plan.pop_front();
+            wp = __ptr_acf->flight_plan.get(0);
+        };
         
-        auto acf_parameters = __ptr_acf->parameters();        
         auto our_location = __ptr_acf->get_location();    
         auto our_heading = __ptr_acf->get_rotation().heading;
     
+        auto destination = __ptr_acf->flight_plan.destination();
         
-        if ( acf_parameters.destination.empty() ) {
-            Logger::log("AgentAircraft::state_changed, AircraftStateLanded::_internal_acitvate(), FP without destination.");
+        if ( destination.empty() ) {
+            Logger::log("AgentAircraft::state_changed, landed: FP without destination.");
             return;
         }
         
-        auto airport = Airport::get_by_icao( acf_parameters.destination );
+        auto airport = Airport::get_by_icao( destination );
 
         if ( __ptr_acf->acf_condition.icao_type.empty() ) {
-            Logger::log("AircraftStateLanded::_internal_activate(), aircraft ICAO type empty.");
+            Logger::log("AgentAircraft::state_changed, landed, aircraft ICAO type empty.");
             return;
         };
         
@@ -359,7 +400,7 @@ void AgentAircraft::state_changed( void * state ) {
         
         auto way = airport.get_taxi_way_for_parking( our_location, our_heading, parking );
         __ptr_acf->prepare_for_taxing( way );
-        
+                
         if (( _communicator ) && ( _communicator->is_connected() )) {
             CmdFlightPlan * cmd_flight_plan = new CmdFlightPlan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan);
             _communicator->request( cmd_flight_plan );
@@ -375,7 +416,7 @@ void AgentAircraft::state_changed( void * state ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::action_started( void * action ) {    
-    scream_about_me();
+    scream_about_me();    
 }
 
 // *********************************************************************************************************************
@@ -384,7 +425,7 @@ void AgentAircraft::action_started( void * action ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AgentAircraft::action_finished( void * action ) {    
+void AgentAircraft::action_finished( void * action ) {     
     __decision();
 }
 
@@ -395,7 +436,10 @@ void AgentAircraft::action_finished( void * action ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::wp_reached( waypoint_t wp ) {
-    
+    auto next_wp = __ptr_acf->flight_plan.get(0);
+    if ( next_wp.action_to_achieve == ACF_DOES_GLIDING ) {
+        __ptr_acf->graph->set_active_state( ACF_STATE_APPROACH );
+    }
 }
 
 
@@ -623,9 +667,9 @@ void AgentAircraft::__start_fp0_action() {
         if ( action == fake ) {
             Logger::log(
                 "AgentAircraft: __start_fp0_action got fake edge descriptor. WP=" 
-                + next_wp.name + ", type=" + std::to_string(next_wp.type) 
+                + next_wp.name + ", type=" + waypoint_to_string(next_wp.type) 
                 + ", State=" + node.name
-                + ", action=" + to_string( next_wp.action_to_achieve)
+                + ", action=" + action_to_string( next_wp.action_to_achieve)
             );
             return;
         }

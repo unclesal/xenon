@@ -239,8 +239,10 @@ namespace xenon {
             case ACF_DOES_TAXING_STOP : return "ACF_DOES_TAXING_STOP";
             case ACF_DOES_WAITING_TAKE_OFF_APPROVAL : return "ACF_DOES_WAITING_TAKE_OFF_APPROVAL";            
             case ACF_DOES_LINING_UP : return "ACF_DOES_LINING_UP";            
-            case ACF_DOES_TAKE_OFF : return "ACF_DOES_TAKE_OFF";        
-            case ACF_DOES_FLYING : return "ACF_DOES_FLYING";        
+            case ACF_DOES_TAKE_OFF : return "ACF_DOES_TAKE_OFF";  
+            case ACF_DOES_BECOMING: return "ACF_DOES_BECOMING";
+            case ACF_DOES_FLYING : return "ACF_DOES_FLYING";  
+            case ACF_DOES_GLIDING: return "ACF_DOES_GLIDING";
             case ACF_DOES_LANDING : return "ACF_DOES_LANDING";        
             case ACF_DOES_RUNWAY_LEAVING : return "ACF_DOES_RUNWAY_LEAVING";
             case ACF_DOES_PARKING : return "ACF_DOES_PARKING";

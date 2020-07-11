@@ -195,7 +195,7 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
     
     if ( front_wp.type == WAYPOINT_HP ) {
         
-        if ( distance <= 50 && _ptr_acf->vcl_condition.target_speed ) {
+        if ( distance <= 70 && _ptr_acf->vcl_condition.target_speed ) {
             // Начинаем торможение 
             if ( _ptr_acf->vcl_condition.speed ) {
                 auto time = distance / _ptr_acf->vcl_condition.speed;            
