@@ -52,6 +52,7 @@ void CmdFlightPlan::to_json( JSON & json) {
     auto way = JSON::array();
     for ( auto wp : __fp.__way ) {
         JSON element;
+        element["npp"] = wp.npp;
         element["name"] = wp.name;
         element["type"] = (uint16_t) wp.type;
         element["latitude"] = wp.location.latitude;
@@ -83,6 +84,7 @@ void CmdFlightPlan::from_json( JSON & json ) {
     auto way = json.value("way", JSON::array());
     for ( auto element: way ) {
         waypoint_t wp;
+        wp.npp = element.value( "npp", 0 );
         wp.name = element.value("name", "");
         wp.type = ( waypoint_type_t ) element.value( "type", 0 );
         wp.location.latitude = element.value( "latitude", 0.0 );

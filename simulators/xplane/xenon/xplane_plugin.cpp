@@ -59,10 +59,7 @@ void XPlanePlugin::enable() {
 // *********************************************************************************************************************
 
 void XPlanePlugin::disable() {
-    __enabled = false;    
-    if ( __communicator ) {
-        if ( __communicator->is_connected() ) __communicator->disconnect();
-    }
+    __enabled = false;        
 }
 
 // *********************************************************************************************************************
@@ -219,6 +216,12 @@ void XPlanePlugin::on_received( void * abstract_command ) {
     CmdFlightPlan * cmd_flight_plan = dynamic_cast< CmdFlightPlan * > ( cmd );
     if ( cmd_flight_plan ) {
         __command_received( cmd_flight_plan );
+        return;
+    };
+    
+    CmdWaypointReached * cmd_waypoint_reached = dynamic_cast < CmdWaypointReached * > ( cmd );
+    if ( cmd_waypoint_reached ) {
+        __command_received( cmd_waypoint_reached );
         return;
     };
     
@@ -562,18 +565,37 @@ void XPlanePlugin::__command_received( CmdFlightPlan * cmd ) {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                              В основном агенте была достигнута точка полетного плана                              *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::__command_received( CmdWaypointReached * cmd ) {
+    
+    __agents_mutex.lock();
+    for ( auto bimbo: __bimbos ) {
+        if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
+            bimbo->flight_plan.erase_up_to( cmd->npp() );
+            break;
+        };
+    };
+    __agents_mutex.unlock();
+}
+
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                                                     Деструктор                                                    *
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
 XPlanePlugin::~XPlanePlugin() {
     
-    if ( __communicator ) {
-        if ( __communicator->is_connected() ) __communicator->disconnect();
+    disconnect_communicator();
+    if ( __communicator ) {        
         delete( __communicator );
         __communicator = nullptr;
     }
-    /*
+    
     __agents_mutex.lock();
     // Корректное освобождение памяти, выделенной под самоходки.
     for ( auto vcl : __vehicles ) {
@@ -588,5 +610,5 @@ XPlanePlugin::~XPlanePlugin() {
     __bimbos.clear();
     
     __agents_mutex.unlock();
-    */
+    
 }

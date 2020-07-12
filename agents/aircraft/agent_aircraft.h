@@ -80,7 +80,8 @@ namespace xenon {
             void __start_fp0_action();
             
             
-            void __test_landing();            
+            void __test_landing();  
+            void __test_fly_circle( Airport & airport, const startup_location_t & gate );
             
     };
     

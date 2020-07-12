@@ -64,6 +64,7 @@ add_library(xenon MODULE
         ${NETCMD}/cmd_query_around.cpp
         ${NETCMD}/cmd_vehicle_condition.cpp
         ${NETCMD}/cmd_flight_plan.cpp
+        ${NETCMD}/cmd_waypoint_reached.cpp
         
         ${NETWORK}/abstract_command.cpp
         ${NETWORK}/Ambient.cpp

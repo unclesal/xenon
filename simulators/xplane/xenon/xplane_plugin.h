@@ -29,6 +29,7 @@
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
 #include "cmd_flight_plan.h"
+#include "cmd_waypoint_reached.h"
 
 namespace xenon {
 
@@ -42,6 +43,10 @@ namespace xenon {
             void enable();
             void disable();
             void handle_message(XPLMPluginID from, int messageID, void * ptrParam);
+            
+            inline void disconnect_communicator() {
+                if ( __communicator && __communicator->is_connected() ) __communicator->disconnect();                
+            };
 
             /**
              * @short Observe (get, store, transmitt to network e.t.c.) aircrafts positions and states.
@@ -128,6 +133,8 @@ namespace xenon {
             
             void __command_received( CmdAircraftCondition * cmd );
             void __command_received( CmdFlightPlan * cmd );
+            void __command_received( CmdWaypointReached * cmd );
+            
             BimboAircraft * __add_one_aircraft( CmdAircraftCondition * cmd );
 
     }; // class XPlanePlugin

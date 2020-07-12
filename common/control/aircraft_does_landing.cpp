@@ -186,8 +186,8 @@ void AircraftDoesLanding::__step__alignment(
         if ( rotation.pitch > _ptr_acf->acf_condition.target_pitch ) _ptr_acf->acf_condition.pitch_acceleration = -0.9f;
         else _ptr_acf->acf_condition.pitch_acceleration = 0.9f;
         
-        // Торможение.
-        _ptr_acf->vcl_condition.acceleration = -1.6f;
+        // Торможение. 
+        _ptr_acf->vcl_condition.acceleration = -1.7f;
         // До нуля-то не надо, быстрее освободим ВПП.
         _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
         

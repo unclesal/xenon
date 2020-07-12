@@ -417,8 +417,8 @@ void BimboAircraft::prepare_for_take_off( const deque<waypoint_t> & taxi_way ) {
 
 void BimboAircraft::prepare_for_taxing( const deque < xenon::waypoint_t > & taxi_way) {
     
-    for ( int i=0; i<taxi_way.size(); i++ ) {
-        flight_plan.push_back( taxi_way.at(i) );
+    for ( auto wp: taxi_way ) {
+        flight_plan.push_back( wp );
     }
     
     // Если последняя точка парковка - то ее нужно сместить в зависимости от типа ВС.
@@ -722,88 +722,58 @@ void BimboAircraft::test__fp_landing() {
     
     // Отсюда начинается этап отладки посадки.
     // SS025
-    waypoint_t ss025 = {
-        .name = "SS025",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 42.11, 'N' ),
-            .longitude = degrees_to_decimal( 60, 28, 31.40, 'E' ),
-            .altitude = 1100.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
+    waypoint_t ss025;
+    ss025.name = "SS025";
+    ss025.type = WAYPOINT_FLYING;
+    ss025.location.latitude = degrees_to_decimal( 56, 44, 42.11, 'N' );
+    ss025.location.longitude = degrees_to_decimal( 60, 28, 31.40, 'E' );
+    ss025.location.altitude = 1100.0;        
+    ss025.speed = 240.0;        
+    ss025.action_to_achieve = ACF_DOES_FLYING;    
     flight_plan.push_back( ss025 );
 
     // CF08L
-    waypoint_t cf08l = {
-        .name = "CF08L",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 41.97, 'N' ),
-            .longitude = degrees_to_decimal( 60, 34, 0.50, 'E' ),
-            .altitude = 1100.0
-        },
-        .speed = 240.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_FLYING
-    };
+    waypoint_t cf08l;
+    cf08l.name = "CF08L";
+    cf08l.type = WAYPOINT_FLYING;
+    cf08l.location.latitude = degrees_to_decimal( 56, 44, 41.97, 'N' );
+    cf08l.location.longitude = degrees_to_decimal( 60, 34, 0.50, 'E' );
+    cf08l.location.altitude = 1100.0;        
+    cf08l.speed = 240.0;        
+    cf08l.action_to_achieve = ACF_DOES_FLYING;
     flight_plan.push_back( cf08l );
 
     // FN08L
-    waypoint_t fn08l = {
-        .name = "FN08L",
-        .type = WAYPOINT_FLYING,
-        .location = {
-            .latitude = degrees_to_decimal(56, 44, 40.25, 'N' ),
-            .longitude = degrees_to_decimal(60, 37, 38.34, 'E'),
-            .altitude = 1000.0
-        },
-        .speed = 200.0,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_GLIDING
-    };
+    waypoint_t fn08l;
+    fn08l.name = "FN08L";
+    fn08l.type = WAYPOINT_FLYING;
+    fn08l.location.latitude = degrees_to_decimal(56, 44, 40.25, 'N' );
+    fn08l.location.longitude = degrees_to_decimal(60, 37, 38.34, 'E');
+    fn08l.location.altitude = 1000.0;        
+    fn08l.speed = 200.0;        
+    fn08l.action_to_achieve = ACF_DOES_GLIDING;
     flight_plan.push_back( fn08l );
 
     // RW08L - торец ВПП.    
-    waypoint_t rwy08l = {
-        .name = "RWY08L",
-        .type = WAYPOINT_RUNWAY,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 41.41, 'N' ),
-            .longitude = degrees_to_decimal( 60, 46, 40.90, 'E' ),
-            .altitude = 246.0
-        },
-        .speed = _params.landing_speed,
-        .incomming_heading = 0.0,
-        .outgoing_heading = 0.0,          
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_LANDING
-    };    
+    waypoint_t rwy08l;
+    rwy08l.name = "RWY08L";
+    rwy08l.type = WAYPOINT_RUNWAY;
+    rwy08l.location.latitude = degrees_to_decimal( 56, 44, 41.41, 'N' );
+    rwy08l.location.longitude = degrees_to_decimal( 60, 46, 40.90, 'E' );
+    rwy08l.location.altitude = 170.0;        
+    rwy08l.speed = _params.landing_speed;        
+    rwy08l.action_to_achieve = ACF_DOES_LANDING;
     flight_plan.push_back( rwy08l );
 
     // RWY26R - только для обеспечения посадки, для установки курса и торможения на ВПП.
-    waypoint_t rwy26r = {
-        .name = "RWY26R",
-        .type = WAYPOINT_DESTINATION,
-        .location = {
-            .latitude = degrees_to_decimal( 56, 44, 40.99, 'N' ),
-            .longitude = degrees_to_decimal( 60, 49, 22.90, 'E' ),
-            .altitude = 246.0
-        },
-        .speed = 0.0,
-        .incomming_heading = 0.0,        
-        .outgoing_heading = 0.0,        
-        .distance_to_next_wp = 0.0,
-        .action_to_achieve = ACF_DOES_LANDING
-    };
+    waypoint_t rwy26r;
+    rwy26r.name = "RWY26R";
+    rwy26r.type = WAYPOINT_DESTINATION;
+    rwy26r.location.latitude = degrees_to_decimal( 56, 44, 40.99, 'N' );
+    rwy26r.location.longitude = degrees_to_decimal( 60, 49, 22.90, 'E' );
+    rwy26r.location.altitude = 170.0;
+    rwy26r.speed = 0.0;        
+    rwy26r.action_to_achieve = ACF_DOES_LANDING;
     flight_plan.push_back( rwy26r );
 
 };
@@ -817,42 +787,30 @@ void BimboAircraft::test__fp_landing() {
 
 void BimboAircraft::test__fly() {
         
-//     При вылете с полосы 08L
-//     SS028
-   waypoint_t ss028 = {
-       .name = "SS028",
-       .type = WAYPOINT_FLYING,
-       .location = {
-           .latitude = degrees_to_decimal( 56, 44, 40.20, 'N' ),
-           .longitude = degrees_to_decimal( 60, 59, 28.50, 'E' ),
-           .altitude = 1100.0
-       },
-       .speed = 240.0,
-       .incomming_heading = 0.0,
-       .outgoing_heading = 0.0,
-       .distance_to_next_wp = 0.0,
-       .action_to_achieve = ACF_DOES_FLYING
-   };
-   flight_plan.push_back( ss028 );
+    // При вылете с полосы 08L
+    // SS028
+    waypoint_t ss028;
+    ss028.name = "SS028";
+    ss028.type = WAYPOINT_FLYING;
+    ss028.location.latitude = degrees_to_decimal( 56, 44, 40.20, 'N' );
+    ss028.location.longitude = degrees_to_decimal( 60, 59, 28.50, 'E' );
+    ss028.location.altitude = 1100.0;    
+    ss028.speed = 240.0;    
+    ss028.action_to_achieve = ACF_DOES_BECOMING;
+    flight_plan.push_back( ss028 );    
     
-//     D237K
-   waypoint_t d237k = {
-       .name = "D237K",
-       .type = WAYPOINT_FLYING,
-       .location = {
-           .latitude = degrees_to_decimal( 56, 41, 12.40, 'N' ),
-           .longitude = degrees_to_decimal( 60, 29, 1.46, 'E' ),
-           .altitude = 1100.0
-       },
-       .speed = 240.0,
-       .incomming_heading = 0.0,
-       .outgoing_heading = 0.0,
-       .distance_to_next_wp = 0.0,
-       .action_to_achieve = ACF_DOES_FLYING
-   };
-   flight_plan.push_back( d237k );
+    // D237K
+    waypoint_t d237k;
+    d237k.name = "D237K";
+    d237k.type = WAYPOINT_FLYING;
+    d237k.location.latitude = degrees_to_decimal( 56, 41, 12.40, 'N' );
+    d237k.location.longitude = degrees_to_decimal( 60, 29, 1.46, 'E' );
+    d237k.location.altitude = 1100.0;       
+    d237k.speed = 240.0;       
+    d237k.action_to_achieve = ACF_DOES_FLYING;   
+    flight_plan.push_back( d237k );
    
-   test__fp_landing();
+    test__fp_landing();
           
     vector< std::string > alternate;
     alternate.push_back("USCC");

@@ -10,6 +10,7 @@
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
 #include "cmd_flight_plan.h"
+#include "cmd_waypoint_reached.h"
 
 #include "push_back_allowed.h"
 #include "taxing_distance.h"
@@ -159,19 +160,39 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->vcl_condition.agent_uuid = uuid;
         __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT; 
         
-        __test_landing();
+        // __test_landing();
+        __test_fly_circle( usss, gate );
         
-                                       
-//         __ptr_acf->place_on_ground( gate );
-//         
-//         auto where_i_am = __ptr_acf->get_location();    
-//         auto way = usss.get_taxi_way_for_departure( where_i_am );            
-//         __ptr_acf->prepare_for_take_off( way );
-//         __ptr_acf->test__fly();    
-                
+        // Коррекция высот ВПП.
+        for ( int i=0; i<__ptr_acf->flight_plan.size(); i++ ) {
+            auto wp = __ptr_acf->flight_plan.get( i );
+            if ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
+                wp.location.altitude = usss.evalution_in_meters();
+                __ptr_acf->flight_plan.set( i, wp );
+            };
+        };
+                                                               
     }
     
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                   Тестирование - полета по кругу, "коробочки"                                     *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AgentAircraft::__test_fly_circle( Airport & airport, const startup_location_t & gate ) {
+    
+    __ptr_acf->place_on_ground( gate );
+         
+    auto where_i_am = __ptr_acf->get_location();    
+    auto way = airport.get_taxi_way_for_departure( where_i_am );
+    __ptr_acf->prepare_for_take_off( way );
+    __ptr_acf->test__fly();    
+
+}
+
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -436,6 +457,12 @@ void AgentAircraft::action_finished( void * action ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::wp_reached( waypoint_t wp ) {
+    
+    if ( _communicator && _communicator->is_connected() ) {
+        CmdWaypointReached * cmd = new CmdWaypointReached( __ptr_acf->vcl_condition, wp.npp );
+        _communicator->request( cmd );
+    };
+    
     auto next_wp = __ptr_acf->flight_plan.get(0);
     if ( next_wp.action_to_achieve == ACF_DOES_GLIDING ) {
         __ptr_acf->graph->set_active_state( ACF_STATE_APPROACH );

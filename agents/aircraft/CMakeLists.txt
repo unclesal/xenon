@@ -67,6 +67,7 @@ set(SOURCES
     ${NETCMD}/cmd_query_around.cpp
     ${NETCMD}/cmd_aircraft_condition.cpp
     ${NETCMD}/cmd_flight_plan.cpp
+    ${NETCMD}/cmd_waypoint_reached.cpp
 
     ${CONTROL}/aircraft_abstract_action.cpp
     ${CONTROL}/aircraft_abstract_state.cpp

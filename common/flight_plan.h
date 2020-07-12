@@ -39,9 +39,21 @@ namespace xenon {
             ~FlightPlan() = default;
             FlightPlan & operator = ( const FlightPlan & fp );
             
-            void push_front( const waypoint_t & wp );
             void pop_front();
-            void push_back( const waypoint_t & wp );            
+            
+            /**
+             * @short Удалить от начала полетного плана все точки вплоть до данной.
+             * Отрабатывается при достижении определенной точки полетного плана в агенте.
+             */
+            void erase_up_to( const uint16_t & npp );
+            
+            void push_front( waypoint_t & wp );            
+            void push_back( waypoint_t & wp ); 
+            /**
+             * @short Вставить точку.
+             * Если индекс отрицательный, то вставляется от конца. Если положительный - то от начала.
+             */
+            void insert( const int & index, waypoint_t & wp );
             
             // void remove( const int & index );            
             
@@ -86,6 +98,9 @@ namespace xenon {
 
 #ifdef INSIDE_AGENT
             AgentInterface * __agent;
+            // Номер точки по порядку. Генерируется в агенте, остальные только читают его.
+            static uint16_t __NPP;
+            static void __increment_npp();
 #endif            
         
     }; // class FlightPlan

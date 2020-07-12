@@ -101,6 +101,7 @@ PLUGIN_API void	XPluginStop(void) {
     try {
 
         if ( _plugin ) {
+            _plugin->disconnect_communicator();
             delete( _plugin );
             _plugin = nullptr;
         }

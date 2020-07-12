@@ -9,6 +9,7 @@
 #include "cmd_query_around.h"
 #include "cmd_vehicle_condition.h"
 #include "cmd_flight_plan.h"
+#include "cmd_waypoint_reached.h"
 
 using namespace xenon;
 using namespace std;
@@ -20,10 +21,11 @@ using namespace std;
 // *********************************************************************************************************************
 
 CommandParser::CommandParser() {
-    __register< CmdVehicleCondition >( "CmdVehicleCondition" );
-    __register< CmdQueryAround >( "CmdQueryAround" );
-    __register< CmdAircraftCondition >( "CmdAircraftCondition" );    
-    __register< CmdFlightPlan > ( "CmdFlightPlan" );
+    __register< CmdVehicleCondition  > ( "CmdVehicleCondition"  );
+    __register< CmdQueryAround       > ( "CmdQueryAround"       );
+    __register< CmdAircraftCondition > ( "CmdAircraftCondition" );    
+    __register< CmdFlightPlan        > ( "CmdFlightPlan"        );
+    __register< CmdWaypointReached   > ( "CmdWaypointReached"   );
 }
 
 // *********************************************************************************************************************

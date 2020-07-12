@@ -55,10 +55,10 @@ void LUBeforeTakeOff::update( CmdAircraftCondition * cmd ) {
             
             // --------------------------------------------------
             
-            if (( delta >= 358 ) || ( delta <= 2 )) {
+            if (( delta >= 355 ) || ( delta <= 5 )) {
             
-                if ( 
-                    agent.vcl_condition.current_state == ACF_STATE_READY_FOR_TAKE_OFF
+                if (
+                    agent.vcl_condition.current_action == ACF_DOES_BECOMING
                     || agent.vcl_condition.current_state == ACF_STATE_AIRBORNED
                 ) {
                     auto distance = xenon::distance2d(our_location, agent.vcl_condition.location);
