@@ -22,7 +22,7 @@
 #include "bimbo_aircraft.h"
 #include "XAmbient.h"
 #include "XSetReactor.h"
-// #include "airport.h"
+#include "airport.h"
 #include "connected_communicator.h"
 #include "abstract_command.h"
 

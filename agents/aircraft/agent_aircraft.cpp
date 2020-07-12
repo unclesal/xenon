@@ -143,6 +143,8 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         
     } else if ( uuid == A321_SVR ) { 
         
+        // Airbus A321 Уральские Авиалинии.
+        
         __ptr_acf = new BimboAircraft("A321", "SVR", "SVR");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 SVR";                
         gate = usss.get_startup_locations()["12"];        
@@ -150,10 +152,23 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         
     } else if ( uuid == B772_UAE ) {
         
+        // Boeing 777-200 UAE
+        
         __ptr_acf = new BimboAircraft("B772", "UAE", "UAE");
         __ptr_acf->vcl_condition.agent_name = "Boeing 777-200 UAE";        
-        gate = usss.get_startup_locations()["11"];        
+        gate = usss.get_startup_locations()["10"];        
         __start_time += 40000;
+    } else if ( uuid == B744_SVA ) {
+        __ptr_acf = new BimboAircraft( "B744", "SVA", "SVA" );
+        __ptr_acf->vcl_condition.agent_name = "Boeing 747-400 SVA";
+        gate = usss.get_startup_locations()["9"];
+        __start_time += 50000;
+    } else if ( uuid == B763_ELY ) {
+        // Boeing 767-300 El-Al
+        __ptr_acf = new BimboAircraft( "B763", "ELY", "ELY" );
+        __ptr_acf->vcl_condition.agent_name = "Boeing 767-300 El-Al";
+        gate = usss.get_startup_locations()["8"];
+        __start_time += 60000;
     }
     
     if ( __ptr_acf ) {
@@ -415,7 +430,8 @@ void AgentAircraft::state_changed( void * state ) {
         if ( __ptr_acf->agent_uuid() == B738_AFF ) parking = airport.get_startup_locations()["15"];
         else if ( __ptr_acf->agent_uuid() == A321_AFL ) parking = airport.get_startup_locations()["13"];
         else if ( __ptr_acf->agent_uuid() == A321_SVR ) parking = airport.get_startup_locations()["12"];
-        else if ( __ptr_acf->agent_uuid() == B772_UAE ) parking = airport.get_startup_locations()["11"];
+        else if ( __ptr_acf->agent_uuid() == B772_UAE ) parking = airport.get_startup_locations()["10"];
+        else if ( __ptr_acf->agent_uuid() == B744_SVA ) parking = airport.get_startup_locations()["9"];
         
         __ptr_acf->acf_condition.parking = parking.name;
         

@@ -54,6 +54,7 @@ set(SOURCES
     ${FRAMES}/abstract_frame.cpp
     ${FRAMES}/entity_frame.cpp
     ${FRAMES}/hp_lu_occupated.cpp
+    ${FRAMES}/hp_some_one_landing.cpp
     ${FRAMES}/lu_before_take_off.cpp
     ${FRAMES}/state_frame.cpp
     ${FRAMES}/push_back_allowed.cpp

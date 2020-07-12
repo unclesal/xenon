@@ -59,6 +59,9 @@ add_library(xenon MODULE
         ${COMMON}/abstract_vehicle.cpp
         ${COMMON}/bimbo_aircraft.cpp
         ${COMMON}/flight_plan.cpp
+        
+        ${COMMON}/airport.cpp
+        ${COMMON}/airport_network.cpp
                 
         ${NETCMD}/cmd_aircraft_condition.cpp
         ${NETCMD}/cmd_query_around.cpp

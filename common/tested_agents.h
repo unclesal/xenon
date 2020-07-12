@@ -16,5 +16,10 @@
 // UAE
 #define B772_UAE            "247c551ea70d11ea932694de807942f4"
 
+// B747-400 Saudia airlines
+#define B744_SVA            "3b619af6c43511eab46d94de807942f4"
+
+// B767-300 El-Al
+#define B763_ELY            "e9286bdcc43b11eaa98394de807942f4"
 
 #define XPLANE_AIRCRAFT     "9b46e480a3f611eab14b94de807942f4"
