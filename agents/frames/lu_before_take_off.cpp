@@ -58,14 +58,17 @@ void LUBeforeTakeOff::update( CmdAircraftCondition * cmd ) {
             if (( delta >= 355 ) || ( delta <= 5 )) {
             
                 if (
-                    agent.vcl_condition.current_action == ACF_DOES_BECOMING
+                    agent.vcl_condition.current_action == ACF_DOES_TAKE_OFF
+                    || agent.vcl_condition.current_action == ACF_DOES_BECOMING
                     || agent.vcl_condition.current_state == ACF_STATE_AIRBORNED
                 ) {
                     auto distance = xenon::distance2d(our_location, agent.vcl_condition.location);
                     if ( distance <= MIN_ALLOWABLE_TAKE_OFF_DISTANCE ) {
-                        Logger::log(
-                            "LuBeforeTakeOff: " + _ptr_acf->vcl_condition.agent_name + " -> " + agent.vcl_condition.agent_name + ", distance=" + std::to_string( distance )
-                        );
+                        
+//                         Logger::log(
+//                             "LuBeforeTakeOff: " + _ptr_acf->vcl_condition.agent_name + " -> " + agent.vcl_condition.agent_name + ", distance=" + std::to_string( distance )
+//                         );
+                        
                         _next_action.action = ACF_DOES_WAITING_TAKE_OFF_APPROVAL;
                         _activated = true;
                         break;

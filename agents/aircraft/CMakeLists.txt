@@ -55,10 +55,11 @@ set(SOURCES
     ${FRAMES}/entity_frame.cpp
     ${FRAMES}/hp_lu_occupated.cpp
     ${FRAMES}/hp_some_one_landing.cpp
-    ${FRAMES}/lu_before_take_off.cpp
+    ${FRAMES}/lu_before_take_off.cpp    
     ${FRAMES}/state_frame.cpp
     ${FRAMES}/push_back_allowed.cpp
-    ${FRAMES}/taxing_distance.cpp    
+    ${FRAMES}/taxing_distance.cpp   
+    ${FRAMES}/taxing_push_back_ahead.cpp
     
     ${NET}/abstract_command.cpp
     ${NET}/command_parser.cpp

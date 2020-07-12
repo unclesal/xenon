@@ -78,12 +78,12 @@ BimboAircraft::BimboAircraft(
 // *********************************************************************************************************************
 
 void BimboAircraft::action_finished( void * action ) {
-    
+#ifdef INSIDE_AGENT    
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
     aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );    
     graph->action_finished( ptr_abstract_action );    
     AbstractVehicle::action_finished( action );
-        
+#endif        
 };
 
 // *********************************************************************************************************************
@@ -306,7 +306,7 @@ void BimboAircraft::__acf_parameters_correction() {
 
         _params.length = 70.6;
         _params.wingspan = 64.4;
-        _params.shift_from_ramp = -25.0;
+        _params.shift_from_ramp = -20.0;
 
         _params.v1 = 120.0;
         _params.v2 = 150.0;
@@ -337,7 +337,7 @@ void BimboAircraft::__acf_parameters_correction() {
         
         _params.length = 54.94;
         _params.wingspan = 47.57;
-        _params.shift_from_ramp = -20.0;
+        _params.shift_from_ramp = -15.0;
 
         _params.v1 = 110.0;
         _params.v2 = 140.0;
@@ -588,24 +588,28 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     AbstractAircraft::update_from( vc, ac );
     
     if ( ! graph->current_state_is( vc.current_state ))
-        graph->set_active_state( vc.current_state );
-    
-    if ( ! graph->current_action_is( vc.current_action ) ) {
+            graph->set_active_state( vc.current_state );
+
+    if ( graph->current_state_is( vc.current_state )) {
         
-        aircraft_state_graph::graph_t::edge_descriptor fake;
-        auto action_descriptor = graph->get_action_outgoing_from_current_state( vc.current_action );
-        if ( action_descriptor != fake ) {
-            try {
-                graph->set_active_action( action_descriptor );
-            } catch ( const std::runtime_error & e ) {
-                Logger::log(
-                    "BimboAircraft::update_from(), could not find action for state " 
-                    + to_string( vc.current_state ) + ", action " + to_string( vc.current_action )
-                );            
-            }
-        };
+        if ( ! graph->current_action_is( vc.current_action ) ) {
+            
+            aircraft_state_graph::graph_t::edge_descriptor fake;
+            auto action_descriptor = graph->get_action_outgoing_from_current_state( vc.current_action );
+            if ( action_descriptor != fake ) {
+                try {
+                    graph->set_active_action( action_descriptor );
+                } catch ( const std::runtime_error & e ) {
+                    Logger::log(
+                        "BimboAircraft::update_from(), could not find action for state " 
+                        + to_string( vc.current_state ) + ", action " + to_string( vc.current_action )
+                    );            
+                }
+            };
+            
+        }
         
-    }    
+    }
     
     auto new_location = vc.location;
 
@@ -634,9 +638,9 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     // По углам тоже чтобы не сильно дергалась.
     auto current_rotation = get_rotation();
      if ( 
-        abs(current_rotation.heading - vc.rotation.heading ) >= 3.0
-        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 3.0
-        || abs( current_rotation.roll - vc.rotation.roll ) >= 3.0
+        abs(current_rotation.heading - vc.rotation.heading ) >= 1.0
+        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 1.0
+        || abs( current_rotation.roll - vc.rotation.roll ) >= 1.0
     ) {
         if ( 
             graph->current_action_is( ACF_DOES_LANDING )

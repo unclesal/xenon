@@ -119,7 +119,7 @@ void XPlanePlugin::__init_around() {
 
     __communicator = new ConnectedCommunicator( this );
     
-//     auto acf1 = new BimboAircraft("B763", "ELY", "ELY");
+//     auto acf1 = new BimboAircraft("B763", "SAS", "SAS");
 //     auto usss = Airport::get_by_icao("USSS");
 //     auto gate = usss.get_startup_locations()["10"];
 //     acf1->place_on_ground( gate );    

@@ -41,9 +41,11 @@ void xenon::HpLuOccupated::update(xenon::CmdAircraftCondition* cmd) {
             auto distance = xenon::distance2d( our_location, agent.vcl_condition.location );
             
             if ( distance <= 150.0 ) {
-                Logger::log(
-                    "HP_LU_Occupated. " + _ptr_acf->vcl_condition.agent_name + " -> " + agent.vcl_condition.agent_name + ", dist=" + std::to_string( distance )
-                );
+                
+//                 Logger::log(
+//                     "HP_LU_Occupated. " + _ptr_acf->vcl_condition.agent_name + " -> " + agent.vcl_condition.agent_name + ", dist=" + std::to_string( distance )
+//                 );
+                
                 _next_action.action = ACF_DOES_WAITING_TAKE_OFF_APPROVAL;
                 _activated = true;
                 break;

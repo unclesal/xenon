@@ -101,10 +101,14 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
     };
     
     if ( _ptr_acf->vcl_condition.speed <= 0.5 ) {
+        
         _ptr_acf->vcl_condition.speed = 0.0;
-        _ptr_acf->vcl_condition.target_speed = 0.0;
-        // _ptr_acf->condition.tug = 0.0;
+        _ptr_acf->vcl_condition.target_speed = 0.0;        
         _ptr_acf->vcl_condition.acceleration = 0.0;
+        
+        _ptr_acf->vcl_condition.heading_acceleration = 0;
+        _ptr_acf->vcl_condition.target_heading = _ptr_acf->vcl_condition.rotation.heading;
+        
         _finish();
     }
     

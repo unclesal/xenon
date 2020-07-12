@@ -176,17 +176,17 @@ void CmdAircraftCondition::execute_on_server( ConnectedClientCore * client, Clie
         _acf_condition.icao_airline = "UAE";
         _acf_condition.livery = "UAE";
         
-    } else if ( _vcl_condition.agent_uuid == B744_SVA ) {
+    } else if ( _vcl_condition.agent_uuid == B744_SWI ) {
         
         _acf_condition.icao_type = "B744";
-        _acf_condition.icao_airline = "SVA";
-        _acf_condition.livery = "SVA";
+        _acf_condition.icao_airline = "SWI";
+        _acf_condition.livery = "SWI";
         
-    } else if ( _vcl_condition.agent_uuid == B763_ELY ) {
+    } else if ( _vcl_condition.agent_uuid == B763_SAS ) {
         
         _acf_condition.icao_type = "B763";
-        _acf_condition.icao_airline = "ELY";
-        _acf_condition.livery = "ELY";
+        _acf_condition.icao_airline = "SAS";
+        _acf_condition.livery = "SAS";
         
     }
 

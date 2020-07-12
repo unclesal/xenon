@@ -28,10 +28,15 @@ AircraftDoesWaitingTakeOffApproval::AircraftDoesWaitingTakeOffApproval(
 void AircraftDoesWaitingTakeOffApproval::_internal_start() {
     
     Logger::log( _ptr_acf->vcl_condition.agent_name + " Wait TO approval start");
+    
     // Ничего не делаем, просто стоим.
+    
     _ptr_acf->vcl_condition.speed = 0;
     _ptr_acf->vcl_condition.acceleration = 0;
     _ptr_acf->vcl_condition.target_speed = 0;
+    
+    _ptr_acf->vcl_condition.heading_acceleration = 0;
+    _ptr_acf->vcl_condition.target_heading = _ptr_acf->vcl_condition.rotation.heading;
         
 }
 

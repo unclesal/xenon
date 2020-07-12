@@ -32,12 +32,12 @@ int main( int argc, char * argv[] ) {
     std::thread b772_uae_thread( &AgentAircraft::run, &b772_uae );
     b772_uae_thread.detach();
     
-    AgentAircraft b744_sva( B744_SVA );
-    std::thread b744_sva_thread( &AgentAircraft::run, &b744_sva );
-    b744_sva_thread.detach();
+    AgentAircraft b744_swi( B744_SWI );
+    std::thread b744_swi_thread( &AgentAircraft::run, &b744_swi );
+    b744_swi_thread.detach();
     
-    AgentAircraft b763_ely( B763_ELY );
-    b763_ely.run();
+    AgentAircraft b763_sas( B763_SAS );
+    b763_sas.run();
     
     return 0;
 };

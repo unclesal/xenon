@@ -44,6 +44,15 @@ namespace xenon {
     // Если меньше или равно, то задний должен остановиться.
     constexpr float MIN_ALLOWABLE_TAXING_DISTANCE = 120.0f;
     
+    // Минимально допустимая дистанция между самолетами для выталкивания.
+    // Сделана довольно большой, чтобы выталкивались - по одному, а не кучкой.
+    // На самом деле это "костыль", т.к. выталкивать должен - tug, а он сам разберется.
+    constexpr float MIN_ALLOWABLE_PUSH_BACK_DISTANCE = 200.0f;
+    
+    // Задний самолет прекратит руление, если на этой дистанции и ближе выполняется push back.
+    // Чтобы дать возможность корректно завершится выталкиванию.
+    constexpr float MIN_PUSH_BACK_AHEAD_ME = 300.0f;
+    
     // Минимально допустимая дистанция до ранее взлетевшего самолета.
     constexpr float MIN_ALLOWABLE_TAKE_OFF_DISTANCE = 5000.0f;
     
@@ -58,7 +67,7 @@ namespace xenon {
     
     // Количество циклов (тиков), после которых агент сообщает о 
     // своем новом местоположении и параметрах.
-    constexpr unsigned int CYCLES_PER_SCREAM = 75;
+    constexpr unsigned int CYCLES_PER_SCREAM = 40;
 
     /**
      * @short Использование ВПП.

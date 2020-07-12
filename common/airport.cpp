@@ -1120,7 +1120,7 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     // Предпоследней точкой поставим HP.
     waypoint_t hp;
     auto bearing_to_rwy = xenon::bearing( result[ result.size() - 2 ].location, result[ result.size() - 1 ].location );
-    hp.location = xenon::shift( result[ result.size() - 1 ].location, -100.0, bearing_to_rwy );
+    hp.location = xenon::shift( result[ result.size() - 1 ].location, -130.0, bearing_to_rwy );
     hp.location.altitude = evalution_in_meters();
     hp.name = "HP";
     hp.type = WAYPOINT_HP;
