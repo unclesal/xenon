@@ -19,3 +19,19 @@ AircraftStateReadyForTakeOff::AircraftStateReadyForTakeOff(
 ) : AircraftAbstractState( ptr_acf, nd )
 {
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                                    Активация состояния                                            *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftStateReadyForTakeOff::_internal_activate() {
+    
+    auto wp = _ptr_acf->flight_plan.get(0);
+    while ( wp.type != WAYPOINT_RUNWAY && wp.action_to_achieve != ACF_DOES_TAKE_OFF ) {
+        _ptr_acf->flight_plan.pop_front();
+        wp = _ptr_acf->flight_plan.get(0);
+    };
+
+}

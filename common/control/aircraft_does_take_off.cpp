@@ -132,6 +132,7 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     if ( distance < 100.0 ) {
         Logger::log("Take off done");
         __phase = PHASE_NOTHING;
+        _ptr_acf->flight_plan.pop_front();
         _finish();
         return;
     }
@@ -161,6 +162,9 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
 
 void AircraftDoesTakeOff::_internal_step( const float & elapsed_since_last_call ) {
         
+    auto wp = _ptr_acf->flight_plan.get( 0 );
+    if ( wp.action_to_achieve != ACF_DOES_TAKE_OFF ) _ptr_acf->flight_plan.pop_front();
+    
     // Подруливание по курсу осуществляется во всех фазах, цель - выйти как можно ближе к точке.
 
     _head_steering( elapsed_since_last_call, 20.0 );

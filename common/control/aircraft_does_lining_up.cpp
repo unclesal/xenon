@@ -69,9 +69,9 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
     };
     
     if ( _taxi_turn_started( wp ) ) {        
-        __phase = PHASE_ROTATION;
+        __phase = PHASE_ROTATION;        
         // Убираем ближнюю точку ВПП, мы ее достигли.
-        _ptr_acf->flight_plan.pop_front();
+        _ptr_acf->flight_plan.pop_front();        
     }
 }
 

@@ -439,6 +439,7 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
     auto heading = _ptr_acf->get_rotation().heading;
     auto delta = bearing - heading;
     
+    /*
     if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_TAKE_OFF ) {
         Logger::log(
             _ptr_acf->vcl_condition.agent_name + " before transformation: " 
@@ -450,6 +451,7 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
             + ", delta=" + to_string( delta )
         );    
     }
+    */
     
     if ( abs(delta) >= 180.0 ) {
 
@@ -462,6 +464,7 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
         if ( abs( delta2 ) < abs( delta )) delta = delta2;
     }
 
+    /*
     if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_TAKE_OFF ) {
         Logger::log(
             _ptr_acf->vcl_condition.agent_name + " after transformation: " 
@@ -473,6 +476,7 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
             + ", delta=" + to_string( delta )
         );    
     }
+    */
     
     return delta;
 
@@ -555,11 +559,8 @@ bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination 
     // едет или назад. И похоже что это - длина самолета.
 
     float threshold = 2.5;
-    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _ptr_acf->parameters().length * 2.0 / 3.5;
-    
-    // Костыль
-    if ( _ptr_acf->acf_condition.icao_type == "B744" ) threshold -= 3.0;
-    
+    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _ptr_acf->parameters().length / 2.0;
+        
     if ( dist_shifted_me_to_segment <= threshold ) {
         // Длина дуги, которую нам надо пройти.
         auto len = TAXI_TURN_RADIUS * degrees_to_radians( delta_heading );
