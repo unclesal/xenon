@@ -8,6 +8,10 @@
 
 // Аэрофлот-норд.
 #define B738_AFF            "4204f982a17811eaaf3794de807942f4"
+
+// S7
+#define B738_SBI            "b84d729cc4e411eaba7694de807942f4"
+
 // Аэрофлот
 #define A321_AFL            "9c72a710a24b11ea89d394de807942f4"
 // Уральские авиалинии
@@ -18,6 +22,9 @@
 
 // B747-400 SWI
 #define B744_SWI            "3b619af6c43511eab46d94de807942f4"
+
+// B747-400 THA
+#define B744_THA            "3a527bf4c50111eaaa09-94de807942f4"
 
 // B767-300 SAS
 #define B763_SAS            "e9286bdcc43b11eaa98394de807942f4"

@@ -18,7 +18,7 @@ namespace xenon {
             );
             ~HpLuOccupated() override = default;
             
-            void update( CmdAircraftCondition * cmd ) override;
+            void update() override;
             
         protected:
             

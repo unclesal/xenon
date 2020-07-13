@@ -317,7 +317,7 @@ void BimboAircraft::__acf_parameters_correction() {
         _params.vertical_climb_speed = 1900.0;
         _params.vertical_descend_speed = 1400.0;
         
-        _params.take_off_angle = 10.0;
+        _params.take_off_angle = 9.0;
         _params.taxing_pitch = -0.2;
         _params.on_ground_offset = 5.2;
         
@@ -637,10 +637,10 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     }
     // По углам тоже чтобы не сильно дергалась.
     auto current_rotation = get_rotation();
-     if ( 
-        abs(current_rotation.heading - vc.rotation.heading ) >= 1.0
-        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 1.0
-        || abs( current_rotation.roll - vc.rotation.roll ) >= 1.0
+    if ( 
+        abs(current_rotation.heading - vc.rotation.heading ) >= 1.5
+        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 1.5
+        || abs( current_rotation.roll - vc.rotation.roll ) >= 1.5
     ) {
         if ( 
             graph->current_action_is( ACF_DOES_LANDING )
@@ -649,7 +649,9 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
             // Без тангажа, только два остальных угла.
             drawInfo.roll = vc.rotation.roll;
             drawInfo.heading = vc.rotation.heading;
+            // Тангаж - сохраняем.
             vcl_condition.rotation.pitch = drawInfo.pitch;        
+
         } else set_rotation( vc.rotation );
      }
         
@@ -795,7 +797,7 @@ void BimboAircraft::test__fp_landing() {
     rwy08l.type = WAYPOINT_RUNWAY;
     rwy08l.location.latitude = degrees_to_decimal( 56, 44, 41.41, 'N' );
     rwy08l.location.longitude = degrees_to_decimal( 60, 46, 40.90, 'E' );
-    rwy08l.location.altitude = 170.0;        
+    rwy08l.location.altitude = 260.0;        
     rwy08l.speed = _params.landing_speed;        
     rwy08l.action_to_achieve = ACF_DOES_LANDING;
     flight_plan.push_back( rwy08l );
@@ -806,7 +808,7 @@ void BimboAircraft::test__fp_landing() {
     rwy26r.type = WAYPOINT_DESTINATION;
     rwy26r.location.latitude = degrees_to_decimal( 56, 44, 40.99, 'N' );
     rwy26r.location.longitude = degrees_to_decimal( 60, 49, 22.90, 'E' );
-    rwy26r.location.altitude = 170.0;
+    rwy26r.location.altitude = 260.0;
     rwy26r.speed = 0.0;        
     rwy26r.action_to_achieve = ACF_DOES_LANDING;
     flight_plan.push_back( rwy26r );

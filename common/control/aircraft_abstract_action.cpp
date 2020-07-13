@@ -438,6 +438,19 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
     auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );    
     auto heading = _ptr_acf->get_rotation().heading;
     auto delta = bearing - heading;
+    
+    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_TAKE_OFF ) {
+        Logger::log(
+            _ptr_acf->vcl_condition.agent_name + " before transformation: " 
+            + wp.name + ", type=" + waypoint_to_string( wp.type )
+            + ", action=" + action_to_string( wp.action_to_achieve )
+            + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
+            + ", heading=" + to_string( heading )
+            + ", bearing=" + to_string( bearing )
+            + ", delta=" + to_string( delta )
+        );    
+    }
+    
     if ( abs(delta) >= 180.0 ) {
 
         auto delta2 = 0.0;
@@ -449,13 +462,17 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
         if ( abs( delta2 ) < abs( delta )) delta = delta2;
     }
 
-//     Logger::log(
-//         wp.name + ", type=" + to_string( wp.type )
-//         + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
-//         + ", heading=" + to_string( heading )
-//         + ", bearing=" + to_string( bearing )
-//         + ", delta=" + to_string( delta )
-//     );    
+    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_TAKE_OFF ) {
+        Logger::log(
+            _ptr_acf->vcl_condition.agent_name + " after transformation: " 
+            + wp.name + ", type=" + waypoint_to_string( wp.type )
+            + ", action=" + action_to_string( wp.action_to_achieve )
+            + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
+            + ", heading=" + to_string( heading )
+            + ", bearing=" + to_string( bearing )
+            + ", delta=" + to_string( delta )
+        );    
+    }
     
     return delta;
 
@@ -539,6 +556,9 @@ bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination 
 
     float threshold = 2.5;
     if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _ptr_acf->parameters().length * 2.0 / 3.5;
+    
+    // Костыль
+    if ( _ptr_acf->acf_condition.icao_type == "B744" ) threshold -= 3.0;
     
     if ( dist_shifted_me_to_segment <= threshold ) {
         // Длина дуги, которую нам надо пройти.

@@ -15,7 +15,7 @@ namespace xenon {
             PushBackAllowed( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
             ~PushBackAllowed() override = default;
             
-            void update( CmdAircraftCondition * cmd ) override;
+            void update() override;
             
         protected:
             

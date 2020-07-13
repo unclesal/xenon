@@ -16,7 +16,7 @@ namespace xenon {
             HpSomeOneLanding( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
             ~HpSomeOneLanding() override = default;
             
-            void update( CmdAircraftCondition * cmd ) override;
+            void update() override;
             
         protected:
             

@@ -31,6 +31,14 @@ void AircraftDoesTakeOff::_internal_start() {
     
     Logger::log( _ptr_acf->vcl_condition.agent_name + ", TO internal start");
     
+    // Убираем точки из полетного плана, если они еще не были убраны.
+        
+    auto wp = _ptr_acf->flight_plan.get(0);
+    while ( wp.type != WAYPOINT_RUNWAY && wp.action_to_achieve != ACF_DOES_TAKE_OFF ) {
+        _ptr_acf->flight_plan.pop_front();
+        wp = _ptr_acf->flight_plan.get(0);
+    };
+    
     __phase = PHASE_RUN_UP;
     
     __gear_up_altitude = 0.0;
@@ -48,6 +56,9 @@ void AircraftDoesTakeOff::_internal_start() {
     
     _ptr_acf->vcl_condition.acceleration = 2.0;    
     _ptr_acf->vcl_condition.target_speed = knots_to_merets_per_second( _ptr_acf->parameters().v2 );
+    
+    _ptr_acf->vcl_condition.heading_acceleration = 0;
+    _ptr_acf->vcl_condition.target_heading = _ptr_acf->vcl_condition.rotation.heading;
 
 }
 
@@ -151,7 +162,9 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
 void AircraftDoesTakeOff::_internal_step( const float & elapsed_since_last_call ) {
         
     // Подруливание по курсу осуществляется во всех фазах, цель - выйти как можно ближе к точке.
+
     _head_steering( elapsed_since_last_call, 20.0 );
+    
     switch ( __phase ) {
         case PHASE_RUN_UP: __step__run_up( elapsed_since_last_call ); break;
         case PHASE_BREAK_AWAY: __step__break_away( elapsed_since_last_call ); break;

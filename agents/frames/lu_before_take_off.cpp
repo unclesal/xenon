@@ -15,9 +15,7 @@ using namespace xenon;
 LUBeforeTakeOff::LUBeforeTakeOff( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment) 
     : StateFrame( bimbo, environment )
 {
-    _next_action.action = ACF_DOES_NOTHING;
-    _next_action.priority = 20;
-    _activated = false;
+    
 }
 
 // *********************************************************************************************************************
@@ -26,34 +24,18 @@ LUBeforeTakeOff::LUBeforeTakeOff( BimboAircraft * bimbo, ConnectedCommunicatorRe
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void LUBeforeTakeOff::update( CmdAircraftCondition * cmd ) {
-    _next_action.action = ACF_DOES_NOTHING;
-    _activated = false;
+void LUBeforeTakeOff::update() {
+    
+    _before_update();    
     
     _environment->agents_mutex.lock();
-    
-    auto our_location = _ptr_acf->get_location();
-    auto our_heading = _ptr_acf->vcl_condition.rotation.heading;
-    
+        
     for ( auto agent: _environment->agents ) {
         if ( agent.is_aircraft() ) {
             // Здесь он должен быть не просто "впереди", а точно по курсу.
             // Иначе захватывает соседей на коробочке.
             auto his_location = agent.vcl_condition.location;
-            // Курс на него. Интересуют только те самолеты, которые впереди нас. Как 
-            // бы не айс, если останавливаться при нарушении дистанции будет - передний.
-                        
-            auto bearing = xenon::bearing( our_location, his_location );
-            
-            // --------------------------------------------------
-            // Это - правильная комбинация. Вместе с 
-            // нормализацией дает именно тот курс, который надо.
-            // --------------------------------------------------
-             
-            auto delta = bearing - our_heading;
-            xenon::normalize_degrees( delta );
-            
-            // --------------------------------------------------
+            auto delta = xenon::course_to( _our_location, _our_rotation.heading, his_location );
             
             if (( delta >= 355 ) || ( delta <= 5 )) {
             
@@ -62,7 +44,7 @@ void LUBeforeTakeOff::update( CmdAircraftCondition * cmd ) {
                     || agent.vcl_condition.current_action == ACF_DOES_BECOMING
                     || agent.vcl_condition.current_state == ACF_STATE_AIRBORNED
                 ) {
-                    auto distance = xenon::distance2d(our_location, agent.vcl_condition.location);
+                    auto distance = xenon::distance2d(_our_location, agent.vcl_condition.location);
                     if ( distance <= MIN_ALLOWABLE_TAKE_OFF_DISTANCE ) {
                         
 //                         Logger::log(

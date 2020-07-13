@@ -15,6 +15,7 @@
 #include "push_back_allowed.h"
 #include "taxing_distance.h"
 #include "hp_lu_occupated.h"
+#include "hp_some_one_landing.h"
 #include "lu_before_take_off.h"
 #include "taxing_push_back_ahead.h"
 #include "aircraft_state_landed.h"
@@ -103,6 +104,9 @@ void AgentAircraft::__init_hp_frames() {
     HpLuOccupated * hp_lu_occupated = new HpLuOccupated( __ptr_acf, this );
     __state_frames[ ACF_STATE_HP ].push_back( hp_lu_occupated );
     
+    HpSomeOneLanding * hp_some_one_landing = new HpSomeOneLanding( __ptr_acf, this );
+    __state_frames[ ACF_STATE_HP ].push_back( hp_some_one_landing );
+    
 };
 
 // *********************************************************************************************************************
@@ -137,12 +141,19 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         gate = usss.get_startup_locations()["15"];        
         __start_time += 10000;
         
+    } else if ( uuid == B738_SBI ) {
+        
+        __ptr_acf = new BimboAircraft( "B738", "SBI", "SBI" );
+        __ptr_acf->vcl_condition.agent_name = "Boeing 737-800 SBI";
+        gate = usss.get_startup_locations()["14"];
+        __start_time += 20000;
+        
     } else if ( uuid == A321_AFL ) {
         
         __ptr_acf = new BimboAircraft("A321", "AFL", "AFL");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 AFL";                
         gate = usss.get_startup_locations()["13"];
-        __start_time += 20000;
+        __start_time += 30000;
         
         
     } else if ( uuid == A321_SVR ) { 
@@ -152,7 +163,7 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf = new BimboAircraft("A321", "SVR", "SVR");
         __ptr_acf->vcl_condition.agent_name = "Airbus A321 SVR";                
         gate = usss.get_startup_locations()["12"];        
-        __start_time += 30000;
+        __start_time += 40000;
         
     } else if ( uuid == B772_UAE ) {
         
@@ -161,14 +172,14 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf = new BimboAircraft("B772", "UAE", "UAE");
         __ptr_acf->vcl_condition.agent_name = "Boeing 777-200 UAE";        
         gate = usss.get_startup_locations()["10"];        
-        __start_time += 40000;
+        __start_time += 50000;
         
     } else if ( uuid == B744_SWI ) {
         
         __ptr_acf = new BimboAircraft( "B744", "SWI", "SWI" );
         __ptr_acf->vcl_condition.agent_name = "Boeing 747-400 SWI";
         gate = usss.get_startup_locations()["9"];
-        __start_time += 50000;
+        __start_time += 60000;
         
     } else if ( uuid == B763_SAS ) {
         
@@ -176,8 +187,16 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf = new BimboAircraft( "B763", "ELY", "ELY" );
         __ptr_acf->vcl_condition.agent_name = "Boeing 767-300 SAS";
         gate = usss.get_startup_locations()["8"];
-        __start_time += 60000;
+        __start_time += 70000;
         
+    } else if ( uuid == B744_THA ) {
+        
+        // Boeing 747-400 THA
+        
+        __ptr_acf = new BimboAircraft( "B744", "THA", "THA" );
+        __ptr_acf->vcl_condition.agent_name = "Boeing 747-400 THA";
+        gate = usss.get_startup_locations()["7"];
+        __start_time += 80000;
     }
     
     if ( __ptr_acf ) {
@@ -187,14 +206,14 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         // __test_landing();
         __test_fly_circle( usss, gate );
         
-        // Коррекция высот ВПП.
-        for ( int i=0; i<__ptr_acf->flight_plan.size(); i++ ) {
-            auto wp = __ptr_acf->flight_plan.get( i );
-            if ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
-                wp.location.altitude = usss.evalution_in_meters();
-                __ptr_acf->flight_plan.set( i, wp );
-            };
-        };
+//         Коррекция высот ВПП.
+//         for ( int i=0; i<__ptr_acf->flight_plan.size(); i++ ) {
+//             auto wp = __ptr_acf->flight_plan.get( i );
+//             if ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
+//                 wp.location.altitude = usss.evalution_in_meters();
+//                 __ptr_acf->flight_plan.set( i, wp );
+//             };
+//         };
                                                                
     }
     
@@ -437,11 +456,13 @@ void AgentAircraft::state_changed( void * state ) {
         startup_location_t parking;
         
         if ( __ptr_acf->agent_uuid() == B738_AFF ) parking = airport.get_startup_locations()["15"];
+        else if ( __ptr_acf->agent_uuid() == B738_SBI ) parking = airport.get_startup_locations()["14"];
         else if ( __ptr_acf->agent_uuid() == A321_AFL ) parking = airport.get_startup_locations()["13"];
         else if ( __ptr_acf->agent_uuid() == A321_SVR ) parking = airport.get_startup_locations()["12"];
         else if ( __ptr_acf->agent_uuid() == B772_UAE ) parking = airport.get_startup_locations()["10"];
         else if ( __ptr_acf->agent_uuid() == B744_SWI ) parking = airport.get_startup_locations()["9"];
         else if ( __ptr_acf->agent_uuid() == B763_SAS ) parking = airport.get_startup_locations()["8"];
+        else if ( __ptr_acf->agent_uuid() == B744_THA ) parking = airport.get_startup_locations()["7"];
         
         __ptr_acf->acf_condition.parking = parking.name;
         
@@ -474,6 +495,7 @@ void AgentAircraft::action_started( void * action ) {
 
 void AgentAircraft::action_finished( void * action ) {     
     __decision();
+    scream_about_me();
 }
 
 // *********************************************************************************************************************
@@ -523,19 +545,7 @@ void AgentAircraft::on_received( void * abstract_command ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
-        
-    auto current_state_object = __ptr_acf->graph->get_current_state();
-    auto node = __ptr_acf->graph->get_node_for( current_state_object );
-    
-    // Есть ли в коллекции фреймов состояний - данное текущее состояние?
-    if ( __state_frames.count( node.state )) {
-        // Если оно есть, то проходимся по всем фреймам и обновляем их.
-        for ( auto frame: __state_frames[ node.state ] ) {
-            frame->update( cmd );
-        }
-    }
-        
+void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {        
 };
 
 // *********************************************************************************************************************
@@ -618,10 +628,18 @@ void AgentAircraft::__decision() {
         vector<next_action_t> result;
         
         for ( auto frame : __state_frames[ node.state ] ) {
-            next_action_t his_result;
-            frame->result( his_result );
-            if ( his_result.action != ACF_DOES_NOTHING ) result.push_back( his_result );
+            frame->update();
+            if ( frame->activated() ) {
+                next_action_t his_result;
+                frame->result( his_result );
+                if ( his_result.action != ACF_DOES_NOTHING ) result.push_back( his_result );
+            }
         }
+        
+//         Logger::log( __ptr_acf->vcl_condition.agent_name + ", decision:" );
+//         for ( auto r : result ) {
+//             Logger::log( "    " + action_to_string( r.action ) + ", priority=" + to_string( r.priority ) );
+//         };
                 
         if ( result.empty() ) {
             // У-п-с. Не из чего выбирать. Ок, берем из полетного плана тогда.
@@ -698,6 +716,18 @@ void AgentAircraft::__start_fp0_action() {
     auto current_state = __ptr_acf->graph->get_current_state();
     auto node = __ptr_acf->graph->get_node_for( current_state );
     
+    if ( node.state == ACF_STATE_PARKING && 
+        ( 
+            next_wp.action_to_achieve == ACF_DOES_PUSH_BACK 
+            || next_wp.action_to_achieve == ACF_DOES_SLOW_TAXING
+        )
+    ) {
+        // Мы еще не сдвинулись с парковки. А - собрались. Сдвигаемся принудительно,
+        // с парковки ушли, дальше пойдет либо выталкивание, либо медленное выруливание.
+        __ptr_acf->graph->set_active_state( ACF_STATE_MOTION_STARTED );
+    };
+    
+    
     if ( node.state == ACF_STATE_READY_FOR_TAXING && next_wp.action_to_achieve == ACF_DOES_LINING_UP ) {
         // Мы не доехали до HP. HP - это не точка, это расстояние. 
         // Соответственно, состояние еще не изменилось.
@@ -708,7 +738,8 @@ void AgentAircraft::__start_fp0_action() {
     if ( node.state == ACF_STATE_HP && next_wp.action_to_achieve == ACF_DOES_TAKE_OFF ) {
         // Не закончилась фаза выравнивания.
         next_wp.action_to_achieve = ACF_DOES_LINING_UP;
-    };
+    };    
+    
     
     if ( __ptr_acf->graph->current_action_is( next_wp.action_to_achieve )) return;
     

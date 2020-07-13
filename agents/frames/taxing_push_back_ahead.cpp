@@ -14,10 +14,7 @@ using namespace xenon;
 
 TaxingPushBackAhead::TaxingPushBackAhead( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment )
     : StateFrame( bimbo, environment )
-{
-    _next_action.action = ACF_DOES_NOTHING;
-    _next_action.priority = 20;
-    _activated = false;
+{    
 }
 
 // *********************************************************************************************************************
@@ -26,20 +23,17 @@ TaxingPushBackAhead::TaxingPushBackAhead( BimboAircraft * bimbo, ConnectedCommun
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void TaxingPushBackAhead::update( CmdAircraftCondition * cmd ) {
+void TaxingPushBackAhead::update() {
     
-    _next_action.action = ACF_DOES_NOTHING;
-    _activated = false;
-    
+    _before_update();
     _environment->agents_mutex.lock();
-    
-    auto our_location = _ptr_acf->get_location();
-    auto our_heading = _ptr_acf->vcl_condition.rotation.heading;
-    
+        
     for ( auto agent: _environment->agents ) {
-        if ( agent.is_aircraft() && agent.ahead_me( our_location, our_heading ) ) {
+        auto delta = xenon::course_to( _our_location, _our_rotation.heading, agent.vcl_condition.location );
+        bool ahead_me = (( delta >= 270 ) || ( delta <= 90 ));
+        if ( agent.is_aircraft() && ahead_me ) {
             if ( agent.vcl_condition.current_action == ACF_DOES_PUSH_BACK ) {
-                auto distance = xenon::distance2d( our_location, agent.vcl_condition.location );
+                auto distance = xenon::distance2d( _our_location, agent.vcl_condition.location );
                 if ( distance <= MIN_PUSH_BACK_AHEAD_ME ) {
                     _next_action.action = ACF_DOES_TAXING_STOP;
                     _activated = true;

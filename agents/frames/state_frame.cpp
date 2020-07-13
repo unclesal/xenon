@@ -20,7 +20,29 @@ StateFrame::StateFrame(BimboAircraft * bimbo, ConnectedCommunicatorReactor * env
     _ptr_acf = bimbo;
         
     _next_action.action = ACF_DOES_NOTHING;
+    _next_action.priority = 1;
+    _activated = false;
+    
+    _our_location = _ptr_acf->get_location();
+    _our_rotation = _ptr_acf->get_rotation();
 };
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                               До начала обновления - установка переменных по умолчанию                            *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void StateFrame::_before_update() {
+    
+    _next_action.action = ACF_DOES_NOTHING;
+    _activated = false;
+    
+    _our_location = _ptr_acf->get_location();
+    _our_rotation = _ptr_acf->get_rotation();
+    
+}
+
 
 // *********************************************************************************************************************
 // *                                                                                                                   *

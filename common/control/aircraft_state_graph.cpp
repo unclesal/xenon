@@ -10,6 +10,7 @@
 #include "aircraft_state_approach.h"
 #include "aircraft_state_before_parking.h"
 #include "aircraft_state_landed.h"
+#include "aircraft_state_motion_started.h"
 #include "aircraft_state_on_final.h"
 #include "aircraft_state_on_hp.h"
 #include "aircraft_state_on_the_fly.h"
@@ -28,6 +29,7 @@
 #include "aircraft_does_push_back.h"
 #include "aircraft_does_runway_leaving.h"
 #include "aircraft_does_slow_taxing.h"
+#include "aircraft_does_start_motion.h"
 #include "aircraft_does_take_off.h"
 #include "aircraft_does_taxing.h"
 #include "aircraft_does_taxing_stop.h"
@@ -55,7 +57,10 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // ------------------------------------------------------------------------
 
     // Состояние "на парковке".
-    auto state_parking_d = __create_state< AircraftStateParking > (ACF_STATE_PARKING,  "Parking");            
+    auto state_parking_d = __create_state< AircraftStateParking > (ACF_STATE_PARKING,  "Parking");  
+    
+    // Состояние "начал движение" (сдвинулся с парковки)
+    auto state_motion_started_d = __create_state< AircraftStateMotionStarted > ( ACF_STATE_MOTION_STARTED, "MotionStarted" );
     
     // Состояние "готов к рулежке".
     auto state_ready_for_taxing_d = __create_state< AircraftStateReadyForTaxing > ( 
@@ -118,17 +123,21 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     __create_action< AircraftDoesWaitingPushBack > (
         ACF_DOES_WAITING_PUSH_BACK, "WaitingPushBack", state_parking_d, state_parking_d
     );
+    
+    // На парковке -> начал движение.
+    __create_action< AircraftDoesStartMotion > (
+        ACF_DOES_START_MOTION, "StartMotion", state_parking_d, state_motion_started_d
+    );
 
-    // Из состояния "на парковке" можно перейти в состояние "готов к
+    // Из состояния "начал движение" можно перейти в состояние "готов к
     // рулежке" посредством либо выталкивания, либо собственного руления.
     // Зависит от того, где по курсу расположена начальная точка руления.
-    // TODO: тут надо еще иметь промежуточное состояние на разрешение этого дела.
 
     __create_action< AircraftDoesSlowTaxing > (
-        ACF_DOES_SLOW_TAXING, "SlowTaxing", state_parking_d, state_ready_for_taxing_d
+        ACF_DOES_SLOW_TAXING, "SlowTaxing", state_motion_started_d, state_ready_for_taxing_d
     );
     __create_action< AircraftDoesPushBack >(
-        ACF_DOES_PUSH_BACK, "PushBack", state_parking_d, state_ready_for_taxing_d
+        ACF_DOES_PUSH_BACK, "PushBack", state_motion_started_d, state_ready_for_taxing_d
     );
 
     // Готов к рулению (т.е. происходит рулежка) - может быть остановлено в любой 

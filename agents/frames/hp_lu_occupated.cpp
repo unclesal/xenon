@@ -15,9 +15,7 @@ using namespace xenon;
 HpLuOccupated::HpLuOccupated( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment)
     : StateFrame( bimbo, environment )
 {
-    _next_action.action = ACF_DOES_NOTHING;
-    _next_action.priority = 20;
-    _activated = false;
+    
 }
 
 // *********************************************************************************************************************
@@ -26,21 +24,21 @@ HpLuOccupated::HpLuOccupated( BimboAircraft * bimbo, ConnectedCommunicatorReacto
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void xenon::HpLuOccupated::update(xenon::CmdAircraftCondition* cmd) {
+void xenon::HpLuOccupated::update() {
     
-    _next_action.action = ACF_DOES_NOTHING;
-    _activated = false;
-    
+    _before_update();
+        
     _environment->agents_mutex.lock();
-    
-    auto our_location = _ptr_acf->get_location();
-    auto our_heading = _ptr_acf->vcl_condition.rotation.heading;
-    
+        
     for ( auto agent: _environment->agents ) {
-        if ( agent.is_aircraft() && agent.ahead_me(our_location, our_heading) ) {
-            auto distance = xenon::distance2d( our_location, agent.vcl_condition.location );
+        auto delta = xenon::course_to( _our_location, _our_rotation.heading, agent.vcl_condition.location );
+        bool ahead_me = (( delta >= 270 ) || ( delta <= 90 ));
+
+        if ( agent.is_aircraft() && ahead_me ) {
             
-            if ( distance <= 150.0 ) {
+            auto distance = xenon::distance2d( _our_location, agent.vcl_condition.location );
+            
+            if ( distance <= MIN_HP_LU_OCCUPATED ) {
                 
 //                 Logger::log(
 //                     "HP_LU_Occupated. " + _ptr_acf->vcl_condition.agent_name + " -> " + agent.vcl_condition.agent_name + ", dist=" + std::to_string( distance )

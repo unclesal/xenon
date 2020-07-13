@@ -94,7 +94,7 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
     
     if ( abs(delta) < 5.0 ) {  // && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
         // Тормозим.        
-        _taxi_breaking( 0.0, 3.0 );
+        _taxi_breaking( 0.0, 2.0 );
         // И фиксируем текущий курс, больше крутиться не будем.
         _ptr_acf->vcl_condition.heading_acceleration = 0.0;
 
@@ -105,9 +105,14 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.target_speed = 0.0;        
         _ptr_acf->vcl_condition.acceleration = 0.0;
+                
+        // Убираем точки из полетного плана, если они еще не были убраны.
         
-        _ptr_acf->vcl_condition.heading_acceleration = 0;
-        _ptr_acf->vcl_condition.target_heading = _ptr_acf->vcl_condition.rotation.heading;
+        wp = _ptr_acf->flight_plan.get(0);
+        while ( wp.type != WAYPOINT_RUNWAY && wp.action_to_achieve != ACF_DOES_TAKE_OFF ) {
+            _ptr_acf->flight_plan.pop_front();
+            wp = _ptr_acf->flight_plan.get(0);
+        };
         
         _finish();
     }

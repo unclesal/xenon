@@ -84,7 +84,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     
 #ifdef INSIDE_XPLANE
    _ptr_acf->hit_to_ground( end_rwy_location );    
-   end_rwy_location.altitude += _ptr_acf->parameters().on_ground_offset + 1.0;
+   end_rwy_location.altitude += _ptr_acf->parameters().on_ground_offset + 0.5;
 #endif
 
     
@@ -102,7 +102,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     
     // Logger::log("RWY alt=" + to_string( end_rwy_location.altitude ) + ", our alt=" + to_string(acf_location.altitude) + ", da=" + to_string(da));
 
-    if ( da <= _ptr_acf->parameters().on_ground_offset + 3.5 ) {
+    if ( da <= _ptr_acf->parameters().on_ground_offset + 1.5 ) {
 
         // Переход в фазу выравнивания.
 

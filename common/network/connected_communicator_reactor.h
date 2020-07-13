@@ -36,25 +36,7 @@ namespace xenon {
                         || vcl_condition.agent_type == AGENT_XPLANE
                     );
                 };
-                
-                bool ahead_me( const location_t & me, const double & heading ) {
-                    
-                    auto bearing = xenon::bearing( me, vcl_condition.location );
-            
-                    // --------------------------------------------------
-                    // Это - правильная комбинация. Вместе с 
-                    // нормализацией дает именно тот курс, который надо.
-                    // --------------------------------------------------
-             
-                    auto delta = bearing - heading;
-                    xenon::normalize_degrees( delta );
-            
-                    // --------------------------------------------------
-            
-                    return (( delta >= 270 ) || ( delta <= 90 ));
-                    
-                };
-                
+                                                
                 /**
                  * @short Находится ли данный агент в состоянии руления?
                  */
@@ -68,6 +50,8 @@ namespace xenon {
                         || vcl_condition.current_action == ACF_DOES_WAITING_TAKE_OFF_APPROVAL
                         || vcl_condition.current_action == ACF_DOES_LINING_UP
                         || vcl_condition.current_action == ACF_DOES_TAKE_OFF
+                        || vcl_condition.current_state == ACF_STATE_MOTION_STARTED
+                        || vcl_condition.current_state == ACF_STATE_READY_FOR_TAXING
                     );
                 };
             };

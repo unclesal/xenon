@@ -14,7 +14,7 @@ namespace xenon {
             TaxingDistance( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
             ~TaxingDistance() override = default;
             
-            void update( CmdAircraftCondition * cmd ) override;
+            void update() override;
             
         protected:
             

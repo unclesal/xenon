@@ -20,8 +20,12 @@ namespace xenon {
             virtual ~StateFrame() override = default;
             
             
-            virtual void update( CmdAircraftCondition * cmd ) = 0;
+            virtual void update() = 0;
             virtual void result( next_action_t & next_action );
+            
+            bool activated() {
+                return _activated;
+            };
             
         protected:
             
@@ -29,6 +33,11 @@ namespace xenon {
             
             ConnectedCommunicatorReactor * _environment;
             BimboAircraft * _ptr_acf;
+            
+            location_t _our_location;
+            rotation_t _our_rotation;
+            
+            void _before_update();            
             
         private:
             

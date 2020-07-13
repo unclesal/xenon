@@ -31,8 +31,9 @@ XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
     // Remember ID of our plugin for the future communications between plugins.
     __this_plugin_id = this_plugin_id;
     __enabled = false;
-    __networking = XNetworking::create();
-    __networking->set_setter( this );
+    
+    // __networking = XNetworking::create();
+    // __networking->set_setter( this );
 
     __uair_count = 0;
     
@@ -82,6 +83,7 @@ void XPlanePlugin::observe_user_aircraft() {
 
     if ( __enabled ) {
         __user_aircraft.observe();
+        
         // __networking->send_to_all( & __user_aircraft );
 
         // "Отложенная" инициализация. Естественно, нам "коммуникатор" нужен
@@ -276,6 +278,7 @@ void XPlanePlugin::__ai_controlled_aircraft_was_loaded( int index ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
+/*
 void XPlanePlugin::set( CommandSet & cmd ) {
 
     if ( ! __enabled ) return;
@@ -302,6 +305,7 @@ void XPlanePlugin::set( CommandSet & cmd ) {
 
     }
 }
+*/
 
 // *********************************************************************************************************************
 // *                                                                                                                   *

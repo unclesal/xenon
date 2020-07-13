@@ -16,10 +16,7 @@ using namespace xenon;
 TaxingDistance::TaxingDistance(
     BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment
 ) : StateFrame( bimbo, environment ) 
-{
-    _next_action.action = ACF_DOES_NOTHING;
-    _next_action.priority = 20;
-    _activated = false;
+{    
 }
 
 // *********************************************************************************************************************
@@ -28,37 +25,21 @@ TaxingDistance::TaxingDistance(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void TaxingDistance::update( CmdAircraftCondition * cmd ) {
+void TaxingDistance::update() {
     
-    _next_action.action = ACF_DOES_NOTHING;
-    _activated = false;
+    _before_update();
     
     _environment->agents_mutex.lock();
-    
-    auto our_location = _ptr_acf->get_location();
-    auto our_heading = _ptr_acf->vcl_condition.rotation.heading;
-    
+        
     for ( auto agent: _environment->agents ) {
         if ( agent.is_aircraft() && agent.is_on_taxiway() ) {
+            
             auto his_location = agent.vcl_condition.location;
-            // Курс на него. Интересуют только те самолеты, которые впереди нас. Как 
-            // бы не айс, если останавливаться при нарушении дистанции будет - передний.
+            auto delta = xenon::course_to( _our_location, _our_rotation.heading, his_location );
                         
-            auto bearing = xenon::bearing( our_location, his_location );
-            
-            // --------------------------------------------------
-            // Это - правильная комбинация. Вместе с 
-            // нормализацией дает именно тот курс, который надо.
-            // --------------------------------------------------
-             
-            auto delta = bearing - our_heading;
-            xenon::normalize_degrees( delta );
-            
-            // --------------------------------------------------
-            
             if (( delta >= 270 ) || ( delta <= 90 )) {
                 // Данный агент-самолет - впереди по курсу. Смотрим на дистанцию.
-                auto distance = xenon::distance2d( our_location, his_location );
+                auto distance = xenon::distance2d( _our_location, his_location );
                 if ( distance <= MIN_ALLOWABLE_TAXING_DISTANCE ) {
                     _next_action.action = ACF_DOES_TAXING_STOP;
                     _activated = true;

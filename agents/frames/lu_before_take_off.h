@@ -15,7 +15,7 @@ namespace xenon {
             LUBeforeTakeOff( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
             ~LUBeforeTakeOff() override = default;
             
-            void update( CmdAircraftCondition * cmd ) override;
+            void update() override;
             
         protected:
             

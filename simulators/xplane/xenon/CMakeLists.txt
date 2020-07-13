@@ -88,7 +88,7 @@ add_library(xenon MODULE
         ${CONTROL}/aircraft_does_parking.cpp
         ${CONTROL}/aircraft_does_push_back.cpp
         ${CONTROL}/aircraft_does_runway_leaving.cpp
-        ${CONTROL}/aircraft_does_slow_taxing.cpp
+        ${CONTROL}/aircraft_does_slow_taxing.cpp        
         ${CONTROL}/aircraft_does_take_off.cpp
         ${CONTROL}/aircraft_does_taxing.cpp
         ${CONTROL}/aircraft_does_taxing_stop.cpp
@@ -98,7 +98,7 @@ add_library(xenon MODULE
         ${CONTROL}/aircraft_state_approach.cpp
         ${CONTROL}/aircraft_state_before_parking.cpp
         ${CONTROL}/aircraft_state_graph.cpp
-        ${CONTROL}/aircraft_state_landed.cpp
+        ${CONTROL}/aircraft_state_landed.cpp        
         ${CONTROL}/aircraft_state_parking.cpp
         ${CONTROL}/aircraft_state_on_final.cpp
         ${CONTROL}/aircraft_state_on_hp.cpp
@@ -111,8 +111,7 @@ add_library(xenon MODULE
         main_plugin.cpp
         user_aircraft.cpp
         windll_main.cpp
-        XAmbient.cpp
-        XNetworking.cpp
+        XAmbient.cpp        
         xplane_plugin.cpp
 )
 

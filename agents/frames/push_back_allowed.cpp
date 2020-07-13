@@ -17,9 +17,6 @@ PushBackAllowed::PushBackAllowed(
 )
     : StateFrame( bimbo, environment )
 {
-    _next_action.action = ACF_DOES_NOTHING;
-    _next_action.priority = 20;
-    _activated = false;
 }
 
 // *********************************************************************************************************************
@@ -28,20 +25,31 @@ PushBackAllowed::PushBackAllowed(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void PushBackAllowed::update( CmdAircraftCondition * cmd ) {
+void PushBackAllowed::update() {
     
-    _next_action.action = ACF_DOES_NOTHING;
-    _activated = false;
+    _before_update();
     
     _environment->agents_mutex.lock();
     
     for ( auto agent : _environment->agents ) {
+        
         // Нас интересуют только те агенты, которые самолеты. И эта 
-        // штука должна двигаться. То есть быть в push-back или таксинг
+        // штука должна двигаться. То есть быть в push-back или таксинг        
+        
+//         Logger::log(
+//             _ptr_acf->vcl_condition.agent_name + " -> " + agent.vcl_condition.agent_name + ", " + state_to_string( agent.vcl_condition.current_state )
+//             + ", " + action_to_string( agent.vcl_condition.current_action ) + ", dis=" + to_string( distance ) +  ", is_on_taxiway=" + to_string( agent.is_on_taxiway() )
+//             + ", is_aircraft=" + to_string( agent.is_aircraft() )
+//         );
+        
         if ( agent.is_aircraft() && agent.is_on_taxiway() ) {
             // Вот теперь все. Меряем до нее расстояние.
-            auto distance = xenon::distance2d( _ptr_acf->get_location(), agent.vcl_condition.location);                
+        
+            auto distance = xenon::distance2d( _ptr_acf->get_location(), agent.vcl_condition.location);
             if ( distance <= MIN_ALLOWABLE_PUSH_BACK_DISTANCE ) {
+                
+                // Logger::log( _ptr_acf->vcl_condition.agent_name + " waiting push back activated.");
+                
                 _next_action.action = ACF_DOES_WAITING_PUSH_BACK;
                 _activated = true;
                 break;

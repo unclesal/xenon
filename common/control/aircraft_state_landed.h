@@ -6,7 +6,6 @@
 #pragma once
 
 #include "aircraft_abstract_state.h"
-#include "airport.h"
 
 namespace xenon {
     

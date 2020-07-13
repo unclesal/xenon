@@ -150,6 +150,23 @@ namespace xenon {
         normalize_degrees( brng );
         return brng;
     };
+    
+    /**
+     * @short Курс на точку относительно курса самолета.
+     */
+    inline double course_to( const location_t & my_location, const double & my_heading, const location_t & to ) {
+        
+        auto bearing = xenon::bearing( my_location, to );
+            
+        // --------------------------------------------------
+        // Это - правильная комбинация. Вместе с 
+        // нормализацией дает именно тот курс, который надо.
+        // --------------------------------------------------
+             
+        auto delta = bearing - my_heading;
+        xenon::normalize_degrees( delta );
+        return delta;
+    };
 
     inline location_t shift( const location_t & from, const double & meters, const float & heading ) {
 
@@ -229,10 +246,31 @@ namespace xenon {
         return ms;
     };
     
+    inline std::string state_to_string( const aircraft_state_t & state ) {
+        switch ( state ) {
+            case ACF_STATE_UNKNOWN : return "ACF_STATE_UNKNOWN";
+            case ACF_STATE_PARKING : return "ACF_STATE_PARKING";        
+            case ACF_STATE_MOTION_STARTED : return "ACF_STATE_MOTION_STARTED";
+            case ACF_STATE_READY_FOR_TAXING : return "ACF_STATE_READY_FOR_TAXING";
+            case ACF_STATE_HP : return "ACF_STATE_HP";
+            case ACF_STATE_READY_FOR_TAKE_OFF : return "ACF_STATE_READY_FOR_TAKE_OFF";
+            case ACF_STATE_AIRBORNED : return "ACF_STATE_AIRBORNED";
+            case ACF_STATE_ON_THE_FLY: return "ACF_STATE_ON_THE_FLY";
+            case ACF_STATE_APPROACH : return "ACF_STATE_APPROACH";
+            case ACF_STATE_ON_FINAL : return "ACF_STATE_ON_FINAL";
+            case ACF_STATE_LANDED : return "ACF_STATE_LANDED";
+            case ACF_STATE_RUNWAY_LEAVED : return "ACF_STATE_RUNWAY_LEAVED";
+            case ACF_STATE_BEFORE_PARKING : return "ACF_STATE_BEFORE_PARKING";
+            default: return "Unhandled state " + std::to_string( state );
+
+        };
+    };
+    
     inline std::string action_to_string( const aircraft_action_t & action ) {
         switch ( action ) {
             case ACF_DOES_NOTHING : return "ACF_DOES_NOTHING";        
-            case ACF_DOES_WAITING_PUSH_BACK : return "ACF_DOES_WAITING_PUSH_BACK";        
+            case ACF_DOES_WAITING_PUSH_BACK : return "ACF_DOES_WAITING_PUSH_BACK";    
+            case ACF_DOES_START_MOTION: return "ACF_DOES_START_MOTION";
             case ACF_DOES_PUSH_BACK : return "ACF_DOES_PUSH_BACK";        
             case ACF_DOES_SLOW_TAXING : return "ACF_DOES_SLOW_TAXING";
             case ACF_DOES_NORMAL_TAXING : return "ACF_DOES_NORMAL_TAXING";        

@@ -158,6 +158,12 @@ void CmdAircraftCondition::execute_on_server( ConnectedClientCore * client, Clie
         _acf_condition.icao_airline = "AFF";
         _acf_condition.livery = "AFF";
         
+    } else if ( _vcl_condition.agent_uuid == B738_SBI ) {
+        
+        _acf_condition.icao_type = "B738";
+        _acf_condition.icao_airline = "SBI";
+        _acf_condition.livery = "SBI";
+        
     } else if ( _vcl_condition.agent_uuid == A321_AFL ) {
         
         _acf_condition.icao_type == "A321";
@@ -187,6 +193,12 @@ void CmdAircraftCondition::execute_on_server( ConnectedClientCore * client, Clie
         _acf_condition.icao_type = "B763";
         _acf_condition.icao_airline = "SAS";
         _acf_condition.livery = "SAS";
+        
+    } else if ( _vcl_condition.agent_uuid == B744_THA ) {
+        
+        _acf_condition.icao_type == "B744";
+        _acf_condition.icao_airline = "THA";
+        _acf_condition.livery = "THA";
         
     }
 

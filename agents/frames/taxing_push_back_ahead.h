@@ -15,7 +15,7 @@ namespace xenon {
             TaxingPushBackAhead( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment );
             ~TaxingPushBackAhead() override = default;
             
-            void update( CmdAircraftCondition * cmd ) override;
+            void update() override;
             
         protected:
             

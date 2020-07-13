@@ -332,11 +332,11 @@ namespace xenon {
                 
     };
 
-    // Описание агента с точки зрения его возможности общаться.
-    struct talker_t {
-        std::string uuid = "";
-        agent_t type = AGENT_UNKNOWN;
-    };
+//     Описание агента с точки зрения его возможности общаться.
+//     struct talker_t {
+//         std::string uuid = "";
+//         agent_t type = AGENT_UNKNOWN;
+//     };
     
     // Структура для принятия решения о следующем шаге (действии)
     struct next_action_t {

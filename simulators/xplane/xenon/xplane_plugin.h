@@ -16,12 +16,12 @@
 #include "XPLMDataAccess.h"
 
 // My own includes
-#include "XNetworking.h"
+// #include "XNetworking.h"
 #include "abstract_vehicle.h"
 #include "user_aircraft.h"
 #include "bimbo_aircraft.h"
 #include "XAmbient.h"
-#include "XSetReactor.h"
+// #include "XSetReactor.h"
 #include "airport.h"
 #include "connected_communicator.h"
 #include "abstract_command.h"
@@ -33,7 +33,7 @@
 
 namespace xenon {
 
-    class XPlanePlugin : public XSetReactor, public ConnectedCommunicatorReactor {
+    class XPlanePlugin : public ConnectedCommunicatorReactor {
 
         public:
 
@@ -65,7 +65,7 @@ namespace xenon {
              */
             // void control_of_bimbo_aircrafts( float elapsed_since_last_call );
 
-            void set( CommandSet & cmd ) override;
+            // void set( CommandSet & cmd ) override;
 
             [[nodiscard]] bool is_enabled() const {
                 return __enabled;
@@ -93,7 +93,7 @@ namespace xenon {
              * @short Class for networking.
              */
 
-            XNetworking * __networking;
+            // XNetworking * __networking;
 
             /**
              * @short User aircraft.

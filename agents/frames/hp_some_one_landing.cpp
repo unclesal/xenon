@@ -16,9 +16,7 @@ using namespace xenon;
 HpSomeOneLanding::HpSomeOneLanding( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment)
     : StateFrame( bimbo, environment )
 {
-    _next_action.action = ACF_DOES_NOTHING;
-    _next_action.priority = 20;
-    _activated = false;
+    _next_action.priority = 2;
 }
 
 // *********************************************************************************************************************
@@ -27,10 +25,9 @@ HpSomeOneLanding::HpSomeOneLanding( BimboAircraft * bimbo, ConnectedCommunicator
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void HpSomeOneLanding::update( CmdAircraftCondition * cmd ) {
+void HpSomeOneLanding::update() {
     
-    _next_action.action = ACF_DOES_NOTHING;
-    _activated = false;
+    _before_update();
     
     _environment->agents_mutex.lock();
     
