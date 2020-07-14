@@ -23,8 +23,9 @@
 #include "XAmbient.h"
 // #include "XSetReactor.h"
 #include "airport.h"
-#include "connected_communicator.h"
 #include "abstract_command.h"
+#include "abstract_command_transmitter.hpp"
+#include "connected_communicator_reactor.h"
 
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
@@ -43,11 +44,9 @@ namespace xenon {
             void enable();
             void disable();
             void handle_message(XPLMPluginID from, int messageID, void * ptrParam);
+            void network_tick();
+            void disconnect();
             
-            inline void disconnect_communicator() {
-                if ( __communicator && __communicator->is_connected() ) __communicator->disconnect();                
-            };
-
             /**
              * @short Observe (get, store, transmitt to network e.t.c.) aircrafts positions and states.
              */
@@ -80,9 +79,11 @@ namespace xenon {
 
             bool __enabled;
             int __uair_count;
+            bool __inited;
             
-            ConnectedCommunicator * __communicator;
-
+            int __socket;
+            bool __connected;
+            
             /**
              * @short This plugin identifier.
              */
@@ -118,6 +119,8 @@ namespace xenon {
             vector < BimboAircraft * > __bimbos;
 
             void __init_around();
+            void __try_open_socket();
+            void __read_from_socket();
 
             /**
              * @short User's aircraft was loaded into simulator.

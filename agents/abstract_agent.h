@@ -29,13 +29,18 @@ namespace xenon {
 
         protected:
             
-            ConnectedCommunicator * _communicator; 
+            ConnectedCommunicator * _communicator;
             
             inline void _create_communicator() {
-                _communicator = new ConnectedCommunicator( this );
+                
+                if ( ! _communicator ) {
+                    _communicator = new ConnectedCommunicator( this );                    
+                }
+                
             };                        
             
         private:            
+                        
             
     }; // AbstractAgent
     

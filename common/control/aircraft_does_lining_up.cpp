@@ -29,7 +29,8 @@ AircraftDoesLiningUp::AircraftDoesLiningUp(
 
 void AircraftDoesLiningUp::_internal_start() {
     
-    Logger::log( _ptr_acf->vcl_condition.agent_name + ", LU internal start");
+    // Logger::log( _ptr_acf->vcl_condition.agent_name + ", LU internal start");
+    
     __phase = PHASE_STRAIGHT;
     // Поехали потихоньку.
         

@@ -39,7 +39,9 @@ void AircraftDoesFlying::_internal_start() {
     if ( wp.location.altitude != 0.0f ) __phase = PHASE_WAYPOINT_CONTROLLED;
     else __phase = PHASE_CLIMBING;
     
-    Logger::log("FLYING start, name=" + wp.name + ", alt=" + to_string(wp.location.altitude) + ", phase=" + to_string( __phase ));
+    Logger::log(
+        _ptr_acf->vcl_condition.agent_name 
+        + " FLYING start, name=" + wp.name + ", alt=" + to_string(wp.location.altitude) + ", phase=" + to_string( __phase ));
     
     // Контроль скорости будет осуществляться в данном действии 
     // автоматически, поэтому существующие значения - обнуляем.
@@ -123,7 +125,8 @@ void AircraftDoesFlying::_internal_step( const float & elapsed_since_last_call )
         // Следующая точка полетного плана для определения, что делать дальше.
         wp = _ptr_acf->flight_plan.get(0);
         Logger::log(
-            "Does FLYING, next wp: " + wp.name + ", alt=" + to_string( wp.location.altitude ) 
+            _ptr_acf->vcl_condition.agent_name 
+            + ", next wp: " + wp.name + ", alt=" + to_string( wp.location.altitude ) 
             + ", type=" + waypoint_to_string( wp.type ) + ", action=" + action_to_string( wp.action_to_achieve )
         );
         

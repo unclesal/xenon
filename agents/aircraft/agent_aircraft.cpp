@@ -60,6 +60,7 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     // Коммуникатор порождаем последним, т.к. там потоки и он может тут же 
     // соединиться. Нужно, чтобы все указатели были уже инициализированы.
     _create_communicator();
+    
     __ptr_acf->set_agent( this ); 
 
 }
@@ -555,6 +556,8 @@ void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
 // *********************************************************************************************************************
 
 void AgentAircraft::on_connect() {
+    
+    Logger::log("Communicator connected!");
 
     // Даем свое состояние коммуникатору.
     scream_about_me();    
@@ -726,9 +729,7 @@ void AgentAircraft::__start_fp0_action() {
         // с парковки ушли, дальше пойдет либо выталкивание, либо медленное выруливание.
         __ptr_acf->graph->set_active_state( ACF_STATE_MOTION_STARTED );
     };
-    
-    /*
-    
+        
     if ( node.state == ACF_STATE_READY_FOR_TAXING && next_wp.action_to_achieve == ACF_DOES_LINING_UP ) {
         // Мы не доехали до HP. HP - это не точка, это расстояние. 
         // Соответственно, состояние еще не изменилось.
@@ -739,8 +740,7 @@ void AgentAircraft::__start_fp0_action() {
     if ( node.state == ACF_STATE_HP && next_wp.action_to_achieve == ACF_DOES_TAKE_OFF ) {
         // Не закончилась фаза выравнивания.
         next_wp.action_to_achieve = ACF_DOES_LINING_UP;
-    };
-    */
+    };    
     
     
     if ( __ptr_acf->graph->current_action_is( next_wp.action_to_achieve )) return;

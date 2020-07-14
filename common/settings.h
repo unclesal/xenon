@@ -24,7 +24,7 @@
 #define COMMUNICATOR_MAX_CLIENTS 100
 
 // Максимальный размер пакета, который мы собрались обрабатывать.
-#define COMMUNICATOR_MAX_PACKET_SIZE  8192   // 32768
+#define COMMUNICATOR_MAX_PACKET_SIZE  32768
 
 // The frequency of sending to the network the status of the
 // aircrafts by default, Hertz (times per second).
@@ -36,6 +36,9 @@
 
 // Частота опроса состояния автопилота, раз в секунду (Гц).
 #define AUTOPILOT_STATE_FREQUENCY 2.0
+
+// Частота опроса неблокирующей сетевой сокеты, раз в секунду (Гц)
+#define NETWORK_SOCKET_FREQUENCY 1.0
 
 // Частота опроса и устаровки состояния Bimbo-самолетов, раз в секунду (Гц)
 // #define BIMBO_AIRCRAFT_FREQUENCY 10.0

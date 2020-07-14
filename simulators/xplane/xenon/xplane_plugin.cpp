@@ -5,6 +5,12 @@
 
 // system includes.
 
+#include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <netdb.h>
+
 // XPlane Plugin SDK includes
 #include "XPLMPlugin.h"
 #include "XPLMPlanes.h"
@@ -17,6 +23,8 @@
 
 using namespace xenon;
 using namespace std;
+
+char __receiv_buffer[ COMMUNICATOR_MAX_PACKET_SIZE ];
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -31,13 +39,14 @@ XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id ) {
     // Remember ID of our plugin for the future communications between plugins.
     __this_plugin_id = this_plugin_id;
     __enabled = false;
+    __inited = false;
+    __socket = -1;
     
     // __networking = XNetworking::create();
     // __networking->set_setter( this );
 
-    __uair_count = 0;
-    
-    __communicator = nullptr;        
+    __uair_count = 0;   
+    __connected = false;
 
 }
 
@@ -65,6 +74,138 @@ void XPlanePlugin::disable() {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
+// *                                              Один "шаг" работы с сетью                                            *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::network_tick() {
+    if ( ! __inited ) return;
+    if ( ! __connected ) __try_open_socket();
+    if ( __connected ) __read_from_socket();
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                               Попытка открыть сокету и соединиться с коммуникатором                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::__try_open_socket() {
+    
+    if ( ( __socket < 0 ) || ( ! __connected ) ) {            
+        
+        // Попытка открытия сокеты. Причем, может быть такая ситуация, что сама сокета-то 
+        // открыта, но вот соединиться мы не смогли. Учитываем эту ситуацию.        
+        __connected = false;
+        if ( __socket >= 0 ) disconnect();
+        
+        __socket = socket(AF_INET, SOCK_STREAM, 0);        
+        if ( __socket < 0 ) return;
+        
+        hostent * remote_communicator = gethostbyname( get_communicator_host().c_str() );
+        if ( ! remote_communicator ) {
+            disconnect();
+            on_error(
+                "ConnectedCommunictor::__receiv(), no such host " + get_communicator_host()
+            );            
+            return;
+        }
+        
+        sockaddr_in server_addr;
+        
+        memset( &server_addr, 0, sizeof( server_addr ) );
+        server_addr.sin_family = AF_INET;
+        bcopy((char *) remote_communicator->h_addr, (char *) & server_addr.sin_addr.s_addr, remote_communicator->h_length);            
+        server_addr.sin_port = htons( get_communicator_port() );
+        
+        if ( ::connect( __socket, (struct sockaddr * ) & server_addr, sizeof(server_addr)) < 0) {
+            if ( errno != ECONNREFUSED ) // connection refused
+            {
+                on_error(
+                    "ConnectedCommunicator::connect: " + std::to_string( errno ) 
+                    + ", message=" + std::string( strerror( errno ))
+                );
+            }
+            disconnect();
+            return;
+        }
+
+        // Если здесь остались - мы соединены.
+        // Делаем сокету не-блоковой.
+        
+        int flags = fcntl( __socket, F_GETFL, 0);
+        flags |= O_NONBLOCK;
+        fcntl( __socket, F_SETFL, flags);
+        
+        // Устанавливаем факт соединенности и вызываем обработчик соединения в плагине.
+        __connected = true;
+        on_connect();
+
+    };
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                           Чтение информации с сокеты.                                             *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::__read_from_socket() {
+    for ( ;; ) {
+        uint16_t len = 0;
+        ssize_t bytes = recv( __socket, & len, sizeof( len ), MSG_PEEK );
+        if ( bytes < 0 ) {
+            // Сетевая ошибка.
+            disconnect();
+            return;
+        }
+        
+        if ( bytes < sizeof( len ) ) return; // Там нет даже длины.
+        
+        int total;        
+        ioctl( __socket, FIONREAD, & total );
+        if ( total >= len + sizeof( len ) ) {
+            
+            // Там есть полная команда. Вычитываем ее полностью.
+            bytes = read( __socket, & len, sizeof( len ) );
+            bytes = read( __socket, __receiv_buffer, len );
+            
+            if ( bytes < 0 ) {
+                disconnect();
+                return;
+            };
+            
+            if ( bytes != len ) {
+                on_error("Read from socket, want " + std::to_string( len ) + ", but read " + std::to_string( bytes) );
+                return;
+            }
+            // В буфере получили полностью пакет с командой.
+            
+            XPlane::log("Readed: " + std::to_string( bytes ) );
+            
+        } else return;
+    }
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                                Рассоединиться с сетью                                             *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void XPlanePlugin::disconnect() {
+    
+    if ( __socket >= 0 ) {
+        ::close( __socket );
+        __socket = -1;
+    }
+    __connected = false;
+    
+    on_disconnect();
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
 // *                                       User's aircraft was loaded into simulator.                                  *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -86,14 +227,14 @@ void XPlanePlugin::observe_user_aircraft() {
         
         // __networking->send_to_all( & __user_aircraft );
 
-        // "Отложенная" инициализация. Естественно, нам "коммуникатор" нужен
-        // только в одном экземпляре, смысла нет порождать его 10 раз.
+        // "Отложенная" инициализация.
 
-        if ( ! __communicator ) {
+        if ( ! __inited ) {
+            
             __uair_count ++;
-            // Начиная со второго тика - ждем, когда будет дочитаны
+            // Начиная с некоторого тика - ждем, когда будет дочитаны
             // полностью все имеющиеся аэропорты.
-            if ( __uair_count >= 2 ) {
+            if ( __uair_count >= 4 ) {
                 __init_around();
             }
         }
@@ -110,16 +251,14 @@ void XPlanePlugin::observe_user_aircraft() {
 
 void XPlanePlugin::__init_around() {
 
-    if ( __communicator ) return;
+    if ( __inited ) return;
     
     // Если аэропорт еще не доинициализировался, то пытаться пока рановато еще.
     if ( ! Airport::airports_was_readed() ) return;
+    
+    if ( ! __connected ) __try_open_socket();
+    __inited = true;
 
-    // Коммуникатор можно порождать только тогда, когда все остальное уже готово
-    // (инициализировано). Это потому, что в коммуникаторе есть потоки, он тут
-    // же может соединиться и начать работать - с указателями, которых еще не существует.
-
-    __communicator = new ConnectedCommunicator( this );
     
 //     auto acf1 = new BimboAircraft("B763", "SAS", "SAS");
 //     auto usss = Airport::get_by_icao("USSS");
@@ -142,18 +281,18 @@ void XPlanePlugin::__init_around() {
 void XPlanePlugin::on_connect() {
     
     __user_aircraft.update_conditions();
+    
+    AbstractCommandTransmitter trx( __socket );
+    std::string error;
         
     // Заявляем о себе.
-    CmdAircraftCondition * current_condion = new CmdAircraftCondition(
-        __user_aircraft.vcl_condition, __user_aircraft.acf_condition
-    );
-    __communicator->request( current_condion );
+    CmdAircraftCondition current_condion( __user_aircraft.vcl_condition, __user_aircraft.acf_condition );
+    if ( ! trx.transmitt( & current_condion, error ) ) on_error( error );
     
     // Спрашиваем об окружающих.
-    CmdQueryAround * query_arround = new CmdQueryAround( 
-        __user_aircraft.vcl_condition
-    );
-    __communicator->request( query_arround );
+    error = "";
+    CmdQueryAround query_arround( __user_aircraft.vcl_condition );
+    if ( ! trx.transmitt( & query_arround, error )) on_error( error );
 }
 
 // *********************************************************************************************************************
@@ -173,8 +312,13 @@ void XPlanePlugin::on_disconnect() {
 // *********************************************************************************************************************
 
 void XPlanePlugin::on_received( void * abstract_command ) {
+    
     if ( ! abstract_command ) return;
     AbstractCommand * cmd = ( AbstractCommand * ) abstract_command;
+    
+    Logger::log( "Got " + cmd->command_name() );
+    
+    /*
     
     // Порядок - имеет значение!!! Наследование потому что.
     CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * >( cmd );
@@ -196,6 +340,7 @@ void XPlanePlugin::on_received( void * abstract_command ) {
     };
     
     XPlane::log("XPlanePlugin::on_received: " + cmd->command_name() + " received, but unhandled" );
+    */
 }
 
 // *********************************************************************************************************************
@@ -206,6 +351,7 @@ void XPlanePlugin::on_received( void * abstract_command ) {
 
 void XPlanePlugin::on_error( std::string message ) {
     XPlane::log("ERROR with communications: " + message );
+    disconnect();
 }
 
 // *********************************************************************************************************************
@@ -561,12 +707,8 @@ void XPlanePlugin::__command_received( CmdWaypointReached * cmd ) {
 // *********************************************************************************************************************
 
 XPlanePlugin::~XPlanePlugin() {
-    
-    disconnect_communicator();
-    if ( __communicator ) {        
-        delete( __communicator );
-        __communicator = nullptr;
-    }
+
+    disconnect();
     
     __agents_mutex.lock();
     // Корректное освобождение памяти, выделенной под самоходки.

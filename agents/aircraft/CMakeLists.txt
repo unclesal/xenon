@@ -61,8 +61,8 @@ set(SOURCES
     ${FRAMES}/taxing_distance.cpp   
     ${FRAMES}/taxing_push_back_ahead.cpp
     
-    ${NET}/abstract_command.cpp
-    ${NET}/command_parser.cpp
+    ${NET}/abstract_command.cpp    
+    ${NET}/command_parser.cpp  
     ${NET}/connected_communicator.cpp
     
     ${NETCMD}/cmd_vehicle_condition.cpp

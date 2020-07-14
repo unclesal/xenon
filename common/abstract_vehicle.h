@@ -8,7 +8,6 @@
 #include "structures.h"
 #include "utils.hpp"
 #include "logger.h"
-#include "connected_communicator.h"
 
 #ifdef INSIDE_XPLANE
 #include "XPLMScenery.h"

@@ -8,7 +8,6 @@
 #include <thread>
 
 #include "agent_aircraft.h"
-#include "connected_communicator.h"
 #include "tested_agents.h"
 
 using namespace std;

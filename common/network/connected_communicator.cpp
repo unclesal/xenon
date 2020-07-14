@@ -102,7 +102,7 @@ void ConnectedCommunicator::__try_open_socket() {
         // Попытка открытия сокеты. Причем, может быть такая ситуация, что сама сокета-то 
         // открыта, но вот соединиться мы не смогли. Учитываем эту ситуацию.        
         __connected = false;
-        if ( __socket < 0 ) __close_socket();                            
+        if ( __socket >= 0 ) __close_socket();
         
         __socket = socket(AF_INET, SOCK_STREAM, 0);
         if ( __socket < 0 ) return;

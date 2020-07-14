@@ -101,7 +101,7 @@ PLUGIN_API void	XPluginStop(void) {
     try {
 
         if ( _plugin ) {
-            _plugin->disconnect_communicator();
+            _plugin->disconnect();
             delete( _plugin );
             _plugin = nullptr;
         }
@@ -153,6 +153,17 @@ inline float get_autopilot_observation_interval() {
     auto freq = static_cast<float>( AUTOPILOT_STATE_FREQUENCY );
     return ( (float) 1.0 / freq );
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                       Вернуть интервал опроса сетевой сокеты                                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+inline float get_network_socket_interval() {
+    auto freq = static_cast<float>( NETWORK_SOCKET_FREQUENCY );
+    return ( 1.0f / freq );
+};
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -228,6 +239,23 @@ float cb_observing_bimbo_aircrafts(
     return get_bimbo_aircrafts_observation_interval();
 }
 */
+
+// ********************************************************************************************************************
+// *                                                                                                                  *
+// *                            Callback-процедура работы с неблокирующей сетевой сокетой                             *
+// *                                                                                                                  *
+// ********************************************************************************************************************
+
+float cb_network_socket(
+    [[maybe_unused]] float elapsedSinceLastCall,
+    [[maybe_unused]] float elapsedTimeSinceLastFlightLoop,
+    [[maybe_unused]] int counter,
+    [[maybe_unused]] void * refcon
+) {
+    if ( _plugin && _plugin->is_enabled() ) _plugin->network_tick();
+    return get_network_socket_interval();
+};
+
 // ********************************************************************************************************************
 // *                                                                                                                  *
 // *                               Callback for observing an aircraft's position and state.                           *
@@ -370,6 +398,9 @@ PLUGIN_API int XPluginEnable(void)  {
     // Register callback procedures. This made in enable/disable, not in start/stop
     // section, to stop all handling if plugin is disabled.
     XPLMRegisterFlightLoopCallback( cb_observing_user_aircraft, get_user_aircraft_observation_interval(), nullptr );
+    
+    // Сетевые "тики"
+    XPLMRegisterFlightLoopCallback( cb_network_socket, get_network_socket_interval(), nullptr );
 
     // Наблюдение за состоянием автопилота.
     // XPLMRegisterFlightLoopCallback( cb__observing_autopilot, get_autopilot_observation_interval(), NULL );
@@ -437,6 +468,7 @@ PLUGIN_API void XPluginDisable(void) {
     XPMPMultiplayerCleanup();
 
     // Unregister (free) our callback procedures.
+    XPLMUnregisterFlightLoopCallback( cb_network_socket, nullptr );
     XPLMUnregisterFlightLoopCallback( cb_observing_user_aircraft, nullptr );
     // XPLMUnregisterFlightLoopCallback( cb__observing_autopilot, NULL );
     // XPLMUnregisterFlightLoopCallback( cb__observing_ambient, NULL );
