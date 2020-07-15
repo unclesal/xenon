@@ -11,10 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h> 
-#include <unistd.h>
+#include <errno.h>
 
 #include <thread>
 #include <string>
@@ -47,12 +44,19 @@ namespace xenon {
             };
             
             /**
-             * @short Запрос от некоего агента к центральному коммуникатору.
-             * Точнее, здесь идет только постановка в очередь. Фактическая отправка пакета на сервер
-             * произойдет тогда, когда будет установлено соединение и очередь на отправку дойдет до данного
-             * конкретного пакета. Некий аналог "ассинхронности", чтобы клиент не сидел и не ждал ответа.
+             * @short Передать пакет в сеть.
              */
-            void request( AbstractCommand * cmd );
+            void transmitt( AbstractCommand & cmd );                        
+            
+            void network_step();
+            
+            void init_communicator() {
+                __inited = true;                
+            };
+            
+            bool communicator_inited() {
+                return __inited;
+            };
             
         protected:
             
@@ -61,24 +65,18 @@ namespace xenon {
             /**
              * @short Нумерация отправленных пакетов в порядке возрастания.
              * Просто для контроля, на что конкретно мы получили ответ.
-             * max = 4 294 967 295 (0xffffffff)
              */
-            static unsigned int __packet_number;
-                        
-            ConnectedCommunicatorReactor * __reactor;
-            int __socket;
+            static uint16_t __packet_number;
+            int __socket;            
             char __rx_buffer[ COMMUNICATOR_MAX_PACKET_SIZE ];
-            
-            hostent * __remote_communicator;
-            sockaddr_in __server_addr;
+            char __transmitt_buffer[ COMMUNICATOR_MAX_PACKET_SIZE ];
+                        
+            ConnectedCommunicatorReactor * __reactor;                        
+            bool __inited;
+                                    
             CommandParser __parser;
             bool __connected;
-            
-            std::mutex __transmitt_mutex;
-            deque<AbstractCommand * > __transmitt_queue;
-            
-            void __transmitt();
-            void __receiv();
+                                    
             void __read_from_socket();
             
             void __try_open_socket();

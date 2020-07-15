@@ -15,8 +15,10 @@ using namespace std;
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-AbstractAgent::AbstractAgent() {    
-    _communicator = nullptr;
+AbstractAgent::AbstractAgent() 
+    : ConnectedCommunicator( this )
+{    
+    
 }
 
 // *********************************************************************************************************************
@@ -41,12 +43,8 @@ void AbstractAgent::on_received( void * abstract_command ) {
 
 AbstractAgent::~AbstractAgent() {
 
-    
-    if ( _communicator ) {
-        if ( _communicator->is_connected() ) _communicator->disconnect();
-        delete( _communicator );
-        _communicator = nullptr;
-    }    
+  
+    disconnect();
     
     for ( auto agent: agents ) {
         

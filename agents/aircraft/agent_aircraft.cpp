@@ -57,12 +57,12 @@ AgentAircraft::AgentAircraft ( const std::string & uuid ) : AbstractAgent() {
     __init_hp_frames();
     __init_lu_frames();
     
-    // Коммуникатор порождаем последним, т.к. там потоки и он может тут же 
-    // соединиться. Нужно, чтобы все указатели были уже инициализированы.
-    _create_communicator();
-    
     __ptr_acf->set_agent( this ); 
-
+    
+    // Коммуникатор инициализируем последним, т.к. он может тут же 
+    // соединиться. Нужно, чтобы все указатели были уже инициализированы.
+    init_communicator();
+        
 }
 
 // *********************************************************************************************************************
@@ -307,9 +307,7 @@ void AgentAircraft::run() {
         if ( __cycles >= CYCLES_PER_SCREAM ) {
             __cycles = 0;
             scream_about_me();            
-        }
-        
-        if ( __started ) __decision();
+        }                
 
     }
     
@@ -405,11 +403,10 @@ void AgentAircraft::__choose_next_action() {
 // *********************************************************************************************************************
 
 void AgentAircraft::scream_about_me() {
-    if ( ! __ptr_acf ) return;
-    if ( ! _communicator ) return;
-    if ( _communicator->is_connected()  ) {
-        CmdAircraftCondition * cmd = new CmdAircraftCondition( __ptr_acf->vcl_condition, __ptr_acf->acf_condition );
-        _communicator->request(cmd);
+    if ( ! __ptr_acf ) return;    
+    if ( is_connected()  ) {
+        CmdAircraftCondition cmd( __ptr_acf->vcl_condition, __ptr_acf->acf_condition );
+        transmitt( cmd );
     }
 }
 
@@ -470,9 +467,9 @@ void AgentAircraft::state_changed( void * state ) {
         auto way = airport.get_taxi_way_for_parking( our_location, our_heading, parking );
         __ptr_acf->prepare_for_taxing( way );
                 
-        if (( _communicator ) && ( _communicator->is_connected() )) {
-            CmdFlightPlan * cmd_flight_plan = new CmdFlightPlan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan);
-            _communicator->request( cmd_flight_plan );
+        if ( is_connected() ) {
+            CmdFlightPlan cmd_flight_plan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan);
+            transmitt( cmd_flight_plan );
         }
         
     };
@@ -507,9 +504,9 @@ void AgentAircraft::action_finished( void * action ) {
 
 void AgentAircraft::wp_reached( waypoint_t wp ) {
     
-    if ( _communicator && _communicator->is_connected() ) {
-        CmdWaypointReached * cmd = new CmdWaypointReached( __ptr_acf->vcl_condition, wp.npp );
-        _communicator->request( cmd );
+    if ( is_connected() ) {
+        CmdWaypointReached cmd( __ptr_acf->vcl_condition, wp.npp );
+        transmitt( cmd );
     };
     
     auto next_wp = __ptr_acf->flight_plan.get(0);
@@ -529,8 +526,11 @@ void AgentAircraft::on_received( void * abstract_command ) {
         
     // Сначала вызываем родительский метод, он разложит по коллекции внешних агентов.
     AbstractAgent::on_received( abstract_command );
+        
+    AbstractCommand * cmd = reinterpret_cast< AbstractCommand * >( abstract_command );
+    if ( ! cmd ) return;
     
-    AbstractCommand * cmd = ( AbstractCommand * ) abstract_command;
+    // cout << "AgentAircraft::on_received " << cmd->command_name() << endl;
     
     CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * > ( cmd );
     if ( cmd_aircraft_condition ) {
@@ -558,18 +558,17 @@ void AgentAircraft::on_received( CmdAircraftCondition * cmd ) {
 void AgentAircraft::on_connect() {
     
     Logger::log("Communicator connected!");
-
+    
     // Даем свое состояние коммуникатору.
     scream_about_me();    
     
     // Полетный план.
-    CmdFlightPlan * cmd_flight_plan = new CmdFlightPlan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan );
-    _communicator->request( cmd_flight_plan );
+    CmdFlightPlan cmd_flight_plan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan );
+    transmitt( cmd_flight_plan );
     
     // Спрашиваем наше окружение - тех агентов, которых мы можем "слышать".
-    CmdQueryAround * cmd_around = new CmdQueryAround( __ptr_acf->vcl_condition );
-    _communicator->request( cmd_around );    
-
+    CmdQueryAround cmd_around( __ptr_acf->vcl_condition );
+    transmitt( cmd_around );            
 }
 
 // *********************************************************************************************************************
@@ -584,6 +583,8 @@ void AgentAircraft::__step() {
     float elapsed_since_last_call = ( xenon::get_system_time_ms() - __previous_time) / 1000.0;
     __previous_time = xenon::get_system_time_ms();
 
+    network_step();
+    if ( __started ) __decision();
 
     // Вызываем обновление состояния агента.
     __ptr_acf->UpdatePosition( elapsed_since_last_call, 0 );

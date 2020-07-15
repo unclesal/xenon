@@ -252,7 +252,7 @@ float cb_network_socket(
     [[maybe_unused]] int counter,
     [[maybe_unused]] void * refcon
 ) {
-    if ( _plugin && _plugin->is_enabled() ) _plugin->network_tick();
+    if ( _plugin && _plugin->is_enabled() ) _plugin->network_step();
     return get_network_socket_interval();
 };
 

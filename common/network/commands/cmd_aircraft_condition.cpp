@@ -202,7 +202,7 @@ void CmdAircraftCondition::execute_on_server( ConnectedClientCore * client, Clie
         
     }
 
-    CmdVehicleCondition::execute_on_server( client, server );
+    CmdVehicleCondition::execute_on_server( client, server );    
     
 }
 #endif

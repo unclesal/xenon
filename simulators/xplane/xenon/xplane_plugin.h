@@ -25,6 +25,7 @@
 #include "airport.h"
 #include "abstract_command.h"
 #include "abstract_command_transmitter.hpp"
+#include "connected_communicator.h"
 #include "connected_communicator_reactor.h"
 
 #include "cmd_query_around.h"
@@ -34,7 +35,7 @@
 
 namespace xenon {
 
-    class XPlanePlugin : public ConnectedCommunicatorReactor {
+    class XPlanePlugin : public ConnectedCommunicator, public ConnectedCommunicatorReactor {
 
         public:
 
@@ -44,8 +45,6 @@ namespace xenon {
             void enable();
             void disable();
             void handle_message(XPLMPluginID from, int messageID, void * ptrParam);
-            void network_tick();
-            void disconnect();
             
             /**
              * @short Observe (get, store, transmitt to network e.t.c.) aircrafts positions and states.
@@ -119,8 +118,6 @@ namespace xenon {
             vector < BimboAircraft * > __bimbos;
 
             void __init_around();
-            void __try_open_socket();
-            void __read_from_socket();
 
             /**
              * @short User's aircraft was loaded into simulator.

@@ -74,6 +74,7 @@ add_library(xenon MODULE
         ${NETWORK}/CommandSet.cpp
         ${NETWORK}/command_parser.cpp
         ${NETWORK}/CommandAutopilotState.cpp
+        ${NETWORK}/connected_communicator.cpp
         
         # Управление. 
         ${CONTROL}/aircraft_abstract_action.cpp

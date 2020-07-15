@@ -24,7 +24,7 @@
 #define COMMUNICATOR_MAX_CLIENTS 100
 
 // Максимальный размер пакета, который мы собрались обрабатывать.
-#define COMMUNICATOR_MAX_PACKET_SIZE  32768
+#define COMMUNICATOR_MAX_PACKET_SIZE  16384 // 32768
 
 // The frequency of sending to the network the status of the
 // aircrafts by default, Hertz (times per second).

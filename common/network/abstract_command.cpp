@@ -102,7 +102,9 @@ void AbstractCommand::from_json ( JSON & json ) {
 
 #ifdef SERVER_SIDE
 void AbstractCommand::execute_on_server( ConnectedClientCore * client, ClientsListener * server ) {    
+    
     server->send_to_those_who_can_hear( this );
+    
 }
 #endif
 
