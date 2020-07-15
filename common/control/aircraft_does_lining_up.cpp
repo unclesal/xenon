@@ -110,9 +110,8 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
         // Убираем точки из полетного плана, если они еще не были убраны.
         
         wp = _ptr_acf->flight_plan.get(0);
-        while ( wp.type != WAYPOINT_RUNWAY && wp.action_to_achieve != ACF_DOES_TAKE_OFF ) {
-            _ptr_acf->flight_plan.pop_front();
-            wp = _ptr_acf->flight_plan.get(0);
+        if ( wp.type == WAYPOINT_RUNWAY && wp.action_to_achieve == ACF_DOES_LINING_UP ) {
+            _ptr_acf->flight_plan.pop_front();            
         };
         
         _finish();

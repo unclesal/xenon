@@ -24,7 +24,6 @@
 // #include "XSetReactor.h"
 #include "airport.h"
 #include "abstract_command.h"
-#include "abstract_command_transmitter.hpp"
 #include "connected_communicator.h"
 #include "connected_communicator_reactor.h"
 
@@ -78,11 +77,7 @@ namespace xenon {
 
             bool __enabled;
             int __uair_count;
-            bool __inited;
-            
-            int __socket;
-            bool __connected;
-            
+                        
             /**
              * @short This plugin identifier.
              */

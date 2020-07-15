@@ -130,7 +130,7 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     auto wp = _ptr_acf->flight_plan.get(0);
     auto distance = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     if ( distance < 100.0 ) {
-        Logger::log("Take off done");
+        Logger::log(_ptr_acf->vcl_condition.agent_name + ", take off done");
         __phase = PHASE_NOTHING;
         _ptr_acf->flight_plan.pop_front();
         _finish();
@@ -163,7 +163,7 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
 void AircraftDoesTakeOff::_internal_step( const float & elapsed_since_last_call ) {
         
     auto wp = _ptr_acf->flight_plan.get( 0 );
-    if ( wp.action_to_achieve != ACF_DOES_TAKE_OFF ) _ptr_acf->flight_plan.pop_front();
+    if ( wp.action_to_achieve == ACF_DOES_LINING_UP ) _ptr_acf->flight_plan.pop_front();
     
     // Подруливание по курсу осуществляется во всех фазах, цель - выйти как можно ближе к точке.
 
@@ -173,7 +173,9 @@ void AircraftDoesTakeOff::_internal_step( const float & elapsed_since_last_call 
         case PHASE_RUN_UP: __step__run_up( elapsed_since_last_call ); break;
         case PHASE_BREAK_AWAY: __step__break_away( elapsed_since_last_call ); break;
         case PHASE_CLIMBING: __step__climbing( elapsed_since_last_call ); break;
-        default: Logger::log("ERROR: AircraftDoesTakeOff::_internal_step(), unhandled phase " + to_string( __phase ) );
+        default: Logger::log( 
+            _ptr_acf->vcl_condition.agent_name + ": AircraftDoesTakeOff::_internal_step(), unhandled phase " + to_string( __phase ) 
+        );
     };
 }
 

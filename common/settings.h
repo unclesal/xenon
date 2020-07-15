@@ -38,7 +38,7 @@
 #define AUTOPILOT_STATE_FREQUENCY 2.0
 
 // Частота опроса неблокирующей сетевой сокеты, раз в секунду (Гц)
-#define NETWORK_SOCKET_FREQUENCY 1.0
+#define NETWORK_SOCKET_FREQUENCY 4.0
 
 // Частота опроса и устаровки состояния Bimbo-самолетов, раз в секунду (Гц)
 // #define BIMBO_AIRCRAFT_FREQUENCY 10.0

@@ -36,14 +36,11 @@ XPlanePlugin::XPlanePlugin( XPLMPluginID & this_plugin_id )
     // Remember ID of our plugin for the future communications between plugins.
     __this_plugin_id = this_plugin_id;
     __enabled = false;
-    __inited = false;
-    __socket = -1;
     
     // __networking = XNetworking::create();
     // __networking->set_setter( this );
 
     __uair_count = 0;   
-    __connected = false;
 
 }
 
@@ -176,11 +173,7 @@ void XPlanePlugin::on_received( void * abstract_command ) {
     
     if ( ! abstract_command ) return;
     AbstractCommand * cmd = ( AbstractCommand * ) abstract_command;
-    
-    Logger::log( "Got " + cmd->command_name() );
-    
-    /*
-    
+        
     // Порядок - имеет значение!!! Наследование потому что.
     CmdAircraftCondition * cmd_aircraft_condition = dynamic_cast< CmdAircraftCondition * >( cmd );
     if ( cmd_aircraft_condition ) {
@@ -201,7 +194,7 @@ void XPlanePlugin::on_received( void * abstract_command ) {
     };
     
     XPlane::log("XPlanePlugin::on_received: " + cmd->command_name() + " received, but unhandled" );
-    */
+    
 }
 
 // *********************************************************************************************************************

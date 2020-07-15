@@ -80,7 +80,7 @@ BimboAircraft::BimboAircraft(
 void BimboAircraft::action_finished( void * action ) {
 #ifdef INSIDE_AGENT    
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
-    aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );    
+    // aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );
     graph->action_finished( ptr_abstract_action );    
     AbstractVehicle::action_finished( action );
 #endif        

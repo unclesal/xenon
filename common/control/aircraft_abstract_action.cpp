@@ -261,7 +261,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
 void AircraftAbstractAction::_head_steering( float elapsed_since_last_call, double kp ) {
 
     if ( _ptr_acf->flight_plan.is_empty() ) {
-        Logger::log("ERROR: AircraftAbstractAction::_head_steering, but FP is empty");
+        Logger::log(_ptr_acf->vcl_condition.agent_name + ": AircraftAbstractAction::_head_steering, but FP is empty");
         return;
     };
     

@@ -299,6 +299,15 @@ void AircraftStateGraph::set_active_state( const aircraft_state_t & state ) {
 
 void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t::edge_descriptor & ed ) {
     
+    aircraft_state_graph::graph_t::edge_descriptor fake;
+    
+    if ( ed == fake ) {
+        Logger::log(
+            __ptr_acf->vcl_condition.agent_name 
+            + ", try to set_active_action( nullptr)"
+        );
+    };
+    
     clear_actions_activity();
     
     try {
@@ -557,12 +566,7 @@ aircraft_state_graph::edge_t AircraftStateGraph::get_edge_for( AircraftAbstractA
 
 void AircraftStateGraph::action_finished( xenon::AircraftAbstractAction * ptr_action ) {
     
-    clear_actions_activity();
-    
-    // Это - не лишнее. Хоть ниже и проводится очистка на момент 
-    // установки текущего состояния. Потому что дескриптор
-    // состояния может оказаться не валидным.
-    clear_states_activity();
+    clear_actions_activity();        
     
     if ( ! ptr_action ) {
         Logger::log("ERROR: AircraftStateGraph::action_finished called with null action pointer.");
@@ -571,10 +575,20 @@ void AircraftStateGraph::action_finished( xenon::AircraftAbstractAction * ptr_ac
     
     // Переход на следующее состояние, здесь он абсолютно однозначен.
     auto next_state = boost::target( ptr_action->edge_d(), __graph );
+    auto next_node = __graph[ next_state ];
     
-    try {
-        set_active_state( next_state );
-    } catch ( const std::range_error & re ) {
-        Logger::log("ERROR: AircraftStateGraph::action_finished, invalid descriptor " + to_string( next_state ));
+    if ( ! current_state_is ( next_node.state ) ) {
+    
+        // Это - не лишнее. Хоть ниже и проводится очистка на момент 
+        // установки текущего состояния. Потому что дескриптор
+        // состояния может оказаться не валидным.
+        clear_states_activity();
+        
+        try {
+            set_active_state( next_state );
+        } catch ( const std::range_error & re ) {
+            Logger::log("ERROR: AircraftStateGraph::action_finished, invalid descriptor " + to_string( next_state ));
+        }
     }
+
 }
