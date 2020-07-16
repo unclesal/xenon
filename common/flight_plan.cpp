@@ -258,7 +258,7 @@ xenon::waypoint_t FlightPlan::get( const int & index ) {
     
     __mutex.lock();
     
-    if ( __way.size() > index ) result = __way.at( index );
+    if ( (int) __way.size() > index ) result = __way.at( index );
     else Logger::log(
         "FlightPlan::get " + std::to_string( index ) + ", but FP size=" + std::to_string( __way.size() )
     );
@@ -281,6 +281,20 @@ void FlightPlan::set( const int & index, const xenon::waypoint_t & wp) {
     else Logger::log(
         "FlightPlan::set " + std::to_string( index ) + ", but FP size=" + std::to_string( __way.size() )
     );
+    __mutex.unlock();
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                             Очистка полетного плана                                               *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void FlightPlan::clear() {
+    
+    __mutex.lock();
+    __way.clear();
     __mutex.unlock();
     
 }

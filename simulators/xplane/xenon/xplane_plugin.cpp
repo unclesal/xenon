@@ -494,19 +494,28 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
     BimboAircraft * bimbo = nullptr;
     bool was_appended = false;
     
-    for ( auto b : __bimbos ) {
-        if ( b->agent_uuid() == cmd->agent_uuid() ) {
-            bimbo = b;
-            break;
+    try {
+        
+        for ( auto b : __bimbos ) {
+            if ( b->agent_uuid() == cmd->agent_uuid() ) {
+                bimbo = b;
+                break;
+            };
         };
-    };
+            
+        if ( ! bimbo ) {
+            // Самолетика нет, он только что создается.
+            bimbo = __add_one_aircraft( cmd );                        
+        };
+                    
+        auto vcl_condition = cmd->vcl_condition();
+        auto acf_condition = cmd->acf_condition();
+        bimbo->update_from( vcl_condition, acf_condition );            
         
-    if ( ! bimbo ) {
-        // Самолетика нет, он только что создается.
-        bimbo = __add_one_aircraft( cmd );                        
-    };
+    } catch ( const std::exception & e ) {
         
-    bimbo->update_from( cmd->vcl_condition(), cmd->acf_condition() );        
+        Logger::log( "XPlanePlugin::__command_received, AircraftCondition from " + cmd->vcl_condition().agent_name + ", error " + e.what() );
+    }
     
 }
 
@@ -517,18 +526,25 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
 // *********************************************************************************************************************
 
 void XPlanePlugin::__command_received( CmdFlightPlan * cmd ) {
-        
+    
     __agents_mutex.lock();
     bool found = false;
     for ( auto bimbo: __bimbos ) {
         if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
             found = true;
             // Коррекции высот не происходит, ее сделает действие посадки.
-            bimbo->flight_plan = cmd->flight_plan();            
+            bimbo->flight_plan.clear();
+            auto got_fp = cmd->flight_plan();
+            
+            for ( int i=0; i<got_fp.size(); ++i ) {
+                auto wp = got_fp.get( i );
+                bimbo->flight_plan.push_back( wp );
+            };
             break;
         };
     };
     __agents_mutex.unlock();
+    
     if ( ! found ) {
         Logger::log("CmdFlightPlan received, agent " + cmd->agent_uuid() + " not found in collection");
     };

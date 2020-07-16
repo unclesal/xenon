@@ -21,6 +21,8 @@ AircraftAbstractAction::AircraftAbstractAction (
     _edge_d = edge_d;
         
     _total_duration = 0.0;
+    
+    __finished = false;
 
 }
 
@@ -36,9 +38,12 @@ void AircraftAbstractAction::__start() {
     // Установка тех переменных, которые суммируются в ходе выполнения данного действия. Одно
     // и то же действие может быть вызвано - неоднократно. Поэтому при старте их надо обнулять.
     
+    __finished = false;
+    
     _total_duration = 0.0;
     _total_distance = 0.0;
     
+    /*
     auto wp = _ptr_acf->flight_plan.get(0);
     auto location = _ptr_acf->get_location();
     auto distance_to_front = (int) xenon::distance2d( location, wp.location );
@@ -54,6 +59,7 @@ void AircraftAbstractAction::__start() {
         __previous_heading_delta[ i ] = 0.0;
         
     }
+    */
     
     _internal_start();
             
@@ -227,6 +233,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
 
 void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
             
+    if ( __finished ) return;
         
     // Управление скоростью - одно для всех фаз (действий).
     __control_of_speeds( elapsed_since_last_call );
@@ -291,7 +298,7 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
     
     auto heading = rotation.heading;
     
-//     auto location = _get_acf_location();    
+//     auto location = _ptr_acf->get_location();
 //     auto bearing = xenon::bearing( location, wp.location );
 //     if (( bearing < 90.0 ) && ( heading > 270.0 )) bearing += 360;
 //     auto delta = bearing - heading;
@@ -338,7 +345,7 @@ void AircraftAbstractAction::_head_bearing( const waypoint_t & wp ) {
     // А этот коэффициент определяет скорость вращения в воздухе.
     // Подобран исходя из правдоподобности зрительного восприятия картинки.
     _ptr_acf->vcl_condition.heading_acceleration = 11.5 * dh;
-
+    
     for (int i = PREVIOUS_ARRAY_SIZE - 2 ; i >= 0; -- i ) {
         __previous_heading_delta[i+1] = __previous_heading_delta[i];
     };
@@ -438,9 +445,8 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
     auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );    
     auto heading = _ptr_acf->get_rotation().heading;
     auto delta = bearing - heading;
-    
-    /*
-    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_TAKE_OFF ) {
+        
+    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LANDING ) {
         Logger::log(
             _ptr_acf->vcl_condition.agent_name + " before transformation: " 
             + wp.name + ", type=" + waypoint_to_string( wp.type )
@@ -450,8 +456,7 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
             + ", bearing=" + to_string( bearing )
             + ", delta=" + to_string( delta )
         );    
-    }
-    */
+    }    
     
     if ( abs(delta) >= 180.0 ) {
 
@@ -463,9 +468,8 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
 
         if ( abs( delta2 ) < abs( delta )) delta = delta2;
     }
-
-    /*
-    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_TAKE_OFF ) {
+    
+    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LANDING ) {
         Logger::log(
             _ptr_acf->vcl_condition.agent_name + " after transformation: " 
             + wp.name + ", type=" + waypoint_to_string( wp.type )
@@ -476,7 +480,6 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
             + ", delta=" + to_string( delta )
         );    
     }
-    */
     
     return delta;
 
@@ -559,7 +562,7 @@ bool AircraftAbstractAction::_taxi_turn_started( const waypoint_t & destination 
     // едет или назад. И похоже что это - длина самолета.
 
     float threshold = 2.5;
-    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _ptr_acf->parameters().length / 2.0;
+    if ( _ptr_acf->vcl_condition.speed > 0 ) threshold += _ptr_acf->parameters().rotation_center;
         
     if ( dist_shifted_me_to_segment <= threshold ) {
         // Длина дуги, которую нам надо пройти.

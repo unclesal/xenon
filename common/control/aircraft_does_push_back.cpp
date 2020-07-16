@@ -29,6 +29,8 @@ AircraftDoesPushBack::AircraftDoesPushBack(
 
 void AircraftDoesPushBack::_internal_start() {
     
+    if ( _ptr_acf->flight_plan.is_empty() ) _finish();
+    
     // Раз пошел push back - значит, мы покинули стоянку.
     _ptr_acf->acf_condition.parking = "";
     

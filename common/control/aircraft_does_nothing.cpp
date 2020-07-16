@@ -26,7 +26,14 @@ AircraftDoesNothing::AircraftDoesNothing(
 // *********************************************************************************************************************
 
 void AircraftDoesNothing::_internal_start() {
-    _ptr_acf->vcl_condition.is_clamped_to_ground = true;
+    
+    // Фиксируем курс, чтобы не крутился. Скорости и высоты - не трогаем.
+    // Если что-то задержится, то будет просто лететь (или ехать) прямо.
+    
+    auto heading = _ptr_acf->get_rotation().heading;
+    _ptr_acf->vcl_condition.target_heading = heading;
+    _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+    
 };
 
 // *********************************************************************************************************************
@@ -36,6 +43,6 @@ void AircraftDoesNothing::_internal_start() {
 // *********************************************************************************************************************
 
 void AircraftDoesNothing::_internal_step( const float & elapsed_since_last_call ) {
-    
+    if ( _total_duration >= 10.0f ) _finish();
 };
 

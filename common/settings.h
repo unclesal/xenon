@@ -38,7 +38,15 @@
 #define AUTOPILOT_STATE_FREQUENCY 2.0
 
 // Частота опроса неблокирующей сетевой сокеты, раз в секунду (Гц)
-#define NETWORK_SOCKET_FREQUENCY 4.0
+#define NETWORK_SOCKET_FREQUENCY 1.0
+
+// Один "тик" цикла агента в микросекундах.
+constexpr int AGENT_TICK = 20000;
+    
+// Количество циклов (тиков), после которых агент сообщает о 
+// своем новом местоположении и параметрах.
+constexpr unsigned int CYCLES_PER_SCREAM = 75;
+
 
 // Частота опроса и устаровки состояния Bimbo-самолетов, раз в секунду (Гц)
 // #define BIMBO_AIRCRAFT_FREQUENCY 10.0

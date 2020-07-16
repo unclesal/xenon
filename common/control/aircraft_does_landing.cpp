@@ -29,18 +29,28 @@ xenon::AircraftDoesLanding::AircraftDoesLanding(
 // *********************************************************************************************************************
 
 void AircraftDoesLanding::_internal_start() {
-    
-    __phase = PHASE_UNKNOWN;
+            
     auto wp0 = _ptr_acf->flight_plan.get(0);
-    
-    while ( wp0.action_to_achieve != ACF_DOES_LANDING ) {
+    if ( wp0.type != WAYPOINT_RUNWAY ) {
         _ptr_acf->flight_plan.pop_front();
         wp0 = _ptr_acf->flight_plan.get(0);
-        if ( wp0.action_to_achieve == ACF_DOES_NOTHING || _ptr_acf->flight_plan.is_empty())  {
-            Logger::log("ERROR: WP for landing not found.");
-            return;
-        }
     };
+    
+    auto heading = _ptr_acf->get_rotation().heading;
+    
+    _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+    _ptr_acf->vcl_condition.target_heading = heading;
+    _ptr_acf->vcl_condition.rotation.heading = heading;
+    
+    Logger::log(
+        _ptr_acf->vcl_condition.agent_name  + ", Landing start, wp=" 
+        + wp0.name + ", " + waypoint_to_string( wp0.type ) 
+        + ", " + action_to_string( wp0.action_to_achieve ) 
+        + ", alt=" + std::to_string( wp0.location.altitude )
+    );
+    
+    Logger::log("altitude=" + to_string( _ptr_acf->get_location().altitude ) + ", heading=" + to_string( _ptr_acf->get_rotation().heading ));
+    
     
     __phase = PHASE_DESCENDING;
     
@@ -76,7 +86,8 @@ void AircraftDoesLanding::_internal_start() {
 
 void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters ) {
     
-    _head_bearing( wp );
+    
+    
     auto acf_location = _ptr_acf->get_location();
     auto acf_rotation = _ptr_acf->get_rotation();
     
@@ -87,6 +98,14 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
    end_rwy_location.altitude += _ptr_acf->parameters().on_ground_offset + 1.0;
 #endif
 
+    _head_bearing( wp );
+    
+    Logger::log(
+        "Descending to " + to_string( end_rwy_location.altitude ) 
+        + ", bearing=" + to_string( xenon::bearing( _ptr_acf->get_location(), wp.location ) )
+        + ", current alt=" + to_string( acf_location.altitude ) 
+        + ", heading=" + to_string( _ptr_acf->get_rotation().heading )
+    );
     
     auto distance = xenon::distance2d( acf_location, wp.location );
     if ( _ptr_acf->vcl_condition.speed != 0.0 ) {
@@ -106,7 +125,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
 
         // Переход в фазу выравнивания.
 
-        Logger::log( "jump to ALIGNMENT" );
+        Logger::log( _ptr_acf->vcl_condition.agent_name + ", jump to ALIGNMENT" );
         
         _ptr_acf->flight_plan.pop_front();
         
@@ -114,7 +133,6 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
         
         // Убираем имеющиеся ускорения. Фаза выравнивания будет подруливать сама.
         
-        // _params.tug = 0.0;
         _ptr_acf->vcl_condition.acceleration = 0.0;        
         
         _ptr_acf->acf_condition.target_vertical_speed = -1.0;
@@ -172,7 +190,6 @@ void AircraftDoesLanding::__step__alignment(
     
     if ( height <= 0.3 ) {
         
-        Logger::log("Touch down!!!");
         // Сели. Самолет прижимаем к земле.
         _ptr_acf->vcl_condition.is_clamped_to_ground = true;
         // Переходим в фазу торможения.
@@ -222,7 +239,7 @@ void AircraftDoesLanding::__step__alignment(
 void AircraftDoesLanding::__step__breaking() {
     
     if ( _ptr_acf->vcl_condition.speed < TAXI_NORMAL_SPEED + 0.5 ) {
-        Logger::log("DONE");
+        Logger::log( _ptr_acf->vcl_condition.agent_name + ", landing done.");
         
         // Точка, на которую "целились", т.е. конечная 
         // точка ВПП в плане полета - нам больше не нужна.
@@ -233,9 +250,7 @@ void AircraftDoesLanding::__step__breaking() {
         // Убирание воздушных тормозов.
         _ptr_acf->set_speed_brake_position( 0.0 );
         
-        // Все. Действие посадки - закончено.
-        auto location = _ptr_acf->get_location();
-        Logger::log("Stopped lat=" + to_string( location.latitude ) + ", lon=" + to_string(location.longitude));
+        // Все. Действие посадки - закончено.        
         _finish();
     }
     
@@ -248,10 +263,10 @@ void AircraftDoesLanding::__step__breaking() {
 // *********************************************************************************************************************
 
 void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call ) {
-    
-    if ( __phase == PHASE_UNKNOWN ) __phase = PHASE_DESCENDING;
+        
     auto wp = _ptr_acf->flight_plan.get(0);
     auto acf_parameters = _ptr_acf->parameters();
+    
     switch ( __phase ) {
         case PHASE_DESCENDING: __step__descending( wp, acf_parameters ); break;
         case PHASE_ALIGNMENT: __step__alignment( wp, acf_parameters, elapsed_since_last_call ); break;

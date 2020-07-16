@@ -47,6 +47,6 @@ void AircraftDoesWaitingTakeOffApproval::_internal_start() {
 // *********************************************************************************************************************
 
 void AircraftDoesWaitingTakeOffApproval::_internal_step( const float & elapsed_since_last_call ) {
-    
+    if ( _total_duration >= 10.0f ) _finish();
 }
 

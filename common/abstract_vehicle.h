@@ -46,7 +46,7 @@ namespace xenon {
                 return vcl_condition.agent_uuid;
             };                        
             
-            void update_from( const vehicle_condition_t & vc ) {                
+            void update_from( vehicle_condition_t & vc ) {                
                 vcl_condition = vc;   
             };                        
 

@@ -80,8 +80,7 @@ set(SOURCES
     ${CONTROL}/aircraft_does_lining_up.cpp
     ${CONTROL}/aircraft_does_nothing.cpp
     ${CONTROL}/aircraft_does_parking.cpp
-    ${CONTROL}/aircraft_does_push_back.cpp
-    ${CONTROL}/aircraft_does_runway_leaving.cpp
+    ${CONTROL}/aircraft_does_push_back.cpp    
     ${CONTROL}/aircraft_does_slow_taxing.cpp    
     ${CONTROL}/aircraft_does_take_off.cpp
     ${CONTROL}/aircraft_does_taxing.cpp

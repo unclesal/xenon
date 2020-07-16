@@ -59,9 +59,12 @@ namespace xenon {
             
             waypoint_t get( const int & index );
             void set( const int & index, const waypoint_t & wp );
+            void clear();
+            
             unsigned int size();
             bool is_empty();
             void recalculate();
+            
             double distance_to_runway( const location_t & from );
             double distance_to_turn( const location_t & from, waypoint_t & turned_wp );
             

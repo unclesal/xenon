@@ -27,6 +27,7 @@ AircraftDoesRunwayLeaving::AircraftDoesRunwayLeaving(
 // *********************************************************************************************************************
 
 void AircraftDoesRunwayLeaving::_internal_start() {
+    Logger::log(_ptr_acf->vcl_condition.agent_name + ", does runway leaving internal start");
 }
 
 // *********************************************************************************************************************

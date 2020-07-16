@@ -34,11 +34,8 @@ void AircraftDoesTakeOff::_internal_start() {
     // Убираем точки из полетного плана, если они еще не были убраны.
         
     auto wp = _ptr_acf->flight_plan.get(0);
-    while ( wp.type != WAYPOINT_RUNWAY && wp.action_to_achieve != ACF_DOES_TAKE_OFF ) {
-        _ptr_acf->flight_plan.pop_front();
-        wp = _ptr_acf->flight_plan.get(0);
-    };
-    
+    if ( ( wp.type == WAYPOINT_RUNWAY ) && ( wp.action_to_achieve == ACF_DOES_LINING_UP ) ) _ptr_acf->flight_plan.pop_front();
+            
     __phase = PHASE_RUN_UP;
     
     __gear_up_altitude = 0.0;
@@ -133,6 +130,11 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
         Logger::log(_ptr_acf->vcl_condition.agent_name + ", take off done");
         __phase = PHASE_NOTHING;
         _ptr_acf->flight_plan.pop_front();
+        
+        // Фиксируем курс.
+        _ptr_acf->vcl_condition.target_heading = _ptr_acf->vcl_condition.rotation.heading;
+        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+        
         _finish();
         return;
     }
@@ -163,7 +165,8 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
 void AircraftDoesTakeOff::_internal_step( const float & elapsed_since_last_call ) {
         
     auto wp = _ptr_acf->flight_plan.get( 0 );
-    if ( wp.action_to_achieve == ACF_DOES_LINING_UP ) _ptr_acf->flight_plan.pop_front();
+    
+    if ( ( wp.type == WAYPOINT_RUNWAY ) && ( wp.action_to_achieve == ACF_DOES_LINING_UP ) ) _ptr_acf->flight_plan.pop_front();
     
     // Подруливание по курсу осуществляется во всех фазах, цель - выйти как можно ближе к точке.
 

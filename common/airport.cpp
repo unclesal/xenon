@@ -1118,6 +1118,7 @@ deque<waypoint_t> Airport::get_taxi_way_for_departure( const location_t & from )
     result.at( result.size() - 1 ).action_to_achieve = ACF_DOES_LINING_UP;
     
     // Предпоследней точкой поставим HP.
+    
     waypoint_t hp;
     auto bearing_to_rwy = xenon::bearing( result[ result.size() - 2 ].location, result[ result.size() - 1 ].location );
     hp.location = xenon::shift( result[ result.size() - 1 ].location, -130.0, bearing_to_rwy );

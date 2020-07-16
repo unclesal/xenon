@@ -40,7 +40,7 @@ void AircraftDoesTaxingStop::_internal_start() {
 // *********************************************************************************************************************
 
 void AircraftDoesTaxingStop::_internal_step(const float& elapsed_since_last_call) {
-    if ( _ptr_acf->vcl_condition.speed <= 0.2 ) _finish();
+    if ( _total_duration >= 10.0f ) _finish();
 }
 
 

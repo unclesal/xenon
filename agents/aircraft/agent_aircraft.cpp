@@ -204,8 +204,9 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->vcl_condition.agent_uuid = uuid;
         __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT; 
         
-        // __test_landing();
-        __test_fly_circle( usss, gate );
+        __test_landing();
+        
+        // __test_fly_circle( usss, gate );
         
 //         Коррекция высот ВПП.
 //         for ( int i=0; i<__ptr_acf->flight_plan.size(); i++ ) {
@@ -620,6 +621,13 @@ void AgentAircraft::on_error( std::string message ) {
 void AgentAircraft::__decision() {
         
     if ( ! __started ) return;
+    if ( __ptr_acf->flight_plan.is_empty() ) {
+        if ( ! __ptr_acf->graph->current_action_is( ACF_DOES_NOTHING ) ) {
+            auto action_descriptor = __ptr_acf->graph->get_action_outgoing_from_current_state( ACF_DOES_NOTHING );
+            __ptr_acf->graph->set_active_action( action_descriptor );
+        }
+        return;
+    }
     
     // Текущее состояние.
     
@@ -646,11 +654,8 @@ void AgentAircraft::__decision() {
 //         };
                 
         if ( result.empty() ) {
-            // У-п-с. Не из чего выбирать. Ок, берем из полетного плана тогда.
-            
-            auto action = __ptr_acf->flight_plan.get(0).action_to_achieve;
-            if ( ! __ptr_acf->graph->current_action_is( action ) ) __start_fp0_action();            
-            
+            // У-п-с. Не из чего выбирать. Ок, берем из полетного плана тогда.            
+            __start_fp0_action();                        
             return;
         };
         
@@ -662,38 +667,14 @@ void AgentAircraft::__decision() {
         // Нулевой элемент - это следующее действие.
         auto next_action = result[0].action;
         // Фрейм - легко - мог ни разу не обновиться. В этом случае он выдаст ACF_DOES_NOTHING.
-        if ( next_action == ACF_DOES_NOTHING ) next_action = __ptr_acf->flight_plan.get(0).action_to_achieve;
-        
-        // Возможно, именно оно сейчас и выполняется, тогда ничего не делаем.
-        if ( __ptr_acf->graph->current_action_is( next_action )) {
-            return;
-        }
-        
-        // Будем переставлять. Правда, тут еще есть вопрос: а доступно ли оно из текущего состояния?
-        aircraft_state_graph::graph_t::edge_descriptor fake;
-        
-        auto action_descriptor = __ptr_acf->graph->get_action_outgoing_from_current_state( next_action );
-        
-        if ( action_descriptor == fake ) {
-            Logger::log(
-                "AgentAircraft::__decision, got fake descriptor. State=" + node.name 
-                + ", next action=" + to_string(next_action)
-            );
-            return;
-        }
-        
-        try {
-            __ptr_acf->graph->set_active_action( action_descriptor );
-        } catch ( const std::runtime_error & e ) {
-            Logger::log("AgentAircraft::__decision: no action " + to_string(next_action) + " from node " + node.name );            
-        }
-        
+        if ( next_action == ACF_DOES_NOTHING ) __start_fp0_action();        
+        else __ptr_acf->graph->set_active_action( next_action );
+                
     } else {
         // Logger::log("No frames for " + node.name );
         // Если фреймов нет, то пока что запускаем действие, предусмотренное фронт-точкой полетного плана.
         
-        auto action = __ptr_acf->flight_plan.get(0).action_to_achieve;
-        if ( ! __ptr_acf->graph->current_action_is( action ) ) __start_fp0_action();
+        __start_fp0_action();
         
     }
     
@@ -707,6 +688,12 @@ void AgentAircraft::__decision() {
 
 void AgentAircraft::__start_fp0_action() {
         
+    if ( __ptr_acf->flight_plan.is_empty() ) {
+        
+        __ptr_acf->graph->set_active_action( ACF_DOES_NOTHING );                
+        return;
+    };
+    
     auto next_wp = __ptr_acf->flight_plan.get(0);
     if ( next_wp.action_to_achieve == ACF_DOES_NOTHING ) {
         Logger::log(
@@ -714,6 +701,7 @@ void AgentAircraft::__start_fp0_action() {
             + waypoint_to_string( next_wp.type ) 
             + ", nothing to do."
         );
+        __ptr_acf->graph->set_active_action( ACF_DOES_NOTHING );
         return;
     }        
     
@@ -731,6 +719,7 @@ void AgentAircraft::__start_fp0_action() {
         __ptr_acf->graph->set_active_state( ACF_STATE_MOTION_STARTED );
     };
         
+    /*
     if ( node.state == ACF_STATE_READY_FOR_TAXING && next_wp.action_to_achieve == ACF_DOES_LINING_UP ) {
         // Мы не доехали до HP. HP - это не точка, это расстояние. 
         // Соответственно, состояние еще не изменилось.
@@ -741,38 +730,11 @@ void AgentAircraft::__start_fp0_action() {
     if ( node.state == ACF_STATE_HP && next_wp.action_to_achieve == ACF_DOES_TAKE_OFF ) {
         // Не закончилась фаза выравнивания.
         next_wp.action_to_achieve = ACF_DOES_LINING_UP;
-    };    
-    
-    
-    if ( __ptr_acf->graph->current_action_is( next_wp.action_to_achieve )) return;
-    
-    aircraft_state_graph::graph_t::edge_descriptor fake;
-    try {
-        aircraft_state_graph::graph_t::edge_descriptor action 
-            = __ptr_acf->graph->get_action_outgoing_from_current_state( next_wp.action_to_achieve );
-            
-        if ( action == fake ) {
-            Logger::log(
-                "AgentAircraft: __start_fp0_action got fake edge descriptor. WP=" 
-                + next_wp.name + ", type=" + waypoint_to_string(next_wp.type) 
-                + ", State=" + node.name
-                + ", action=" + action_to_string( next_wp.action_to_achieve)
-            );
-            return;
-        }
+    };
+    */
         
-        __ptr_acf->graph->set_active_action( action );
-
-    } catch ( const std::range_error & re ) {
-        
-        Logger::log(
-            "AgentAircraft::__start_fp0_action, invalid descriptor for action " 
-            + to_string( next_wp.action_to_achieve ) 
-            + " from state " + node.name
-            + ", message=" + string( re.what() )
-        );
-    }
-
+    __ptr_acf->graph->set_active_action( next_wp.action_to_achieve );
+    
 }
 
 

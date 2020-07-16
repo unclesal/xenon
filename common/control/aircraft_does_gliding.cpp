@@ -49,7 +49,11 @@ void AircraftDoesGliding::_internal_step(const float& elapsed_since_last_call) {
     
     auto distance = xenon::distance2d( acf_location, wp.location );
     if ( distance <= FLY_WAYPOINT_REACHED_DISTANCE ) {
-        _ptr_acf->flight_plan.pop_front();
+        
+        if ( wp.type != WAYPOINT_RUNWAY ) {
+            _ptr_acf->flight_plan.pop_front();
+        }
+        
         _finish();
     };
     

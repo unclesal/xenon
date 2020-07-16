@@ -27,7 +27,6 @@
 #include "aircraft_does_nothing.h"
 #include "aircraft_does_parking.h"
 #include "aircraft_does_push_back.h"
-#include "aircraft_does_runway_leaving.h"
 #include "aircraft_does_slow_taxing.h"
 #include "aircraft_does_start_motion.h"
 #include "aircraft_does_take_off.h"
@@ -116,7 +115,7 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // На парковке можно находиться бесконечно и ничего не делать. Это неправильно,
     // т.к. может привести к "зависанию" самолета. Но пока я ничего лучшего не придумал.
     __create_action< AircraftDoesNothing >( 
-        ACF_DOES_NOTHING, "NothingToDo", state_parking_d, state_parking_d
+        ACF_DOES_NOTHING, "DoesNothingOnParking", state_parking_d, state_parking_d
     );
     
     // Еще на парковке можно ожидать выталкивания. Ничего не меняется, мы по-прежнему остаемся на парковке.
@@ -127,6 +126,11 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // На парковке -> начал движение.
     __create_action< AircraftDoesStartMotion > (
         ACF_DOES_START_MOTION, "StartMotion", state_parking_d, state_motion_started_d
+    );
+    
+    // Ничегонеделание - из состояния motion started.
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingWhileMotioinStarted", state_motion_started_d, state_motion_started_d
     );
 
     // Из состояния "начал движение" можно перейти в состояние "готов к
@@ -140,6 +144,11 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_PUSH_BACK, "PushBack", state_motion_started_d, state_ready_for_taxing_d
     );
 
+    // Ничегонеделание - из состояния "готов к рулению".
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingWhileReadyForTaxing", state_ready_for_taxing_d, state_ready_for_taxing_d
+    );
+    
     // Готов к рулению (т.е. происходит рулежка) - может быть остановлено в любой 
     // момент с переходом в то же самое состояние. Т.е. потом можно рулить дальше.
     __create_action<  AircraftDoesTaxingStop >(
@@ -153,6 +162,11 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_NORMAL_TAXING, "NormalTaxing", state_ready_for_taxing_d, state_on_hp_d
     );
     
+    // Ничегонеделание - на предварительном старте.
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingOnHP", state_on_hp_d, state_on_hp_d
+    );
+    
     // На предварительном старте можно задержаться, ожидая разрешение на взлет.
     __create_action< AircraftDoesWaitingTakeOffApproval > (
         ACF_DOES_WAITING_TAKE_OFF_APPROVAL, "WaitingTakeOffApproval", state_on_hp_d, state_on_hp_d
@@ -162,6 +176,11 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // "готов к взлету" - выравниванием (lining up)
     __create_action< AircraftDoesLiningUp > (
         ACF_DOES_LINING_UP, "LiningUp", state_on_hp_d, state_ready_for_take_off_d
+    );
+    
+    // Ничегонеделание - в состоянии "готов к взлету" (исполнительный старт)
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingWhileReadyForTakeOff", state_ready_for_take_off_d, state_ready_for_take_off_d
     );
     
     // "Готов к взлету" (исполнительный старт) может закольцеваться действием
@@ -177,9 +196,19 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_TAKE_OFF, "TakeOff", state_ready_for_take_off_d, state_airborned_d
     );
     
+    // Ничегонеделание в состоянии взлетел.
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingWhileAirborned", state_airborned_d, state_airborned_d
+    );
+    
     // Из состояния airborned в состояние "в полете" переходим становлением.
     __create_action< AircraftDoesBecoming > (
         ACF_DOES_BECOMING, "Becoming", state_airborned_d, state_on_the_fly_d
+    );
+    
+    // Ничегонеделание - в состоянии полета.
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingOnTheFly", state_on_the_fly_d, state_on_the_fly_d
     );
     
     // Из состояния полета происходит действие полета, которое закончится только выходом на глиссаду.
@@ -187,9 +216,19 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_FLYING, "Flying", state_on_the_fly_d, state_approach_d
     );
     
+    // Ничегонеделание - в состоянии подхода.
+    __create_action< AircraftDoesNothing> (
+        ACF_DOES_NOTHING, "DoesNothingWhileApproach", state_approach_d, state_approach_d
+    );
+    
     // Из состояния "на глиссаде" в состояние "на финальной прямой" выходим глайдингом.
     __create_action< AircraftDoesGliding > (
         ACF_DOES_GLIDING, "Gliding", state_approach_d, state_on_final_d
+    );
+    
+    // Ничегонеделание - на финальной прямой.
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingOnFinal", state_on_final_d, state_on_final_d
     );
     
     // Из состояния "на финальной прямой" в состояние "приземлился" - выходим посадкой.
@@ -197,14 +236,29 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
         ACF_DOES_LANDING, "Landing",  state_on_final_d, state_landed_d
     );
     
+    // На "приземлился" он может постоять, ожидая прихода полетного плана с рулением от агента.
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingWhileLanded", state_landed_d, state_landed_d 
+    );
+    
     // Из состояния "приземлился" в состояние "освободил ВПП" выходим рулением.
     __create_action< AircraftDoesTaxing > (
         ACF_DOES_NORMAL_TAXING, "LeaveRunway", state_landed_d, state_rwy_leaved_d
+    );
+    
+    // Ничегонеделание в состоянии "освободил ВПП"
+    __create_action< AircraftDoesNothing > (
+        ACF_DOES_NOTHING, "DoesNothingWhenLeavedRWY", state_rwy_leaved_d, state_rwy_leaved_d
     );
 
     // Из состояния "освободил ВПП" до "почти запарковался" - все еще руление.
     __create_action< AircraftDoesTaxing > (
         ACF_DOES_NORMAL_TAXING, "TaxingToGate", state_rwy_leaved_d, state_before_parking_d
+    );
+    
+    // Ничегонеделание - при заходе на парковку.
+    __create_action < AircraftDoesNothing >(
+        ACF_DOES_NOTHING, "DoesNothingBeforeParking", state_before_parking_d, state_before_parking_d
     );
 
     // Замыкание графа. Из состояния "почти запарковался" в состояние "на парковке".
@@ -287,8 +341,48 @@ void AircraftStateGraph::set_active_state( const aircraft_state_graph::graph_t::
 // *********************************************************************************************************************
 
 void AircraftStateGraph::set_active_state( const aircraft_state_t & state ) {
-    auto state_d = get_node_for( state );
-    set_active_state( state_d );
+    
+    if ( ! current_state_is( state ) ) {
+        auto state_d = get_node_for( state );
+        set_active_state( state_d );
+    }
+    
+}
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                       Сделать текущим действие от его enum'а                                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+void AircraftStateGraph::set_active_action(const xenon::aircraft_action_t & action) {
+    
+    if ( current_action_is( action ) ) return;
+            
+    aircraft_state_graph::graph_t::edge_descriptor action_descriptor 
+        = get_action_outgoing_from_current_state( action );
+        
+    aircraft_state_graph::graph_t::edge_descriptor fake;
+    if ( action_descriptor == fake ) {
+        auto node = get_node_for( __current_state );
+        Logger::log(
+            __ptr_acf->vcl_condition.agent_name 
+            + ", AircraftStateGraph:set_active_action(" + action_to_string( action )
+            + "), no outgoing from current state " + node.name + ", try set DOES_NOTHING..."
+        );
+        
+        // Только не себя саму: можно получить замкнутую реентерабельность.
+        aircraft_state_graph::graph_t::edge_descriptor action_descriptor 
+            = get_action_outgoing_from_current_state( ACF_DOES_NOTHING );
+            
+        if ( action_descriptor != fake ) {
+            set_active_action( action_descriptor );
+        };
+        
+        return;
+    }
+            
+    set_active_action( action_descriptor );
 }
 
 // *********************************************************************************************************************
@@ -524,7 +618,9 @@ aircraft_state_graph::graph_t::edge_descriptor AircraftStateGraph::get_action_ou
 // *********************************************************************************************************************
 
 aircraft_state_graph::node_t AircraftStateGraph::get_node_for( AircraftAbstractState * state ) {
+                
     aircraft_state_graph::node_t result;
+    
     if ( state ) {
         try {
             result = __graph[ state->node_d() ];

@@ -5,6 +5,8 @@
 // *********************************************************************************************************************
 #pragma once
 
+#include <string>
+
 #include "aircraft_state_graph_definition.h"
 #include "logger.h"
 #include "abstract_aircraft.h"
@@ -38,7 +40,8 @@ namespace xenon {
             virtual void _internal_step( const float & elapsed_since_last_call ) = 0;
             virtual void _internal_start() = 0;
                         
-            inline void _finish() {                
+            inline void _finish() {   
+                __finished = true;
                 _ptr_acf->action_finished( this );                
             };
             
@@ -132,6 +135,7 @@ namespace xenon {
                 const float & elapsed_since_last_call, float & acceleration, const float & endpoint, float & controlled_value, bool & changed 
             );
             void __move_straight( const float & elapsed_since_last_call );
+            bool __finished;
 
             
     }; // class AircraftAbstractDoes

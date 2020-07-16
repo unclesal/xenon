@@ -68,6 +68,9 @@ namespace xenon {
             position_t get_position() override;
             position_with_angles_t get_position_with_angles();
             void set_position( const position_t & position ) override;
+            void set_location( const location_t & location ) override;
+            void set_vcl_coordinates();
+            void store_vcl_coordinates();
 #else
             // Мы находимся - не внутри X-Plane. Перекрытие имен 
             // и функций таким образом, чтобы оно тоже работало.
@@ -99,7 +102,7 @@ namespace xenon {
 #endif
             ;
 
-            void update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac ) override;
+            void update_from( vehicle_condition_t & vc, aircraft_condition_t & ac ) override;
 
             // Освещение вкл-выкл
             void set_taxi_lites(bool on) override {

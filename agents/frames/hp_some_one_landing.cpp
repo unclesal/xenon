@@ -15,8 +15,7 @@ using namespace xenon;
 
 HpSomeOneLanding::HpSomeOneLanding( BimboAircraft * bimbo, ConnectedCommunicatorReactor * environment)
     : StateFrame( bimbo, environment )
-{
-    _next_action.priority = 2;
+{    
 }
 
 // *********************************************************************************************************************
@@ -28,6 +27,11 @@ HpSomeOneLanding::HpSomeOneLanding( BimboAircraft * bimbo, ConnectedCommunicator
 void HpSomeOneLanding::update() {
     
     _before_update();
+    
+    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LINING_UP ) {
+        // Опоздали. Если он уже пошел выравниваться - то смысла нет останавливаться.
+        return;
+    }
     
     _environment->agents_mutex.lock();
     

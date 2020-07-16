@@ -27,9 +27,18 @@ AircraftDoesLiningUp::AircraftDoesLiningUp(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesLiningUp::_internal_start() {
+void AircraftDoesLiningUp::_internal_start() {        
     
-    // Logger::log( _ptr_acf->vcl_condition.agent_name + ", LU internal start");
+    auto wp = _ptr_acf->flight_plan.get(0);
+    
+    if ( wp.type == WAYPOINT_HP ) {
+        _ptr_acf->flight_plan.pop_front();    
+        wp = _ptr_acf->flight_plan.get(0);
+    }
+        
+    Logger::log( 
+        _ptr_acf->vcl_condition.agent_name + ", LU internal start, wp=" + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve)
+    );
     
     __phase = PHASE_STRAIGHT;
     // Поехали потихоньку.
@@ -71,8 +80,8 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
     
     if ( _taxi_turn_started( wp ) ) {        
         __phase = PHASE_ROTATION;        
-        // Убираем ближнюю точку ВПП, мы ее достигли.
-        _ptr_acf->flight_plan.pop_front();        
+        // Точку пока что не убираем, иначе это приведет к 
+        // неправильной реакции __decision.        
     }
 }
 
@@ -84,20 +93,23 @@ void AircraftDoesLiningUp::__step_straight( const float & elapsed_since_last_cal
 
 void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_call ) {
     
-    auto wp = _ptr_acf->flight_plan.get(0);
+    // Точка - не нулевая, а первая, т.к. в нулевой все еще сидит начало RWY.
+    auto wp = _ptr_acf->flight_plan.get(1);
     auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );
     auto heading = _ptr_acf->get_rotation().heading;
-    auto delta = bearing - heading; 
+    auto delta = xenon::course_to( _ptr_acf->get_location(), heading, wp.location );        
     
 //     Logger::log(
 //         "Bearing=" + to_string(bearing) + ", heading=" + to_string( heading ) + ", delta=" + to_string( delta )
 //     );
     
-    if ( abs(delta) < 5.0 ) {  // && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
+    if ( ( abs(delta) < 5.0 ) || ( abs(delta) > 355.0 ) ) {  // && ( _ptr_acf->vcl_condition.target_speed != 0.0 ) ) {
         // Тормозим.        
         _taxi_breaking( 0.0, 2.0 );
         // И фиксируем текущий курс, больше крутиться не будем.
         _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+        _ptr_acf->vcl_condition.rotation.heading = bearing;
+        _ptr_acf->vcl_condition.target_heading = bearing;
 
     };
     
@@ -106,14 +118,21 @@ void AircraftDoesLiningUp::__step_rotation( const float & elapsed_since_last_cal
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.target_speed = 0.0;        
         _ptr_acf->vcl_condition.acceleration = 0.0;
-                
+
         // Убираем точки из полетного плана, если они еще не были убраны.
-        
+
         wp = _ptr_acf->flight_plan.get(0);
         if ( wp.type == WAYPOINT_RUNWAY && wp.action_to_achieve == ACF_DOES_LINING_UP ) {
-            _ptr_acf->flight_plan.pop_front();            
+            _ptr_acf->flight_plan.pop_front();
         };
-        
+
+        wp = _ptr_acf->flight_plan.get(0);
+
+        Logger::log(
+            _ptr_acf->vcl_condition.agent_name + ", LU finished, wp0 " + wp.name 
+            + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve)
+        );
+
         _finish();
     }
     
@@ -134,16 +153,16 @@ void AircraftDoesLiningUp::_internal_step( const float & elapsed_since_last_call
         + ", speed=" + to_string( _ptr_acf->vcl_condition.speed )
     );
     */
-    
+      
     /*
-    // Видимо, оно после старта может быть сбито фреймом? Не совсем понял, что происходит, сделал - "костыль".
-    if ( ( !  _ptr_acf->vcl_condition.acceleration ) || ( ! _ptr_acf->vcl_condition.target_speed ) ) {
-        _ptr_acf->vcl_condition.acceleration = TAXI_NORMAL_ACCELERATION;
-        _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
-    };
+    if ( __phase == PHASE_STRAIGHT ) {
+        // Видимо, оно после старта может быть сбито фреймом? Не совсем понял, что происходит, сделал - "костыль".
+        if ( ( !  _ptr_acf->vcl_condition.acceleration ) || ( ! _ptr_acf->vcl_condition.target_speed ) ) {
+            _ptr_acf->vcl_condition.acceleration = TAXI_NORMAL_ACCELERATION;
+            _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
+        };            
+    }
     */
-    
-    if ( __phase == PHASE_NOTHING ) __phase = PHASE_STRAIGHT;
     
     switch ( __phase ) {
         case PHASE_STRAIGHT: __step_straight( elapsed_since_last_call ); break;

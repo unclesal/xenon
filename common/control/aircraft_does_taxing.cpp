@@ -28,6 +28,8 @@ AircraftDoesTaxing::AircraftDoesTaxing(
 
 void AircraftDoesTaxing::_internal_start() {
     
+    if ( _ptr_acf->flight_plan.is_empty() ) _finish();
+    
     _ptr_acf->vcl_condition.is_clamped_to_ground = true;
     _ptr_acf->set_taxi_lites( true );
     _ptr_acf->set_landing_lites( true );

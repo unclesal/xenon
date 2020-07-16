@@ -78,12 +78,18 @@ BimboAircraft::BimboAircraft(
 // *********************************************************************************************************************
 
 void BimboAircraft::action_finished( void * action ) {
+    
 #ifdef INSIDE_AGENT    
     AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
     // aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );
     graph->action_finished( ptr_abstract_action );    
     AbstractVehicle::action_finished( action );
 #endif        
+    
+#ifdef INSIDE_XPLANE
+    graph->set_active_action( ACF_DOES_NOTHING );
+#endif
+    
 };
 
 // *********************************************************************************************************************
@@ -144,10 +150,26 @@ position_t BimboAircraft::get_position() {
 
 #ifdef INSIDE_XPLANE
 void BimboAircraft::set_position( const position_t & position ) {
+    
     drawInfo.x = position.x;
     drawInfo.y = position.y;
     drawInfo.z = position.z;
+    store_vcl_coordinates();
 }
+#endif
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                                        Установка локации - внутри X-Plane                                         *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+#ifdef INSIDE_XPLANE
+void BimboAircraft::set_location( const location_t & location ) {
+    
+    AbstractAircraft::set_location( location );
+    store_vcl_coordinates();
+};
 #endif
 
 // *********************************************************************************************************************
@@ -157,9 +179,15 @@ void BimboAircraft::set_position( const position_t & position ) {
 // *********************************************************************************************************************
 
 void BimboAircraft::set_rotation( const rotation_t & rotation ) {
+
     SetPitch( rotation.pitch );
     SetHeading( rotation.heading );
     SetRoll( rotation.roll );
+    
+#ifdef INSIDE_XPLANE    
+    store_vcl_coordinates();
+#endif
+    
 }
 
 // *********************************************************************************************************************
@@ -243,6 +271,7 @@ void BimboAircraft::__acf_parameters_correction() {
     
     if ( acIcaoType == "B738" ) {
         _params.length = 40.0;
+        _params.rotation_center = _params.length * 1.8f / 3.5f;
         _params.wingspan = 34.0;
         _params.shift_from_ramp = -9.0;
 
@@ -274,6 +303,7 @@ void BimboAircraft::__acf_parameters_correction() {
     } else if ( acIcaoType == "A321" ) {
         
         _params.length = 45.0;
+        _params.rotation_center = _params.length * 2.0f / 3.0f;
         _params.wingspan = 34.0;
         _params.shift_from_ramp = -9.0;
 
@@ -305,6 +335,7 @@ void BimboAircraft::__acf_parameters_correction() {
     } else if ( acIcaoType == "B744" ) {
 
         _params.length = 70.6;
+        _params.rotation_center = _params.length / 4.0f;
         _params.wingspan = 64.4;
         _params.shift_from_ramp = -20.0;
 
@@ -323,7 +354,7 @@ void BimboAircraft::__acf_parameters_correction() {
         
         _params.flaps_take_off_position = 0.4;
         _params.flaps_take_off_speed = 200.0;
-        _params.flaps_landing_speed = 170.0;
+        _params.flaps_landing_speed = 180.0;
 
 #ifdef INSIDE_XPLANE        
         __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
@@ -336,6 +367,7 @@ void BimboAircraft::__acf_parameters_correction() {
     } else if ( acIcaoType == "B763" ) {
         
         _params.length = 54.94;
+        _params.rotation_center = _params.length / 2.5f;
         _params.wingspan = 47.57;
         _params.shift_from_ramp = -15.0;
 
@@ -354,7 +386,7 @@ void BimboAircraft::__acf_parameters_correction() {
         
         _params.flaps_take_off_position = 0.35;
         _params.flaps_take_off_speed = 200.0;
-        _params.flaps_landing_speed = 155.0;
+        _params.flaps_landing_speed = 170.0;
 
 #ifdef INSIDE_XPLANE        
         __actuators[ V_CONTROLS_FLAP_RATIO ].full_time = 20.0;
@@ -367,6 +399,7 @@ void BimboAircraft::__acf_parameters_correction() {
     } else if ( acIcaoType == "B772" ) {
         
         _params.length = 63.73;
+        _params.rotation_center = _params.length / 2.2f;
         _params.wingspan = 60.93;
         _params.shift_from_ramp = -25.0;
 
@@ -531,17 +564,73 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
     
     _acf_mutex.lock();
+
+#ifdef INSIDE_XPLANE
+    set_vcl_coordinates();
+#endif    
+    
     graph->update( elapsed_since_last_call );
 
 #ifdef INSIDE_XPLANE
+    
     __update_actuators(elapsed_since_last_call);
     if ( vcl_condition.is_clamped_to_ground ) {
         clamp_to_ground();
     }
+    
+    store_vcl_coordinates();
+    
 #endif
     _acf_mutex.unlock();
 
 }
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                      Синхронизировать положение самолета и положение описателя "самоходки"                        *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+#ifdef INSIDE_XPLANE
+void BimboAircraft::set_vcl_coordinates() {
+    
+    auto location = vcl_condition.location;
+    auto position = XPlane::location_to_position( location );
+    
+    drawInfo.x = position.x;
+    drawInfo.y = position.y;
+    drawInfo.z = position.z;
+    
+    auto rotation = vcl_condition.rotation;
+    drawInfo.heading = rotation.heading;
+    drawInfo.pitch = rotation.pitch;
+    drawInfo.roll = rotation.roll;
+    
+};
+#endif
+
+// *********************************************************************************************************************
+// *                                                                                                                   *
+// *                       Обратное действие: записать положение самолета в описатель "самоходки"                      *
+// *                                                                                                                   *
+// *********************************************************************************************************************
+
+#ifdef INSIDE_XPLANE
+void BimboAircraft::store_vcl_coordinates() {
+    
+    position_t position;    
+    position.x = drawInfo.x;
+    position.y = drawInfo.y;
+    position.z = drawInfo.z;    
+    
+    vcl_condition.location = XPlane::position_to_location( position );
+    
+    vcl_condition.rotation.heading = drawInfo.heading;
+    vcl_condition.rotation.pitch = drawInfo.pitch;
+    vcl_condition.rotation.roll = drawInfo.roll;
+    
+};
+#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -560,7 +649,7 @@ void BimboAircraft::move( float meters ) {
     auto dest = XPlane::shift( position, meters, GetHeading() );
     drawInfo.x = dest.x;
     drawInfo.z = dest.z;
-    
+    store_vcl_coordinates();
 
 #else
     
@@ -581,35 +670,22 @@ void BimboAircraft::move( float meters ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_condition_t & ac ) {
+void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t & ac ) {
     
     _acf_mutex.lock();
-    
+        
     AbstractAircraft::update_from( vc, ac );
+    
+#ifdef INSIDE_XPLANE
+    store_vcl_coordinates();    
+#endif    
     
     if ( ! graph->current_state_is( vc.current_state ))
             graph->set_active_state( vc.current_state );
 
-    if ( graph->current_state_is( vc.current_state )) {
         
-        if ( ! graph->current_action_is( vc.current_action ) ) {
-            
-            aircraft_state_graph::graph_t::edge_descriptor fake;
-            auto action_descriptor = graph->get_action_outgoing_from_current_state( vc.current_action );
-            if ( action_descriptor != fake ) {
-                try {
-                    graph->set_active_action( action_descriptor );
-                } catch ( const std::runtime_error & e ) {
-                    Logger::log(
-                        "BimboAircraft::update_from(), could not find action for state " 
-                        + to_string( vc.current_state ) + ", action " + to_string( vc.current_action )
-                    );            
-                }
-            };
-            
-        }
-        
-    }
+    if ( ! graph->current_action_is( vc.current_action ) ) 
+            graph->set_active_action( vc.current_action );
     
     auto new_location = vc.location;
 
@@ -618,14 +694,31 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
     // Попытка убрать дергание меток, раздражает сильно.
     
     auto new_position = XPlane::location_to_position( vc.location );
+    
+    // Сохраняем при посадке локальное значение is_clamped_to_ground,
+    // чтобы избежать резких "прыжков" по высоте на экране.
+    
+    if ( 
+        graph->current_action_is( ACF_DOES_LANDING )
+        && vc.is_clamped_to_ground
+        && ! vcl_condition.is_clamped_to_ground
+    ) {
+        vc.is_clamped_to_ground = false;
+    }
+        
     if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
+    
+    // Изменение координат происходит только в том случае,
+    // если разбаланс между локальными и полученными координатами
+    // "достаточно большой". Иначе он будет дергаться взад-вперед.
     
     auto old_position = get_position();
     auto distance = XPlane::distance2d(old_position, new_position);
-    if ( distance >= 1.0 ) {                
+    if ( distance >= 150.0 ) {
         if ( 
             graph->current_action_is( ACF_DOES_LANDING )
             || graph->current_action_is( ACF_DOES_TAKE_OFF )
+            || graph->current_state_is ( ACF_STATE_ON_FINAL )
         ) {
             // Переставляем - без высоты. Потому что высОты 
             // скорректированы в X-Plane под текущий уровень земли.
@@ -633,14 +726,21 @@ void BimboAircraft::update_from( const vehicle_condition_t & vc, const aircraft_
             drawInfo.z = new_position.z;
             // А высоту - сохраняем.
             vcl_condition.location.altitude = drawInfo.y;
-        } else set_position( new_position );
+            store_vcl_coordinates();
+        } else {
+            XPlane::log(vcl_condition.agent_name + ", set position, distance=" + std::to_string( distance ) );
+            set_position( new_position );
+        }
     }
     // По углам тоже чтобы не сильно дергалась.
     auto current_rotation = get_rotation();
+    
+    float threshold_degrees = 10.0;
+    
     if ( 
-        abs(current_rotation.heading - vc.rotation.heading ) >= 1.5
-        || abs( current_rotation.pitch - vc.rotation.pitch ) >= 1.5
-        || abs( current_rotation.roll - vc.rotation.roll ) >= 1.5
+        abs(current_rotation.heading - vc.rotation.heading ) >= threshold_degrees
+        || abs( current_rotation.pitch - vc.rotation.pitch ) >= threshold_degrees
+        || abs( current_rotation.roll - vc.rotation.roll ) >= threshold_degrees
     ) {
         if ( 
             graph->current_action_is( ACF_DOES_LANDING )
