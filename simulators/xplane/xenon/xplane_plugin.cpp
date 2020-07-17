@@ -527,23 +527,30 @@ void XPlanePlugin::__command_received( CmdAircraftCondition * cmd ) {
 
 void XPlanePlugin::__command_received( CmdFlightPlan * cmd ) {
     
+    Logger::log(
+        cmd->vcl_condition().agent_name + ", got flight plan"
+    );
+    
     __agents_mutex.lock();
+    
     bool found = false;
     for ( auto bimbo: __bimbos ) {
         if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
             found = true;
             // Коррекции высот не происходит, ее сделает действие посадки.
-            bimbo->flight_plan.clear();
-            auto got_fp = cmd->flight_plan();
-            
-            for ( int i=0; i<got_fp.size(); ++i ) {
-                auto wp = got_fp.get( i );
-                bimbo->flight_plan.push_back( wp );
-            };
+            bimbo->set_flight_plan( cmd->flight_plan() );
+            Logger::log(
+                bimbo->vcl_condition.agent_name + ", fp size now = " + to_string( bimbo->flight_plan.size() )
+            );
             break;
         };
     };
+    
     __agents_mutex.unlock();
+    
+    Logger::log(
+        cmd->vcl_condition().agent_name + ", got flight plan done."
+    );
     
     if ( ! found ) {
         Logger::log("CmdFlightPlan received, agent " + cmd->agent_uuid() + " not found in collection");

@@ -353,7 +353,7 @@ void BimboAircraft::__acf_parameters_correction() {
         _params.on_ground_offset = 5.2;
         
         _params.flaps_take_off_position = 0.4;
-        _params.flaps_take_off_speed = 200.0;
+        _params.flaps_take_off_speed = 210.0;
         _params.flaps_landing_speed = 180.0;
 
 #ifdef INSIDE_XPLANE        
@@ -674,10 +674,19 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     
     _acf_mutex.lock();
         
+#ifdef INSIDE_XPLANE
+    // Существующая прижатость к земле - возможно, понадобится ее 
+    // восстановить как была в X-Plane. Чтобы не дергался по высоте.
+    auto is_clamped_to_ground = vcl_condition.is_clamped_to_ground;
+    auto drawInfo_altitude = drawInfo.y;
+#endif
+    
     AbstractAircraft::update_from( vc, ac );
     
 #ifdef INSIDE_XPLANE
+    
     store_vcl_coordinates();    
+        
 #endif    
     
     if ( ! graph->current_state_is( vc.current_state ))
@@ -700,10 +709,12 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     
     if ( 
         graph->current_action_is( ACF_DOES_LANDING )
-        && vc.is_clamped_to_ground
-        && ! vcl_condition.is_clamped_to_ground
+        || graph->current_action_is( ACF_DOES_TAKE_OFF )    
     ) {
-        vc.is_clamped_to_ground = false;
+        
+        vcl_condition.is_clamped_to_ground = is_clamped_to_ground;
+        vc.is_clamped_to_ground = is_clamped_to_ground;
+        
     }
         
     if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
@@ -724,9 +735,12 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
             // скорректированы в X-Plane под текущий уровень земли.
             drawInfo.x = new_position.x;
             drawInfo.z = new_position.z;
+            
             // А высоту - сохраняем.
-            vcl_condition.location.altitude = drawInfo.y;
+            vcl_condition.location.altitude = drawInfo_altitude;
+            drawInfo.y = drawInfo_altitude;            
             store_vcl_coordinates();
+
         } else {
             XPlane::log(vcl_condition.agent_name + ", set position, distance=" + std::to_string( distance ) );
             set_position( new_position );

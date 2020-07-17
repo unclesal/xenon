@@ -128,14 +128,11 @@ void AircraftDoesTakeOff::__step__climbing( const float & elapsed_since_last_cal
     auto distance = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     if ( distance < 100.0 ) {
         Logger::log(_ptr_acf->vcl_condition.agent_name + ", take off done");
+        
         __phase = PHASE_NOTHING;
-        _ptr_acf->flight_plan.pop_front();
-        
-        // Фиксируем курс.
-        _ptr_acf->vcl_condition.target_heading = _ptr_acf->vcl_condition.rotation.heading;
-        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
-        
+        _ptr_acf->flight_plan.pop_front();        
         _finish();
+        
         return;
     }
     

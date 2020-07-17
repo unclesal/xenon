@@ -38,7 +38,7 @@
 #define AUTOPILOT_STATE_FREQUENCY 2.0
 
 // Частота опроса неблокирующей сетевой сокеты, раз в секунду (Гц)
-#define NETWORK_SOCKET_FREQUENCY 1.0
+#define NETWORK_SOCKET_FREQUENCY 2.0
 
 // Один "тик" цикла агента в микросекундах.
 constexpr int AGENT_TICK = 20000;

@@ -35,23 +35,7 @@ void AircraftDoesLanding::_internal_start() {
         _ptr_acf->flight_plan.pop_front();
         wp0 = _ptr_acf->flight_plan.get(0);
     };
-    
-    auto heading = _ptr_acf->get_rotation().heading;
-    
-    _ptr_acf->vcl_condition.heading_acceleration = 0.0;
-    _ptr_acf->vcl_condition.target_heading = heading;
-    _ptr_acf->vcl_condition.rotation.heading = heading;
-    
-    Logger::log(
-        _ptr_acf->vcl_condition.agent_name  + ", Landing start, wp=" 
-        + wp0.name + ", " + waypoint_to_string( wp0.type ) 
-        + ", " + action_to_string( wp0.action_to_achieve ) 
-        + ", alt=" + std::to_string( wp0.location.altitude )
-    );
-    
-    Logger::log("altitude=" + to_string( _ptr_acf->get_location().altitude ) + ", heading=" + to_string( _ptr_acf->get_rotation().heading ));
-    
-    
+        
     __phase = PHASE_DESCENDING;
     
     _ptr_acf->set_landing_lites( true );
@@ -60,6 +44,7 @@ void AircraftDoesLanding::_internal_start() {
     _ptr_acf->set_beacon_lites( true );
                 
     _ptr_acf->vcl_condition.is_clamped_to_ground = false;
+        
 
 /*    
 #ifdef INSIDE_XPLANE
@@ -86,10 +71,8 @@ void AircraftDoesLanding::_internal_start() {
 
 void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters ) {
     
-    
-    
     auto acf_location = _ptr_acf->get_location();
-    auto acf_rotation = _ptr_acf->get_rotation();
+//    auto acf_rotation = _ptr_acf->get_rotation();
     
     location_t end_rwy_location = wp.location;
     
@@ -98,15 +81,11 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
    end_rwy_location.altitude += _ptr_acf->parameters().on_ground_offset + 1.0;
 #endif
 
+   auto old_heading = _ptr_acf->get_rotation().heading;
+   auto old_roll = _ptr_acf->get_rotation().roll;
+   
     _head_bearing( wp );
-    
-    Logger::log(
-        "Descending to " + to_string( end_rwy_location.altitude ) 
-        + ", bearing=" + to_string( xenon::bearing( _ptr_acf->get_location(), wp.location ) )
-        + ", current alt=" + to_string( acf_location.altitude ) 
-        + ", heading=" + to_string( _ptr_acf->get_rotation().heading )
-    );
-    
+        
     auto distance = xenon::distance2d( acf_location, wp.location );
     if ( _ptr_acf->vcl_condition.speed != 0.0 ) {
         auto time_to_achieve = distance / _ptr_acf->vcl_condition.speed;
@@ -236,7 +215,9 @@ void AircraftDoesLanding::__step__alignment(
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesLanding::__step__breaking() {
+void AircraftDoesLanding::__step__breaking( const float & elapsed_since_last_call ) {
+    
+    _head_steering( elapsed_since_last_call, 10.0 );
     
     if ( _ptr_acf->vcl_condition.speed < TAXI_NORMAL_SPEED + 0.5 ) {
         Logger::log( _ptr_acf->vcl_condition.agent_name + ", landing done.");
@@ -270,7 +251,7 @@ void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call 
     switch ( __phase ) {
         case PHASE_DESCENDING: __step__descending( wp, acf_parameters ); break;
         case PHASE_ALIGNMENT: __step__alignment( wp, acf_parameters, elapsed_since_last_call ); break;
-        case PHASE_BREAKING: __step__breaking(); break;
+        case PHASE_BREAKING: __step__breaking( elapsed_since_last_call ); break;
         default: Logger::log("UNRELEASED: does landing with phase " + to_string( __phase ) );
     };
 

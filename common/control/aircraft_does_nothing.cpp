@@ -26,14 +26,6 @@ AircraftDoesNothing::AircraftDoesNothing(
 // *********************************************************************************************************************
 
 void AircraftDoesNothing::_internal_start() {
-    
-    // Фиксируем курс, чтобы не крутился. Скорости и высоты - не трогаем.
-    // Если что-то задержится, то будет просто лететь (или ехать) прямо.
-    
-    auto heading = _ptr_acf->get_rotation().heading;
-    _ptr_acf->vcl_condition.target_heading = heading;
-    _ptr_acf->vcl_condition.heading_acceleration = 0.0;
-    
 };
 
 // *********************************************************************************************************************

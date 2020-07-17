@@ -44,7 +44,7 @@ namespace xenon {
                 __finished = true;
                 _ptr_acf->action_finished( this );                
             };
-            
+                        
                         
             /**
              * @short Нулевая точка плана - удаляется, а не приближается, как оно должно быть в "штатном" режиме.

@@ -41,7 +41,7 @@ namespace xenon {
                         
             void __step__descending( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters );
             void __step__alignment( const waypoint_t & wp, const aircraft_parameters_t & acf_parameters, const float & elapsed_since_last_call );
-            void __step__breaking();
+            void __step__breaking( const float & elapsed_since_last_call );
             
     }; //AircraftDoesLanding
     

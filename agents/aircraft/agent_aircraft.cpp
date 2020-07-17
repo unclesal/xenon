@@ -204,9 +204,9 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->vcl_condition.agent_uuid = uuid;
         __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT; 
         
-        __test_landing();
+        // __test_landing();
         
-        // __test_fly_circle( usss, gate );
+        __test_fly_circle( usss, gate );
         
 //         Коррекция высот ВПП.
 //         for ( int i=0; i<__ptr_acf->flight_plan.size(); i++ ) {
@@ -428,6 +428,8 @@ void AgentAircraft::state_changed( void * state ) {
     
     AircraftStateLanded * landed = dynamic_cast< AircraftStateLanded * >( abstract_state );
     if ( landed ) {
+        
+        Logger::log( __ptr_acf->vcl_condition.agent_name + ", landed. Make taxiway for parking...");
                 
         waypoint_t wp = __ptr_acf->flight_plan.get(0);
         while ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
@@ -467,6 +469,8 @@ void AgentAircraft::state_changed( void * state ) {
         
         auto way = airport.get_taxi_way_for_parking( our_location, our_heading, parking );
         __ptr_acf->prepare_for_taxing( way );
+        
+        Logger::log(__ptr_acf->vcl_condition.agent_name + ", FP size is " + to_string( __ptr_acf->flight_plan.size() ) );
                 
         if ( is_connected() ) {
             CmdFlightPlan cmd_flight_plan( __ptr_acf->vcl_condition, __ptr_acf->flight_plan);

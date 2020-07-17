@@ -29,7 +29,6 @@ AircraftStateOnFinal::AircraftStateOnFinal(
 void AircraftStateOnFinal::_internal_activate() {
     
     auto wp0 = _ptr_acf->flight_plan.get(0);
-    if ( wp0.type != WAYPOINT_RUNWAY ) 
-            _ptr_acf->flight_plan.pop_front();
+    if ( wp0.type != WAYPOINT_RUNWAY ) _ptr_acf->flight_plan.pop_front();
 
 }

@@ -44,15 +44,15 @@ void AircraftDoesGliding::_internal_start() {
 void AircraftDoesGliding::_internal_step(const float& elapsed_since_last_call) {
     
     auto wp = _ptr_acf->flight_plan.get(0);
+    
     _head_bearing( wp );
+    
     auto acf_location = _ptr_acf->get_location();
     
     auto distance = xenon::distance2d( acf_location, wp.location );
     if ( distance <= FLY_WAYPOINT_REACHED_DISTANCE ) {
         
-        if ( wp.type != WAYPOINT_RUNWAY ) {
-            _ptr_acf->flight_plan.pop_front();
-        }
+        if ( wp.type != WAYPOINT_RUNWAY ) _ptr_acf->flight_plan.pop_front();
         
         _finish();
     };

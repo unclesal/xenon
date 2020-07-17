@@ -34,7 +34,6 @@ AircraftAbstractAction::AircraftAbstractAction (
 
 void AircraftAbstractAction::__start() {
     
-    
     // Установка тех переменных, которые суммируются в ходе выполнения данного действия. Одно
     // и то же действие может быть вызвано - неоднократно. Поэтому при старте их надо обнулять.
     
@@ -43,10 +42,10 @@ void AircraftAbstractAction::__start() {
     _total_duration = 0.0;
     _total_distance = 0.0;
     
-    /*
-    auto wp = _ptr_acf->flight_plan.get(0);
-    auto location = _ptr_acf->get_location();
-    auto distance_to_front = (int) xenon::distance2d( location, wp.location );
+    
+    // auto wp = _ptr_acf->flight_plan.get(0);
+    // auto location = _ptr_acf->get_location();
+    // auto distance_to_front = (int) xenon::distance2d( location, wp.location );
             
     for ( int i=0; i<PREVIOUS_ARRAY_SIZE; ++ i ) {
         
@@ -58,8 +57,7 @@ void AircraftAbstractAction::__start() {
         // Массив предыдущих расхождений по курсу для каждой фазы будет свой.
         __previous_heading_delta[ i ] = 0.0;
         
-    }
-    */
+    }    
     
     _internal_start();
             
@@ -445,18 +443,18 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
     auto bearing = xenon::bearing( _ptr_acf->get_location(), wp.location );    
     auto heading = _ptr_acf->get_rotation().heading;
     auto delta = bearing - heading;
-        
-    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LANDING ) {
-        Logger::log(
-            _ptr_acf->vcl_condition.agent_name + " before transformation: " 
-            + wp.name + ", type=" + waypoint_to_string( wp.type )
-            + ", action=" + action_to_string( wp.action_to_achieve )
-            + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
-            + ", heading=" + to_string( heading )
-            + ", bearing=" + to_string( bearing )
-            + ", delta=" + to_string( delta )
-        );    
-    }    
+
+//    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LANDING ) {
+//        Logger::log(
+//            _ptr_acf->vcl_condition.agent_name + " before transformation: "
+//            + wp.name + ", type=" + waypoint_to_string( wp.type )
+//            + ", action=" + action_to_string( wp.action_to_achieve )
+//            + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
+//            + ", heading=" + to_string( heading )
+//            + ", bearing=" + to_string( bearing )
+//            + ", delta=" + to_string( delta )
+//        );
+//    }
     
     if ( abs(delta) >= 180.0 ) {
 
@@ -469,17 +467,17 @@ double AircraftAbstractAction::_get_delta_bearing( const waypoint_t & wp ) {
         if ( abs( delta2 ) < abs( delta )) delta = delta2;
     }
     
-    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LANDING ) {
-        Logger::log(
-            _ptr_acf->vcl_condition.agent_name + " after transformation: " 
-            + wp.name + ", type=" + waypoint_to_string( wp.type )
-            + ", action=" + action_to_string( wp.action_to_achieve )
-            + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
-            + ", heading=" + to_string( heading )
-            + ", bearing=" + to_string( bearing )
-            + ", delta=" + to_string( delta )
-        );    
-    }
+//    if ( _ptr_acf->vcl_condition.current_action == ACF_DOES_LANDING ) {
+//        Logger::log(
+//            _ptr_acf->vcl_condition.agent_name + " after transformation: "
+//            + wp.name + ", type=" + waypoint_to_string( wp.type )
+//            + ", action=" + action_to_string( wp.action_to_achieve )
+//            + ", distance=" + to_string( xenon::distance2d(_ptr_acf->get_location(), wp.location))
+//            + ", heading=" + to_string( heading )
+//            + ", bearing=" + to_string( bearing )
+//            + ", delta=" + to_string( delta )
+//        );
+//    }
     
     return delta;
 
@@ -612,7 +610,7 @@ void AircraftAbstractAction::_control_of_flaps() {
         && ( current_flaps != 0.0 )
     ) {
         _ptr_acf->set_flaps_position(0.0);
-        Logger::log("FLY: laps to 0");
+        Logger::log(_ptr_acf->vcl_condition.agent_name + ": flaps to 0");
     }
     
     if ( 
@@ -623,7 +621,7 @@ void AircraftAbstractAction::_control_of_flaps() {
         && ( current_flaps != acf_params.flaps_take_off_position )
     ) {
         _ptr_acf->set_flaps_position( acf_params.flaps_take_off_position );
-        Logger::log("FLY: flaps to TO");
+        Logger::log(_ptr_acf->vcl_condition.agent_name + ": flaps to TO");
     };
     
     // Если скорость еще снизилась, то закрылки выпускаем в посадочное положение 
@@ -634,7 +632,7 @@ void AircraftAbstractAction::_control_of_flaps() {
         && ( _ptr_acf->vcl_condition.acceleration < 0.0 )
         && ( current_flaps != 1.0 )
     ) {
-        Logger::log("Flaps to LAND position, was " + to_string(current_flaps));
+        Logger::log(_ptr_acf->vcl_condition.agent_name + ": Flaps to LAND position, was " + to_string(current_flaps));
         _ptr_acf->set_flaps_position( 1.0 );
         _ptr_acf->set_gear_down( true );
     }     

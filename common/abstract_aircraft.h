@@ -45,6 +45,13 @@ namespace xenon {
             virtual void set_thrust_position( const float & position ) {};
             virtual void set_speed_brake_position( const float & value ) {};
             
+            void set_flight_plan( const FlightPlan & fp ) {
+                _acf_mutex.lock();
+                flight_plan.clear();
+                flight_plan = fp;
+                _acf_mutex.unlock();
+            };
+            
             virtual void move( float meters ) {};
             
             virtual void update_from( vehicle_condition_t & vc, aircraft_condition_t & ac );

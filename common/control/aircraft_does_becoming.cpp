@@ -25,6 +25,17 @@ AircraftDoesBecoming::AircraftDoesBecoming(
 // *********************************************************************************************************************
 
 void AircraftDoesBecoming::_internal_start() {
+    
+    auto rotation = _ptr_acf->get_rotation();
+    rotation.roll = 0.0;
+    _ptr_acf->set_rotation( rotation );
+    
+    _ptr_acf->acf_condition.roll_acceleration = 0.0;
+    _ptr_acf->acf_condition.target_roll = 0.0;
+    
+    auto wp = _ptr_acf->flight_plan.get(0);
+    if ( wp.type == WAYPOINT_RUNWAY ) _ptr_acf->flight_plan.pop_front();
+    
 }
 
 // *********************************************************************************************************************
@@ -37,9 +48,13 @@ void xenon::AircraftDoesBecoming::_internal_step( const float & elapsed_since_la
     
     auto location = _ptr_acf->get_location();
     auto wp = _ptr_acf->flight_plan.get(0);
-    _head_bearing( wp );
+    if ( wp.type == WAYPOINT_RUNWAY ) {
+        _ptr_acf->flight_plan.pop_front();
+        wp = _ptr_acf->flight_plan.get(0);
+    };
     
-    _control_of_flaps();
+    _head_bearing( wp );        
+    _control_of_flaps();    
     
     auto distance = xenon::distance2d(location, wp.location );
     if ( distance <= FLY_WAYPOINT_REACHED_DISTANCE ) {
@@ -57,6 +72,7 @@ void xenon::AircraftDoesBecoming::_internal_step( const float & elapsed_since_la
         auto target_altitude = wp.location.altitude;
         _altitude_adjustment( target_altitude, time_to_achieve );
     };
+    
 }
 
 

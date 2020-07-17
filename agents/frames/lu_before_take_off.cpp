@@ -28,6 +28,9 @@ void LUBeforeTakeOff::update() {
     
     _before_update();    
     
+    // Если уже начал разбег - проверять бессмысленно, пусть взлетает.
+    if ( _ptr_acf->graph->current_action_is ( ACF_DOES_TAKE_OFF ) ) return;
+    
     _environment->agents_mutex.lock();
         
     for ( auto agent: _environment->agents ) {
