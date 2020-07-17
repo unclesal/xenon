@@ -271,7 +271,7 @@ void BimboAircraft::__acf_parameters_correction() {
     
     if ( acIcaoType == "B738" ) {
         _params.length = 40.0;
-        _params.rotation_center = _params.length * 1.8f / 3.5f;
+        _params.rotation_center = _params.length * 1.9f / 3.5f;
         _params.wingspan = 34.0;
         _params.shift_from_ramp = -9.0;
 
@@ -722,52 +722,62 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     // Изменение координат происходит только в том случае,
     // если разбаланс между локальными и полученными координатами
     // "достаточно большой". Иначе он будет дергаться взад-вперед.
-    
-    auto old_position = get_position();
-    auto distance = XPlane::distance2d(old_position, new_position);
-    if ( distance >= 150.0 ) {
-        if ( 
-            graph->current_action_is( ACF_DOES_LANDING )
-            || graph->current_action_is( ACF_DOES_TAKE_OFF )
-            || graph->current_state_is ( ACF_STATE_ON_FINAL )
-        ) {
-            // Переставляем - без высоты. Потому что высОты 
-            // скорректированы в X-Plane под текущий уровень земли.
-            drawInfo.x = new_position.x;
-            drawInfo.z = new_position.z;
-            
-            // А высоту - сохраняем.
-            vcl_condition.location.altitude = drawInfo_altitude;
-            drawInfo.y = drawInfo_altitude;            
-            store_vcl_coordinates();
-
-        } else {
-            XPlane::log(vcl_condition.agent_name + ", set position, distance=" + std::to_string( distance ) );
-            set_position( new_position );
-        }
-    }
-    // По углам тоже чтобы не сильно дергалась.
-    auto current_rotation = get_rotation();
-    
-    float threshold_degrees = 10.0;
+    // А при рулении - вообще не делаем коррекции. X-Plane рулится
+    // полностью самостоятельно на основании полетного плана.
     
     if ( 
-        abs(current_rotation.heading - vc.rotation.heading ) >= threshold_degrees
-        || abs( current_rotation.pitch - vc.rotation.pitch ) >= threshold_degrees
-        || abs( current_rotation.roll - vc.rotation.roll ) >= threshold_degrees
+        ! graph->current_action_is( ACF_DOES_PUSH_BACK )
+        && ! graph->current_action_is( ACF_DOES_NORMAL_TAXING ) 
+        && ! graph->current_action_is( ACF_DOES_PARKING )        
     ) {
-        if ( 
-            graph->current_action_is( ACF_DOES_LANDING )
-            || graph->current_action_is( ACF_DOES_TAKE_OFF )
-        ) {
-            // Без тангажа, только два остальных угла.
-            drawInfo.roll = vc.rotation.roll;
-            drawInfo.heading = vc.rotation.heading;
-            // Тангаж - сохраняем.
-            vcl_condition.rotation.pitch = drawInfo.pitch;        
+    
+        auto old_position = get_position();
+        auto distance = XPlane::distance2d(old_position, new_position);
+        
+        if ( distance >= 150.0 ) {
+            if ( 
+                graph->current_action_is( ACF_DOES_LANDING )
+                || graph->current_action_is( ACF_DOES_TAKE_OFF )
+                || graph->current_state_is ( ACF_STATE_ON_FINAL )
+            ) {
+                // Переставляем - без высоты. Потому что высОты 
+                // скорректированы в X-Plane под текущий уровень земли.
+                drawInfo.x = new_position.x;
+                drawInfo.z = new_position.z;
+                
+                // А высоту - сохраняем.
+                vcl_condition.location.altitude = drawInfo_altitude;
+                drawInfo.y = drawInfo_altitude;            
+                store_vcl_coordinates();
 
-        } else set_rotation( vc.rotation );
-     }
+            } else {
+                XPlane::log(vcl_condition.agent_name + ", set position, distance=" + std::to_string( distance ) );
+                set_position( new_position );
+            }
+        }
+        // По углам тоже чтобы не сильно дергалась.
+        auto current_rotation = get_rotation();
+        
+        float threshold_degrees = 10.0;
+        
+        if ( 
+            abs(current_rotation.heading - vc.rotation.heading ) >= threshold_degrees
+            || abs( current_rotation.pitch - vc.rotation.pitch ) >= threshold_degrees
+            || abs( current_rotation.roll - vc.rotation.roll ) >= threshold_degrees
+        ) {
+            if ( 
+                graph->current_action_is( ACF_DOES_LANDING )
+                || graph->current_action_is( ACF_DOES_TAKE_OFF )
+            ) {
+                // Без тангажа, только два остальных угла.
+                drawInfo.roll = vc.rotation.roll;
+                drawInfo.heading = vc.rotation.heading;
+                // Тангаж - сохраняем.
+                vcl_condition.rotation.pitch = drawInfo.pitch;        
+
+            } else set_rotation( vc.rotation );
+        }
+    }
         
 #else               
     set_location( new_location );                

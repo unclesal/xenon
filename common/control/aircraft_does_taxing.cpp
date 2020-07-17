@@ -56,14 +56,13 @@ void AircraftDoesTaxing::__choose_speed() {
     
     waypoint_t turned_wp;
     auto distance_to_turn = _ptr_acf->flight_plan.distance_to_turn( _ptr_acf->get_location(), turned_wp );
-    // XPlane::log("Distance to turn=" + to_string( distance_to_turn ));
+    
+    // Logger::log("Distance to turn=" + to_string( distance_to_turn ));
         
     if ( distance_to_turn >= 100.0 ) {                
         
-        if ( _ptr_acf->vcl_condition.target_speed != TAXI_NORMAL_SPEED ) {
-            
-            // Logger::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_ptr_acf->vcl_condition.target_speed));
-        
+        if ( _ptr_acf->vcl_condition.target_speed != TAXI_NORMAL_SPEED ) {                
+            // Logger::log("set TAXI_NORMAL_SPEED, distance=" + to_string( distance_to_turn ) + ", target=" + to_string(_ptr_acf->vcl_condition.target_speed));            
             _ptr_acf->vcl_condition.acceleration = TAXI_NORMAL_ACCELERATION;
             _ptr_acf->vcl_condition.target_speed = TAXI_NORMAL_SPEED;
         }
@@ -75,10 +74,12 @@ void AircraftDoesTaxing::__choose_speed() {
         if ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED ) {
             
             float time_to_reach = distance_to_turn / _ptr_acf->vcl_condition.speed;
+            Logger::log( "time_to_reach: " + to_string( time_to_reach ) );
+            
             if ( time_to_reach <= 10.0 ) {
                 // До точки поворота осталось меньше скольки-нибудь секунд - тормозим.
-                // Logger::log("breaking to TAXI_SLOW_SPEED for 10 sec");
-                _taxi_breaking( TAXI_SLOW_SPEED, 10.0);
+                Logger::log("breaking to TAXI_SLOW_SPEED for " + to_string( time_to_reach - 1 ) + " sec");
+                _taxi_breaking( TAXI_SLOW_SPEED, time_to_reach - 1 );
 
             } else {
             
@@ -101,82 +102,6 @@ void AircraftDoesTaxing::__choose_speed() {
 
 // ********************************************************************************************************************
 // *                                                                                                                  *
-// *                                    Отрабатываем подход к предварительному старту                                 *
-// *                                                                                                                  *
-// ********************************************************************************************************************
-/*
-void AircraftDoesTaxing::__become_to_hp( waypoint_t & front_wp ) {
-
-    // Если в FP нет ВПП, то будет ровно 0. И здесь намеренно берется
-    // не первая точка из полетного плана, т.к. между RWY и нами
-    // могут быть еще точки руления, которые будут проигнорированы.
-
-    auto here = _ptr_acf->get_location();
-    
-    auto distance_to_rwy = _ptr_acf->flight_plan.distance_to_runway( here );
-    if (( distance_to_rwy > 0.0 ) && ( distance_to_rwy <= 200.0 ) ) {
-
-        // подходим к HP.
-
-        if ( _ptr_acf->vcl_condition.speed > 0.0 ) {
-
-            // Дистанция до точки остановки перед HP.
-            float dtr = distance_to_rwy - 120.0;
-
-            float time_to_reach = dtr / _ptr_acf->vcl_condition.speed;
-            if ( time_to_reach <= 5.0 ) {
-                _taxi_breaking( 0.0, 5.0 );
-            }
-        }
-
-        if (( _ptr_acf->vcl_condition.target_speed != 0.0 ) && ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED )) {
-
-            auto ds = TAXI_SLOW_SPEED - _ptr_acf->vcl_condition.speed;
-            _ptr_acf->vcl_condition.acceleration = ds / 5.0;
-            _ptr_acf->vcl_condition.target_speed = TAXI_SLOW_SPEED;
-            
-//             Logger::log(
-//                 "Go to HP speed=" + to_string(_ptr_acf->vcl_condition.speed)
-//                 + ", acceleration=" + to_string( _ptr_acf->vcl_condition.acceleration )
-//             );
-
-        }
-
-        if ( abs(_ptr_acf->vcl_condition.speed) <= 0.5 ) {
-            
-//             Logger::log("Full stop on HP. Distance=" + to_string(distance_to_rwy));
-//             Logger::log(
-//                 "Lat=" + to_string( _get_acf_location().latitude )
-//                 + ", lon=" + to_string( _get_acf_location().longitude )
-//                 + ", heading=" + to_string( _get_acf_rotation().heading )
-//             );
-
-            _ptr_acf->vcl_condition.speed = 0.0;
-            _ptr_acf->vcl_condition.acceleration = 0.0;
-            _ptr_acf->vcl_condition.heading_acceleration = 0.0;
-            // Действие было полностью выполнено, выходим.
-
-            while ( front_wp.type == WAYPOINT_TAXING ) {
-                _ptr_acf->flight_plan.pop_front();
-                front_wp = _ptr_acf->flight_plan.get(0);
-            }
-            _finish();
-            return;
-        }
-
-    } else {
-
-        // Мы пока что достаточно далеко от HP.
-        // Осуществляем обычное руление.
-
-        __choose_speed();
-    }
-
-}
-*/
-
-// ********************************************************************************************************************
-// *                                                                                                                  *
 // *                                               Перекрытая функция "шага"                                          *
 // *                                                                                                                  *
 // ********************************************************************************************************************
@@ -187,10 +112,11 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
 
 //    Logger::log(
 //        "Front=" + front_wp.name
-//        + ", dis=" + to_string( xenon::distance2d( _get_acf_location(), front_wp.location))
+//        + ", type=" + waypoint_to_string( front_wp.type ) + ", action=" + action_to_string( front_wp.action_to_achieve )
+//        + ", dis=" + to_string( xenon::distance2d( _ptr_acf->get_location(), front_wp.location))
 //    );
 
-    _head_steering( elapsed_since_last_call, 16.0 );        
+    _head_steering( elapsed_since_last_call, 20.0 );        
     __choose_speed();
     
     double distance = xenon::distance2d( _ptr_acf->get_location(), front_wp.location );

@@ -33,7 +33,7 @@ AircraftAbstractAction::AircraftAbstractAction (
 // ********************************************************************************************************************
 
 void AircraftAbstractAction::__start() {
-    
+        
     // Установка тех переменных, которые суммируются в ходе выполнения данного действия. Одно
     // и то же действие может быть вызвано - неоднократно. Поэтому при старте их надо обнулять.
     
@@ -60,7 +60,7 @@ void AircraftAbstractAction::__start() {
     }    
     
     _internal_start();
-            
+    
 }
 
 // ********************************************************************************************************************
@@ -232,7 +232,7 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
 void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
             
     if ( __finished ) return;
-        
+            
     // Управление скоростью - одно для всех фаз (действий).
     __control_of_speeds( elapsed_since_last_call );
     // Управление угловым положением самолета.
@@ -254,7 +254,7 @@ void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
     _internal_step( elapsed_since_last_call );
             
     _total_duration += elapsed_since_last_call;
-    
+        
 }
 
 // *********************************************************************************************************************

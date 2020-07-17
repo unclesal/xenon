@@ -160,14 +160,14 @@ void AircraftDoesLanding::__step__alignment(
     _ptr_acf->hit_to_ground( ground_pos );
     
     // Выстота (расстояние до земли)
-    auto height = acf_position.y - ground_pos.y;
+    auto height = abs(acf_position.y - ground_pos.y);
 #else
     auto acf_location = _ptr_acf->get_location();
     // Выстота (расстояние до земли)
     auto height = acf_location.altitude - wp.location.altitude;
 #endif
     
-    if ( height <= 0.3 ) {
+    if ( height <= 0.2 ) {
         
         // Сели. Самолет прижимаем к земле.
         _ptr_acf->vcl_condition.is_clamped_to_ground = true;
@@ -219,7 +219,7 @@ void AircraftDoesLanding::__step__breaking( const float & elapsed_since_last_cal
     
     _head_steering( elapsed_since_last_call, 10.0 );
     
-    if ( _ptr_acf->vcl_condition.speed < TAXI_NORMAL_SPEED + 0.5 ) {
+    if ( _ptr_acf->vcl_condition.speed < TAXI_NORMAL_SPEED * 2.0 + 0.5 ) {
         Logger::log( _ptr_acf->vcl_condition.agent_name + ", landing done.");
         
         // Точка, на которую "целились", т.е. конечная 

@@ -1240,12 +1240,14 @@ std::deque< waypoint_t > Airport::get_taxi_way_for_parking(
 
         // Все. Запрашиваем Дейкстру.
         auto way = __routes.get_shortest_path( nearest_d, parking.location );
+        int npp_name = 0;
         for ( auto descriptor : way ) {
             auto node = __routes.graph()[ descriptor ];
             waypoint_t wp;
             
             // Имена - могут быть страшненькими, передавать их по сети зазря не хочется.
             // wp.name = node.name;
+            wp.name = to_string( npp_name ++ );
             
             wp.type = WAYPOINT_TAXING;
             wp.action_to_achieve = ACF_DOES_NORMAL_TAXING;

@@ -111,7 +111,7 @@ void FlightPlan::push_front( waypoint_t & wp ) {
 #endif    
     __way.push_front( wp );
     __mutex.unlock();
-    
+            
 }
 
 // *********************************************************************************************************************
@@ -134,6 +134,14 @@ void FlightPlan::pop_front() {
 #ifdef INSIDE_AGENT
     if ( __agent ) __agent->wp_reached( front_wp );    
 #endif    
+    
+    Logger::log("FlightPlan::pop_front()");
+    for ( int i=0; i<__way.size(); i++ ) {
+        auto wp = __way.at( i );
+        Logger::log(
+            "   " + to_string(wp.npp) + ", " + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve ) 
+        );
+    }
 
 }
 
@@ -151,7 +159,7 @@ void FlightPlan::erase_up_to( const uint16_t & npp) {
     while ( it != __way.end() ) {
         if (( * it ).npp == npp ) {
             // Точка найдена.
-            __way.erase( __way.begin(), it );
+            __way.erase( __way.begin(), it + 1 );
             break;
         };
         it ++;

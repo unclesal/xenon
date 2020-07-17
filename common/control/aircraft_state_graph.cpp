@@ -402,16 +402,28 @@ void AircraftStateGraph::set_active_action( const aircraft_state_graph::graph_t:
         );
     };
     
+    auto descriptor = ed;
+    
+    if ( __ptr_acf->flight_plan.is_empty() ) {
+        // Если полетный план пустой, то нет смысла устанавливать какое-то действие.
+        descriptor = get_action_outgoing_from_current_state( ACF_DOES_NOTHING );
+        if ( descriptor == fake ) {
+            Logger::log(__ptr_acf->vcl_condition.agent_name + ", set_active_action: can not find ACF_DOES_NOTHING" );
+            return;
+        };
+        
+    };
+    
     clear_actions_activity();
     
     try {
 
 #ifdef DEBUG        
-        Logger::log( __ptr_acf->vcl_condition.agent_name + ", set_active_action " + __graph[ ed ].name );
+        Logger::log( __ptr_acf->vcl_condition.agent_name + ", set_active_action " + __graph[ descriptor ].name );
 #endif        
-        __graph[ ed ].current_action = true;
-        __ptr_acf->vcl_condition.current_action = __graph[ ed ].action;
-        __current_action = (AircraftAbstractAction * ) __graph[ ed ].ptr_does_class;
+        __graph[ descriptor ].current_action = true;
+        __ptr_acf->vcl_condition.current_action = __graph[ descriptor ].action;
+        __current_action = (AircraftAbstractAction * ) __graph[ descriptor ].ptr_does_class;
 
         // Это единственное место, где должен вызываться старт. Поэтому сам старт сделан приватным.
         if ( __current_action ) __current_action->__start();

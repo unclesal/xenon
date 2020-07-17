@@ -16,8 +16,9 @@ using namespace xenon;
 int main( int argc, char * argv[] ) {
 
     AgentAircraft b738_aff( B738_AFF );    
-    // b738_aff.run();    
+    b738_aff.run();    
     
+    /*
     std::thread b738_aff_thread( &AgentAircraft::run, &b738_aff );
     b738_aff_thread.detach();
     
@@ -47,6 +48,7 @@ int main( int argc, char * argv[] ) {
     
     AgentAircraft b763_sas( B763_SAS );
     b763_sas.run();    
+    */
     
     return 0;
 };

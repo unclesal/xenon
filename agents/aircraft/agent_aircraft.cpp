@@ -204,19 +204,9 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->vcl_condition.agent_uuid = uuid;
         __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT; 
         
-        // __test_landing();
-        
-        __test_fly_circle( usss, gate );
-        
-//         Коррекция высот ВПП.
-//         for ( int i=0; i<__ptr_acf->flight_plan.size(); i++ ) {
-//             auto wp = __ptr_acf->flight_plan.get( i );
-//             if ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
-//                 wp.location.altitude = usss.evalution_in_meters();
-//                 __ptr_acf->flight_plan.set( i, wp );
-//             };
-//         };
-                                                               
+        __test_landing();        
+        // __test_fly_circle( usss, gate );
+                                                                       
     }
     
 }
@@ -626,10 +616,7 @@ void AgentAircraft::__decision() {
         
     if ( ! __started ) return;
     if ( __ptr_acf->flight_plan.is_empty() ) {
-        if ( ! __ptr_acf->graph->current_action_is( ACF_DOES_NOTHING ) ) {
-            auto action_descriptor = __ptr_acf->graph->get_action_outgoing_from_current_state( ACF_DOES_NOTHING );
-            __ptr_acf->graph->set_active_action( action_descriptor );
-        }
+        __ptr_acf->graph->set_active_action( ACF_DOES_NOTHING );
         return;
     }
     

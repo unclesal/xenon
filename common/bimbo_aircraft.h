@@ -61,7 +61,7 @@ namespace xenon {
                 const std::string & livery
             );
 
-            ~BimboAircraft() override = default;                        
+            ~BimboAircraft() override = default;     
 
 #ifdef INSIDE_XPLANE
             // Мы находимся внутри плагина X-Plane.

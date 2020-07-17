@@ -568,7 +568,7 @@ void XPlanePlugin::__command_received( CmdWaypointReached * cmd ) {
     __agents_mutex.lock();
     for ( auto bimbo: __bimbos ) {
         if ( bimbo->agent_uuid() == cmd->agent_uuid() ) {
-            bimbo->flight_plan.erase_up_to( cmd->npp() );
+            bimbo->erase_up_to( cmd->npp() );
             break;
         };
     };

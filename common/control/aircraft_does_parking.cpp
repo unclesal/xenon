@@ -33,9 +33,11 @@ void AircraftDoesParking::_internal_start() {
     // Скорости потихоньку до минимума. Из расчета, что за сколько-то
     // секунд мы этот самый искомый минимум - достигнем.
 
-    _ptr_acf->vcl_condition.target_speed = PARKING_SPEED;
-    float ds = PARKING_SPEED - _ptr_acf->vcl_condition.speed;
-    _ptr_acf->vcl_condition.acceleration = ds / 5.0;    
+    // _ptr_acf->vcl_condition.target_speed = PARKING_SPEED;
+    // float ds = PARKING_SPEED - _ptr_acf->vcl_condition.speed;
+    // _ptr_acf->vcl_condition.acceleration = ds / 5.0;    
+    
+    _taxi_breaking( PARKING_SPEED, 3.0 );
     
     // Курс фиксируем как он был на прошлой фазе.
     _ptr_acf->vcl_condition.heading_acceleration = 0.0;
@@ -49,13 +51,7 @@ void AircraftDoesParking::_internal_start() {
 
 void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elapsed_since_last_call ) {
     
-    auto loc1 = xenon::shift( wp.location, 25, wp.incomming_heading );
-    auto dis = xenon::distance_to_segment( _ptr_acf->get_location(), wp.location, loc1 );
-    auto delta = _get_delta_bearing( wp );
-    
-    if ( dis <= 30.0 ) {
-        _ptr_acf->vcl_condition.target_heading = wp.incomming_heading;
-        _ptr_acf->vcl_condition.heading_acceleration = delta / 25.0;
+    if ( _taxi_turn_started( wp ) ) {
         __phase = PHASE_TURN;
     }    
 }
@@ -67,8 +63,8 @@ void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elaps
 // *********************************************************************************************************************
 
 void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_since_last_call ) {    
-    auto delta = _get_delta_bearing( wp );
-    if (( abs( delta ) <= 1.0 ) || ( abs(delta) >= 359.0)) {
+    auto delta = xenon::course_to( _ptr_acf->get_location(), _ptr_acf->get_rotation().heading, wp.location );
+    if (( abs( delta ) <= 2.0 ) || ( abs(delta) >= 358.0)) {
         __phase = PHASE_STRAIGHT;
     }
 }
@@ -80,20 +76,24 @@ void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_s
 // *********************************************************************************************************************
 
 void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elapsed_since_last_call ) {
+    
     _head_steering( elapsed_since_last_call, 10.0);
     
     auto dis = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     
     auto speed = _ptr_acf->vcl_condition.speed;
+    
     if ( speed == 0.0 ) {
         // На ноль делить нельзя, поэтому фазы торможения и не будет вообще.
         _ptr_acf->vcl_condition.acceleration = 0.0;
         _ptr_acf->vcl_condition.speed = 0.0;
+        _ptr_acf->vcl_condition.target_speed = 0.0;
         _ptr_acf->flight_plan.pop_front();
         _finish();
         return;
     };
     auto t = dis / speed;
+    
     // XPlane::log("straight, dis=" + to_string( dis ) + ", speed=" + to_string( _ptr_acf->vcl_condition.speed ) + ", time=" + to_string(t));
     if ( t <= 5.0 ) {
         __phase = PHASE_BREAKING;
@@ -111,6 +111,7 @@ void AircraftDoesParking::__breaking() {
     if ( _ptr_acf->vcl_condition.speed <= 0.1 ) {
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.acceleration = 0.0;
+        _ptr_acf->vcl_condition.target_speed = 0.0;
         _ptr_acf->flight_plan.pop_front();
         _finish();
     }

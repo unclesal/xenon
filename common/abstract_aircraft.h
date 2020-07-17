@@ -19,12 +19,12 @@ using namespace std;
 
 namespace xenon {
 
+    /**
+     * @short Абстрактрый самолет, как пользовательский, так и внутри симулятора.
+     */
+
     class AbstractAircraft : public AbstractVehicle {
-        
-        /**
-         * Абстрактрый самолет, как пользовательский, так и внутри симулятора.
-         */
-        
+                
         public:
 
             AbstractAircraft();
@@ -45,11 +45,41 @@ namespace xenon {
             virtual void set_thrust_position( const float & position ) {};
             virtual void set_speed_brake_position( const float & value ) {};
             
+            /**
+             * @short Стереть точки полетного плана вплоть до данной.
+             * Реакция на тот факт, что в "основном" агенте была достигнута
+             * определенная точка полетного плана. В отличие от прямого обращения
+             * к FlightPlan, здесь задействован "самолетный мутекс".
+             */
+            inline void erase_up_to( const uint16_t & npp ) {
+                _acf_mutex.lock();
+                flight_plan.erase_up_to( npp );
+                _acf_mutex.unlock();
+                
+                Logger::log("AbstractAircraft::erase_up_to " + to_string ( npp ));
+                for ( int i=0; i<flight_plan.size(); i++ ) {
+                    auto wp = flight_plan.get( i );
+                    Logger::log(
+                        "   " + to_string(wp.npp) + ", " + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve ) 
+                    );
+                };
+                
+            };
+
             void set_flight_plan( const FlightPlan & fp ) {
                 _acf_mutex.lock();
                 flight_plan.clear();
                 flight_plan = fp;
                 _acf_mutex.unlock();
+                
+                Logger::log("FlightPlan changed.");
+                for ( int i=0; i<flight_plan.size(); i++ ) {
+                    auto wp = flight_plan.get( i );
+                    Logger::log(
+                        "   " + to_string( wp.npp ) + ", " + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve ) 
+                    );
+                };
+                
             };
             
             virtual void move( float meters ) {};
