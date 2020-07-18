@@ -28,14 +28,14 @@ AircraftDoesParking::AircraftDoesParking(
 
 void AircraftDoesParking::_internal_start() {
     
+    auto wp = _ptr_acf->flight_plan.get(0);
+    if ( wp.type != WAYPOINT_PARKING ) _ptr_acf->flight_plan.pop_front();
+    
     __phase = PHASE_BECOMING;
     
     // Скорости потихоньку до минимума. Из расчета, что за сколько-то
     // секунд мы этот самый искомый минимум - достигнем.
 
-    // _ptr_acf->vcl_condition.target_speed = PARKING_SPEED;
-    // float ds = PARKING_SPEED - _ptr_acf->vcl_condition.speed;
-    // _ptr_acf->vcl_condition.acceleration = ds / 5.0;    
     
     _taxi_breaking( PARKING_SPEED, 3.0 );
     
@@ -51,9 +51,12 @@ void AircraftDoesParking::_internal_start() {
 
 void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elapsed_since_last_call ) {
     
+    _head_steering( elapsed_since_last_call, 3.0);
+    
     if ( _taxi_turn_started( wp ) ) {
         __phase = PHASE_TURN;
-    }    
+    }
+    
 }
 
 // *********************************************************************************************************************
@@ -62,10 +65,22 @@ void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elaps
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_since_last_call ) {    
-    auto delta = xenon::course_to( _ptr_acf->get_location(), _ptr_acf->get_rotation().heading, wp.location );
+void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_since_last_call ) {   
+
+    double delta = _get_delta_to_target_heading( wp );
+    normalize_degrees( delta );
+    
+//     Logger::log(
+//         "Turn: " + waypoint_to_string( wp.type ) 
+//         + ", h=" + to_string( _ptr_acf->get_rotation().heading ) 
+//         + ", b=" + to_string( xenon::bearing( _ptr_acf->get_location(), wp.location ) )
+//         + ", d=" + to_string( delta )
+//     );
+    
     if (( abs( delta ) <= 5.0 ) || ( abs(delta) >= 355.0)) {
         __phase = PHASE_STRAIGHT;
+        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+        _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;
     }
 }
 
@@ -77,7 +92,7 @@ void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_s
 
 void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elapsed_since_last_call ) {
     
-    _head_steering( elapsed_since_last_call, 10.0);
+    _head_steering( elapsed_since_last_call, 15.0);
     
     auto dis = xenon::distance2d( _ptr_acf->get_location(), wp.location );
     
@@ -89,16 +104,19 @@ void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elaps
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.target_speed = 0.0;
         _ptr_acf->flight_plan.pop_front();
+        Logger::log(_ptr_acf->vcl_condition.agent_name + " parked.");
         _finish();
         return;
     };
 
     auto t = dis / speed;
-    
-    Logger::log("straight, dis=" + to_string( dis ) + ", speed=" + to_string( _ptr_acf->vcl_condition.speed ) + ", time=" + to_string(t));
-    if ( t <= 10.0 ) {
+        
+    if ( t <= 5.0 ) {
+        Logger::log("set breaking, dis=" + to_string( dis ) + ", speed=" + to_string( _ptr_acf->vcl_condition.speed ) + ", time=" + to_string(t));
         __phase = PHASE_BREAKING;
-        _taxi_breaking( 0.0, 10.0 );
+        _ptr_acf->vcl_condition.heading_acceleration = 0.0;
+        _ptr_acf->vcl_condition.target_heading = _ptr_acf->get_rotation().heading;        
+        _taxi_breaking( 0.0, 5.0 );
     };    
 }
 
@@ -110,14 +128,13 @@ void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elaps
 
 void AircraftDoesParking::__breaking( const float & elapsed_since_last_call ) {
 
-    _head_steering( elapsed_since_last_call, 10.0 );
-
     if ( _ptr_acf->vcl_condition.speed <= 0.2 ) {
 
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.acceleration = 0.0;
         _ptr_acf->vcl_condition.target_speed = 0.0;
         _ptr_acf->flight_plan.pop_front();
+        Logger::log(_ptr_acf->vcl_condition.agent_name + " parked.");
         _finish();
 
     }

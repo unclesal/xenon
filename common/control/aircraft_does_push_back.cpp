@@ -111,7 +111,7 @@ void AircraftDoesPushBack::__internal_step__phase_turn() {
     double delta = _get_delta_to_target_heading( wp );
     normalize_degrees( delta );
     // Порог разницы в курсах, ниже которого мы считаем, что выровнялись.
-    double threshold = 0.8;
+    double threshold = 1.5;
     
     if ( (delta >= 360 - threshold ) || ( delta <= threshold ) ) {
         

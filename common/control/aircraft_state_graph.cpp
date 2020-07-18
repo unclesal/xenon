@@ -159,7 +159,7 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     // предварительном старте" можно перейти рулением.
 
     __create_action< AircraftDoesTaxing >(
-        ACF_DOES_NORMAL_TAXING, "NormalTaxing", state_ready_for_taxing_d, state_on_hp_d
+        ACF_DOES_NORMAL_TAXING, "TaxingToHP", state_ready_for_taxing_d, state_on_hp_d
     );
     
     // Ничегонеделание - на предварительном старте.
@@ -243,7 +243,7 @@ AircraftStateGraph::AircraftStateGraph( AbstractAircraft * ptr_acf ) {
     
     // Из состояния "приземлился" в состояние "освободил ВПП" выходим рулением.
     __create_action< AircraftDoesTaxing > (
-        ACF_DOES_NORMAL_TAXING, "LeaveRunway", state_landed_d, state_rwy_leaved_d
+        ACF_DOES_NORMAL_TAXING, "TaxingFromRunway", state_landed_d, state_rwy_leaved_d
     );
     
     // Ничегонеделание в состоянии "освободил ВПП"

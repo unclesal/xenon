@@ -79,14 +79,14 @@ BimboAircraft::BimboAircraft(
 
 void BimboAircraft::action_finished( void * action ) {
     
-#ifdef INSIDE_AGENT    
-    AircraftAbstractAction * ptr_abstract_action = ( AircraftAbstractAction * ) action;
+    AircraftAbstractAction * ptr_abstract_action = reinterpret_cast< AircraftAbstractAction * >( action );
+#ifdef INSIDE_AGENT        
     // aircraft_state_graph::edge_t edge = graph->get_edge_for( ptr_abstract_action );
     graph->action_finished( ptr_abstract_action );    
     AbstractVehicle::action_finished( action );
 #endif        
     
-#ifdef INSIDE_XPLANE
+#ifdef INSIDE_XPLANE    
     graph->set_active_action( ACF_DOES_NOTHING );
 #endif
     
@@ -671,7 +671,7 @@ void BimboAircraft::move( float meters ) {
 // *********************************************************************************************************************
 
 void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t & ac ) {
-    
+        
     _acf_mutex.lock();
         
 #ifdef INSIDE_XPLANE
@@ -688,11 +688,10 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     store_vcl_coordinates();    
         
 #endif    
-    
+        
     if ( ! graph->current_state_is( vc.current_state ))
             graph->set_active_state( vc.current_state );
-
-        
+    
     if ( ! graph->current_action_is( vc.current_action ) ) 
             graph->set_active_action( vc.current_action );
     
@@ -728,15 +727,13 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     if ( 
         ! graph->current_action_is( ACF_DOES_PUSH_BACK )
         && ! graph->current_action_is( ACF_DOES_NORMAL_TAXING ) 
-        && ! graph->current_action_is( ACF_DOES_PARKING )
         && ! graph->current_action_is( ACF_DOES_LANDING )
-        && ! graph->current_state_is( ACF_STATE_BEFORE_PARKING )
     ) {
     
         auto old_position = get_position();
         auto distance = XPlane::distance2d(old_position, new_position);
         
-        if ( distance >= 150.0 ) {
+        if ( distance >= 10.0 ) {
             if ( 
                 graph->current_action_is( ACF_DOES_LANDING )
                 || graph->current_action_is( ACF_DOES_TAKE_OFF )
@@ -760,7 +757,7 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
         // По углам тоже чтобы не сильно дергалась.
         auto current_rotation = get_rotation();
         
-        float threshold_degrees = 10.0;
+        float threshold_degrees = 3.0;
         
         if ( 
             abs(current_rotation.heading - vc.rotation.heading ) >= threshold_degrees

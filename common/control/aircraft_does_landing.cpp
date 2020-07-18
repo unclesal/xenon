@@ -100,7 +100,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     
     // Logger::log("RWY alt=" + to_string( end_rwy_location.altitude ) + ", our alt=" + to_string(acf_location.altitude) + ", da=" + to_string(da));
 
-    if ( da <= _ptr_acf->parameters().on_ground_offset + 3.0 ) {
+    if ( da <= _ptr_acf->parameters().on_ground_offset + 2.5 ) {
 
         // Переход в фазу выравнивания.
 

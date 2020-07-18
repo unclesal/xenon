@@ -41,11 +41,11 @@
 #define NETWORK_SOCKET_FREQUENCY 2.0
 
 // Один "тик" цикла агента в микросекундах.
-constexpr int AGENT_TICK = 20000;
+constexpr int AGENT_TICK = 10000;
     
 // Количество циклов (тиков), после которых агент сообщает о 
 // своем новом местоположении и параметрах.
-constexpr unsigned int CYCLES_PER_SCREAM = 75;
+constexpr unsigned int CYCLES_PER_SCREAM = 150;
 
 
 // Частота опроса и устаровки состояния Bimbo-самолетов, раз в секунду (Гц)
