@@ -45,7 +45,7 @@ constexpr int AGENT_TICK = 10000;
     
 // Количество циклов (тиков), после которых агент сообщает о 
 // своем новом местоположении и параметрах.
-constexpr unsigned int CYCLES_PER_SCREAM = 150;
+constexpr unsigned int CYCLES_PER_SCREAM = 50;
 
 
 // Частота опроса и устаровки состояния Bimbo-самолетов, раз в секунду (Гц)
