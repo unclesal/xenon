@@ -37,7 +37,7 @@ namespace xenon {
             void __becoming( const waypoint_t & wp, const float & elapsed_since_last_call );
             void __turn( const waypoint_t & wp, const float & elapsed_since_last_call );
             void __straight( const waypoint_t & wp, const float & elapsed_since_last_call );
-            void __breaking();
+            void __breaking( const float & elapsed_since_last_call );
         
     }; // class AircraftDoesParking
 }; // namespace xenon

@@ -100,7 +100,7 @@ void AircraftDoesLanding::__step__descending( const waypoint_t & wp, const aircr
     
     // Logger::log("RWY alt=" + to_string( end_rwy_location.altitude ) + ", our alt=" + to_string(acf_location.altitude) + ", da=" + to_string(da));
 
-    if ( da <= _ptr_acf->parameters().on_ground_offset + 2.0 ) {
+    if ( da <= _ptr_acf->parameters().on_ground_offset + 3.0 ) {
 
         // Переход в фазу выравнивания.
 
@@ -192,7 +192,10 @@ void AircraftDoesLanding::__step__alignment(
         // Выпуск воздушных тормозов.
         _ptr_acf->set_speed_brake_position( 1.0 );
             
-    } else if ( height <= 2.5 ) {
+    }
+    
+    /*
+    else if ( height <= 3.5 ) {
         
         // Достаточно высоко - снижаемся поинтенсивнее.
         _ptr_acf->acf_condition.target_vertical_speed = -0.6f;
@@ -206,6 +209,7 @@ void AircraftDoesLanding::__step__alignment(
             _ptr_acf->acf_condition.vertical_acceleration = -2.0f;
         
     }
+    */
         
 };
 
@@ -244,10 +248,12 @@ void AircraftDoesLanding::__step__breaking( const float & elapsed_since_last_cal
 // *********************************************************************************************************************
 
 void AircraftDoesLanding::_internal_step( const float & elapsed_since_last_call ) {
-        
+
+    if ( _ptr_acf->flight_plan.is_empty() ) _finish();
+
     auto wp = _ptr_acf->flight_plan.get(0);
     auto acf_parameters = _ptr_acf->parameters();
-    
+
     switch ( __phase ) {
         case PHASE_DESCENDING: __step__descending( wp, acf_parameters ); break;
         case PHASE_ALIGNMENT: __step__alignment( wp, acf_parameters, elapsed_since_last_call ); break;

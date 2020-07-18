@@ -230,17 +230,17 @@ void AircraftAbstractAction::__control_of_angles( const float & elapsed_since_la
 // ********************************************************************************************************************
 
 void AircraftAbstractAction::__step( const float & elapsed_since_last_call ) {
-            
+
     if ( __finished ) return;
-            
+
     // Управление скоростью - одно для всех фаз (действий).
     __control_of_speeds( elapsed_since_last_call );
     // Управление угловым положением самолета.
     __control_of_angles( elapsed_since_last_call );
-    
-    // До перемещения - запоминаем предыдущее положение.
-    auto front_wp = _ptr_acf->flight_plan.get(0);
-        
+
+//     // До перемещения - запоминаем предыдущее положение.
+//     auto front_wp = _ptr_acf->flight_plan.get(0);
+// 
 //         for ( int i = PREVIOUS_ARRAY_SIZE - 2; i>=0; -- i ) {
 //             __previous_distance_to_front_wp[i + 1] = __previous_distance_to_front_wp[i];
 //         }
@@ -379,10 +379,10 @@ void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude
     
     _ptr_acf->acf_condition.vertical_speed = 0.0;
     if ( time_to_achieve ) _ptr_acf->acf_condition.vertical_speed = da / time_to_achieve;
-    
+            
+    /*
     // Если ему просто взять и поставить некий градус, скажем, 5, то выглядит не 
     // реалистично. Угол тангажа надо ставить в зависимости от вертикальной скорости.
-    
     float degrees = 1.0;
     if ( abs(_ptr_acf->acf_condition.vertical_speed) > 7.0 ) degrees = 4.0;
     else if ( abs(_ptr_acf->acf_condition.vertical_speed) > 5.0 ) degrees = 3.0;
@@ -396,6 +396,12 @@ void AircraftAbstractAction::_altitude_adjustment( const float & target_altitude
         // Мы находимся - выше, надо опускаться.            
         _ptr_acf->acf_condition.target_pitch = -degrees;                        
     }
+    */
+    
+    // Пропорциональное регулирование угла в зависимости  от вертикальной скорости.
+    _ptr_acf->acf_condition.target_pitch = _ptr_acf->acf_condition.vertical_speed / 1.5;
+    if ( _ptr_acf->acf_condition.target_pitch > 7.0 ) _ptr_acf->acf_condition.target_pitch = 7.0;
+    if ( _ptr_acf->acf_condition.target_pitch < -7.0 ) _ptr_acf->acf_condition.target_pitch = -7.0;
     
     // Изменение тангажа. А вот тангаж можно увидеть. 
     // Соответственно, резко изменяться он не может.

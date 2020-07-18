@@ -50,6 +50,7 @@ namespace xenon {
                         || vcl_condition.current_action == ACF_DOES_WAITING_TAKE_OFF_APPROVAL
                         || vcl_condition.current_action == ACF_DOES_LINING_UP
                         || vcl_condition.current_action == ACF_DOES_TAKE_OFF
+                        || vcl_condition.current_action == ACF_DOES_PARKING
                         || vcl_condition.current_state == ACF_STATE_MOTION_STARTED
                         || vcl_condition.current_state == ACF_STATE_READY_FOR_TAXING
                     );

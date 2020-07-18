@@ -134,14 +134,6 @@ void FlightPlan::pop_front() {
 #ifdef INSIDE_AGENT
     if ( __agent ) __agent->wp_reached( front_wp );    
 #endif    
-    
-    Logger::log("FlightPlan::pop_front()");
-    for ( int i=0; i<__way.size(); i++ ) {
-        auto wp = __way.at( i );
-        Logger::log(
-            "   " + to_string(wp.npp) + ", " + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve ) 
-        );
-    }
 
 }
 
@@ -285,7 +277,7 @@ xenon::waypoint_t FlightPlan::get( const int & index ) {
 void FlightPlan::set( const int & index, const xenon::waypoint_t & wp) {
     
     __mutex.lock();
-    if ( __way.size() > index ) __way.at( index ) = wp;
+    if ( (int) __way.size() > index ) __way.at( index ) = wp;
     else Logger::log(
         "FlightPlan::set " + std::to_string( index ) + ", but FP size=" + std::to_string( __way.size() )
     );
@@ -352,7 +344,7 @@ double FlightPlan::distance_to_runway( const location_t & from ) {
     
     __mutex.lock();
     
-    for ( int i=0; i<__way.size(); ++i ) {
+    for ( int i=0; i< (int) __way.size(); ++i ) {
         auto wp = __way.at(i);
         if ( wp.type == WAYPOINT_RUNWAY ) {
             result = xenon::distance2d( from, wp.location );

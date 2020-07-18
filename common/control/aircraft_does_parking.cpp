@@ -64,7 +64,7 @@ void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elaps
 
 void AircraftDoesParking::__turn( const waypoint_t & wp, const float & elapsed_since_last_call ) {    
     auto delta = xenon::course_to( _ptr_acf->get_location(), _ptr_acf->get_rotation().heading, wp.location );
-    if (( abs( delta ) <= 2.0 ) || ( abs(delta) >= 358.0)) {
+    if (( abs( delta ) <= 5.0 ) || ( abs(delta) >= 355.0)) {
         __phase = PHASE_STRAIGHT;
     }
 }
@@ -92,13 +92,14 @@ void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elaps
         _finish();
         return;
     };
+
     auto t = dis / speed;
     
-    // XPlane::log("straight, dis=" + to_string( dis ) + ", speed=" + to_string( _ptr_acf->vcl_condition.speed ) + ", time=" + to_string(t));
-    if ( t <= 5.0 ) {
+    Logger::log("straight, dis=" + to_string( dis ) + ", speed=" + to_string( _ptr_acf->vcl_condition.speed ) + ", time=" + to_string(t));
+    if ( t <= 10.0 ) {
         __phase = PHASE_BREAKING;
-        _taxi_breaking( 0.0, 5.0 );
-    };
+        _taxi_breaking( 0.0, 10.0 );
+    };    
 }
 
 // *********************************************************************************************************************
@@ -107,13 +108,18 @@ void AircraftDoesParking::__straight( const waypoint_t & wp, const float & elaps
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AircraftDoesParking::__breaking() {
-    if ( _ptr_acf->vcl_condition.speed <= 0.1 ) {
+void AircraftDoesParking::__breaking( const float & elapsed_since_last_call ) {
+
+    _head_steering( elapsed_since_last_call, 10.0 );
+
+    if ( _ptr_acf->vcl_condition.speed <= 0.2 ) {
+
         _ptr_acf->vcl_condition.speed = 0.0;
         _ptr_acf->vcl_condition.acceleration = 0.0;
         _ptr_acf->vcl_condition.target_speed = 0.0;
         _ptr_acf->flight_plan.pop_front();
         _finish();
+
     }
 }
 
@@ -124,12 +130,14 @@ void AircraftDoesParking::__breaking() {
 // *********************************************************************************************************************
 
 void AircraftDoesParking::_internal_step( const float & elapsed_since_last_call ) {
+
     auto wp = _ptr_acf->flight_plan.get(0);
+
     switch ( __phase ) {
         case PHASE_BECOMING: __becoming( wp, elapsed_since_last_call ); break;
         case PHASE_TURN: __turn( wp, elapsed_since_last_call ); break;
         case PHASE_STRAIGHT: __straight( wp, elapsed_since_last_call ); break;
-        case PHASE_BREAKING: __breaking(); break;
+        case PHASE_BREAKING: __breaking( elapsed_since_last_call ); break;
         default: Logger::log("AircraftDoesParking::step(), unhandled phase" + to_string( __phase ));
     };
 }

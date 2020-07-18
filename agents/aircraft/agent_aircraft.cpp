@@ -7,6 +7,7 @@
 
 #include "agent_aircraft.h"
 #include "tested_agents.h"
+#include "aircraft_does_parking.h"
 #include "cmd_query_around.h"
 #include "cmd_aircraft_condition.h"
 #include "cmd_flight_plan.h"
@@ -306,89 +307,6 @@ void AgentAircraft::run() {
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
-// *                                            Выбор следующего действия                                              *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-/*
-void AgentAircraft::__choose_next_action() {  
-    
-    string current_state_name = "Unknown state";
-    auto current_state = __ptr_acf->graph->get_current_state();
-    if ( current_state ) {
-        auto node = __ptr_acf->graph->get_node_for( current_state );
-        current_state_name = node.name;
-    }
-    
-    Logger::log("choose_next_action(), state=" + current_state_name + ", fp size=" + to_string( __ptr_acf->_flight_plan.size() ) );
-    
-    if (
-        ( __ptr_acf->graph->current_state_is( ACF_STATE_PARKING )) 
-        && ( __ptr_acf->graph->current_action_is( ACF_DOES_NOTHING ))
-        && ( __ptr_acf->__taxing_prepared )
-        && ( ! __ptr_acf->_flight_plan.empty() )
-    ) {
-        // На парковке и "ничего не делает", и при этом рулежка уже
-        // подготовлена - поехали по полетному плану.
-        __ptr_acf->__start_fp0_action();
-        return;
-    }
-        
-    if (
-        ( __ptr_acf->graph->current_state_is( ACF_STATE_READY_FOR_TAXING ) )
-        && ( __ptr_acf->__taxing_prepared )
-    ) {
-        // Если готов к рулению - пока что поехали. 
-        // TODO: всякая фигня типа заведения двигателей, разрешения на руление и др.
-        __ptr_acf->__start_fp0_action();
-        return;
-    } 
-    
-    if ( __ptr_acf->graph->current_state_is( ACF_STATE_HP ) ) {
-        __ptr_acf->__start_fp0_action();
-        return;
-    }
-    
-    if ( __ptr_acf->graph->current_state_is( ACF_STATE_READY_FOR_TAKE_OFF ) ) {
-        __ptr_acf->__start_fp0_action();
-        return;
-    };
-    
-    if ( __ptr_acf->graph->current_state_is( ACF_STATE_AIRBORNED ) ) {
-        
-        aircraft_state_graph::graph_t::edge_descriptor action 
-            = __ptr_acf->graph->get_action_outgoing_from_current_state( ACF_DOES_FLYING );
-            
-        __ptr_acf->graph->set_active_action( action );
-        
-        return;
-    };
-    
-    if ( __ptr_acf->graph->current_state_is ( ACF_STATE_ON_FINAL ) ) {
-        __ptr_acf->__start_fp0_action();
-        return;
-    }
-
-    if ( __ptr_acf->graph->current_state_is( ACF_STATE_LANDED )) {
-        if ( !__ptr_acf->_flight_plan.empty() ) __ptr_acf->__start_fp0_action();
-        else Logger::log("AgentAircraft::__choose_next_action(), ACF_STATE_LANDED, but FP is empty");
-        return;
-    }
-    
-    if ( __ptr_acf->graph->current_state_is( ACF_STATE_RUNWAY_LEAVED )) {
-        __ptr_acf->__start_fp0_action();
-        return;
-    };
-    
-    if ( __ptr_acf->graph->current_state_is( ACF_STATE_BEFORE_PARKING )) {
-        __ptr_acf->__start_fp0_action();
-        return;
-    };
-    
-    Logger::log("ERROR: AgentAircraft::__choose_next_action(), action was not determined");    
-};
-*/
-// *********************************************************************************************************************
-// *                                                                                                                   *
 // *                     Отправить в сеть пакет своего состояния, если коммуникатор соединен                           *
 // *                                                                                                                   *
 // *********************************************************************************************************************
@@ -412,7 +330,7 @@ void AgentAircraft::state_changed( void * state ) {
     scream_about_me();
     
     // После посадки нужно определить стоянку.
-    AircraftAbstractState * abstract_state = ( AircraftAbstractState * ) state;
+    AircraftAbstractState * abstract_state = reinterpret_cast< AircraftAbstractState * >( state );
     
     cout << __ptr_acf->vcl_condition.agent_name << ", AgentAircraft::state_changed to " << __ptr_acf->graph->get_node_for( abstract_state ).name << endl;
     
@@ -420,12 +338,14 @@ void AgentAircraft::state_changed( void * state ) {
     if ( landed ) {
         
         Logger::log( __ptr_acf->vcl_condition.agent_name + ", landed. Make taxiway for parking...");
-                
-        waypoint_t wp = __ptr_acf->flight_plan.get(0);
-        while ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
-            __ptr_acf->flight_plan.pop_front();
-            wp = __ptr_acf->flight_plan.get(0);
-        };
+
+        if ( ! __ptr_acf->flight_plan.is_empty() ) {
+            waypoint_t wp = __ptr_acf->flight_plan.get(0);
+            while ( wp.type == WAYPOINT_RUNWAY || wp.type == WAYPOINT_DESTINATION ) {
+                __ptr_acf->flight_plan.pop_front();
+                wp = __ptr_acf->flight_plan.get(0);
+            };
+        }
         
         auto our_location = __ptr_acf->get_location();    
         auto our_heading = __ptr_acf->get_rotation().heading;
@@ -486,7 +406,17 @@ void AgentAircraft::action_started( void * action ) {
 // *                                                                                                                   *
 // *********************************************************************************************************************
 
-void AgentAircraft::action_finished( void * action ) {     
+void AgentAircraft::action_finished( void * void_action ) {
+    
+    auto abstract_action = reinterpret_cast<AircraftAbstractAction * >( void_action );
+    
+    auto parked = dynamic_cast<AircraftDoesParking * >( abstract_action );
+    if ( parked ) {
+        // Закончилось действие парковки, самолет на стоянке. 
+        Logger::log( __ptr_acf->vcl_condition.agent_name + " parked, done.");
+        __started = false;
+    };
+    
     __decision();
     scream_about_me();
 }
@@ -504,9 +434,19 @@ void AgentAircraft::wp_reached( waypoint_t wp ) {
         transmitt( cmd );
     };
     
-    auto next_wp = __ptr_acf->flight_plan.get(0);
-    if ( next_wp.action_to_achieve == ACF_DOES_GLIDING ) {
-        __ptr_acf->graph->set_active_state( ACF_STATE_APPROACH );
+    if ( ! __ptr_acf->flight_plan.is_empty() ) {
+
+        // Если полетный план не пустой, то пробуем достать
+        // из него нужное нам следующее действие.
+
+        auto next_wp = __ptr_acf->flight_plan.get(0);
+        if ( next_wp.action_to_achieve == ACF_DOES_GLIDING ) {
+            __ptr_acf->graph->set_active_state( ACF_STATE_APPROACH );
+        }
+
+    } else {
+        // Полетный план пустой - ничего не делаем, ждем, когда его заполнят.
+        __ptr_acf->graph->set_active_action( ACF_DOES_NOTHING );
     }
 }
 
@@ -614,7 +554,11 @@ void AgentAircraft::on_error( std::string message ) {
 
 void AgentAircraft::__decision() {
         
-    if ( ! __started ) return;
+    if ( ! __started ) {
+        __ptr_acf->graph->set_active_action( ACF_DOES_NOTHING );
+        return;
+    }
+    
     if ( __ptr_acf->flight_plan.is_empty() ) {
         __ptr_acf->graph->set_active_action( ACF_DOES_NOTHING );
         return;

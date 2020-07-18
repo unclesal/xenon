@@ -21,7 +21,7 @@ namespace xenon {
     const float PARKING_SPEED = 1.5;
 
     // Скорость при "медленной и аккуратной" рулежке, например, при заходе на стоянку.
-    const float TAXI_SLOW_SPEED = 4.16;  // 15 км/ч
+    const float TAXI_SLOW_SPEED = 4.16667;  // 15 км/ч
 
     // Скорость при "нормальной" рулежке.
     const float TAXI_NORMAL_SPEED = 11.111; // 40 км/x

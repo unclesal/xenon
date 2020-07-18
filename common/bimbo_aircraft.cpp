@@ -271,7 +271,7 @@ void BimboAircraft::__acf_parameters_correction() {
     
     if ( acIcaoType == "B738" ) {
         _params.length = 40.0;
-        _params.rotation_center = _params.length * 1.9f / 3.5f;
+        _params.rotation_center = _params.length * 2.0f / 3.5f;
         _params.wingspan = 34.0;
         _params.shift_from_ramp = -9.0;
 
@@ -728,7 +728,9 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     if ( 
         ! graph->current_action_is( ACF_DOES_PUSH_BACK )
         && ! graph->current_action_is( ACF_DOES_NORMAL_TAXING ) 
-        && ! graph->current_action_is( ACF_DOES_PARKING )        
+        && ! graph->current_action_is( ACF_DOES_PARKING )
+        && ! graph->current_action_is( ACF_DOES_LANDING )
+        && ! graph->current_state_is( ACF_STATE_BEFORE_PARKING )
     ) {
     
         auto old_position = get_position();

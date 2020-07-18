@@ -52,34 +52,20 @@ namespace xenon {
              * к FlightPlan, здесь задействован "самолетный мутекс".
              */
             inline void erase_up_to( const uint16_t & npp ) {
+
                 _acf_mutex.lock();
                 flight_plan.erase_up_to( npp );
-                _acf_mutex.unlock();
-                
-                Logger::log("AbstractAircraft::erase_up_to " + to_string ( npp ));
-                for ( int i=0; i<flight_plan.size(); i++ ) {
-                    auto wp = flight_plan.get( i );
-                    Logger::log(
-                        "   " + to_string(wp.npp) + ", " + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve ) 
-                    );
-                };
+                _acf_mutex.unlock();                
                 
             };
 
             void set_flight_plan( const FlightPlan & fp ) {
+
                 _acf_mutex.lock();
                 flight_plan.clear();
                 flight_plan = fp;
                 _acf_mutex.unlock();
-                
-                Logger::log("FlightPlan changed.");
-                for ( int i=0; i<flight_plan.size(); i++ ) {
-                    auto wp = flight_plan.get( i );
-                    Logger::log(
-                        "   " + to_string( wp.npp ) + ", " + wp.name + ", " + waypoint_to_string( wp.type ) + ", " + action_to_string( wp.action_to_achieve ) 
-                    );
-                };
-                
+                                
             };
             
             virtual void move( float meters ) {};

@@ -73,9 +73,7 @@ namespace xenon {
 
             // void __test();
             void __temporary_make_aircraft_by_uuid( const std::string & uuid );
-            
-            //void __choose_next_action();
-            
+                        
             void __decision();
             void __start_fp0_action();
             

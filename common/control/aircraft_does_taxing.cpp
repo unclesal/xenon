@@ -74,11 +74,13 @@ void AircraftDoesTaxing::__choose_speed() {
         if ( _ptr_acf->vcl_condition.target_speed != TAXI_SLOW_SPEED ) {
             
             float time_to_reach = distance_to_turn / _ptr_acf->vcl_condition.speed;
-            Logger::log( "time_to_reach: " + to_string( time_to_reach ) );
+
+            // Logger::log( "time_to_reach: " + to_string( time_to_reach ) );
             
             if ( time_to_reach <= 10.0 ) {
                 // До точки поворота осталось меньше скольки-нибудь секунд - тормозим.
-                Logger::log("breaking to TAXI_SLOW_SPEED for " + to_string( time_to_reach - 1 ) + " sec");
+                // Logger::log("breaking to TAXI_SLOW_SPEED for " + to_string( time_to_reach - 1 ) + " sec");
+
                 _taxi_breaking( TAXI_SLOW_SPEED, time_to_reach - 1 );
 
             } else {
@@ -108,6 +110,8 @@ void AircraftDoesTaxing::__choose_speed() {
 
 void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call ) {
     
+    if ( _ptr_acf->flight_plan.is_empty() ) _finish();
+    
     auto front_wp = _ptr_acf->flight_plan.get(0);
 
 //    Logger::log(
@@ -116,7 +120,8 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
 //        + ", dis=" + to_string( xenon::distance2d( _ptr_acf->get_location(), front_wp.location))
 //    );
 
-    _head_steering( elapsed_since_last_call, 20.0 );        
+    _head_steering( elapsed_since_last_call, 25.0 );
+
     __choose_speed();
     
     double distance = xenon::distance2d( _ptr_acf->get_location(), front_wp.location );
@@ -154,7 +159,11 @@ void AircraftDoesTaxing::_internal_step( const float & elapsed_since_last_call )
         }
     }
     
-    if ( distance < 32.0 ) {
+    bool before_parking = (( _ptr_acf->flight_plan.size() >= 2 ) && ( _ptr_acf->flight_plan.get(1).type == WAYPOINT_PARKING ));
+    double distance_threshold = 32;
+    if ( before_parking ) distance_threshold = 20.0;
+
+    if ( distance < distance_threshold) {
         
         auto reached_wp_type = front_wp.type;
         _ptr_acf->flight_plan.pop_front();
