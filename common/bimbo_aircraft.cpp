@@ -154,7 +154,10 @@ void BimboAircraft::set_position( const position_t & position ) {
     drawInfo.x = position.x;
     drawInfo.y = position.y;
     drawInfo.z = position.z;
-    vcl_coordinates_from_drawinfo_to_condition();
+    
+    auto location = XPlane::position_to_location( position );
+    vcl_condition.location = location;
+    
 }
 #endif
 
@@ -165,10 +168,9 @@ void BimboAircraft::set_position( const position_t & position ) {
 // *********************************************************************************************************************
 
 #ifdef INSIDE_XPLANE
-void BimboAircraft::set_location( const location_t & location ) {
-    
-    AbstractAircraft::set_location( location );
-    vcl_coordinates_from_drawinfo_to_condition();
+void BimboAircraft::set_location( const location_t & location ) {    
+    // Установка vcl_condition проходит там же.
+    AbstractAircraft::set_location( location );    
 };
 #endif
 
@@ -185,7 +187,7 @@ void BimboAircraft::set_rotation( const rotation_t & rotation ) {
     SetRoll( rotation.roll );
     
 #ifdef INSIDE_XPLANE    
-    vcl_coordinates_from_drawinfo_to_condition();
+    vcl_condition.rotation = rotation;
 #endif
     
 }
@@ -564,10 +566,6 @@ void BimboAircraft::__update_actuators( float elapsed_since_last_call ) { // NOL
 void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused]] int fl_counter) {    
     
     _acf_mutex.lock();
-
-#ifdef INSIDE_XPLANE
-    vcl_coordinates_from_condition_to_drawinfo();
-#endif    
     
     graph->update( elapsed_since_last_call );
 
@@ -576,61 +574,12 @@ void BimboAircraft::UpdatePosition(float elapsed_since_last_call, [[maybe_unused
     __update_actuators(elapsed_since_last_call);
     if ( vcl_condition.is_clamped_to_ground ) {
         clamp_to_ground();
-    }
-    
-    vcl_coordinates_from_drawinfo_to_condition();
+    }        
     
 #endif
     _acf_mutex.unlock();
 
 }
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                      Синхронизировать положение самолета и положение описателя "самоходки"                        *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-#ifdef INSIDE_XPLANE
-void BimboAircraft::vcl_coordinates_from_condition_to_drawinfo() {
-    
-    auto location = vcl_condition.location;
-    auto position = XPlane::location_to_position( location );
-    
-    drawInfo.x = position.x;
-    drawInfo.y = position.y;
-    drawInfo.z = position.z;
-    
-    auto rotation = vcl_condition.rotation;
-    drawInfo.heading = rotation.heading;
-    drawInfo.pitch = rotation.pitch;
-    drawInfo.roll = rotation.roll;
-    
-};
-#endif
-
-// *********************************************************************************************************************
-// *                                                                                                                   *
-// *                       Обратное действие: записать положение самолета в описатель "самоходки"                      *
-// *                                                                                                                   *
-// *********************************************************************************************************************
-
-#ifdef INSIDE_XPLANE
-void BimboAircraft::vcl_coordinates_from_drawinfo_to_condition() {
-    
-    position_t position;    
-    position.x = drawInfo.x;
-    position.y = drawInfo.y;
-    position.z = drawInfo.z;    
-    
-    vcl_condition.location = XPlane::position_to_location( position );
-    
-    vcl_condition.rotation.heading = drawInfo.heading;
-    vcl_condition.rotation.pitch = drawInfo.pitch;
-    vcl_condition.rotation.roll = drawInfo.roll;
-    
-};
-#endif
 
 // *********************************************************************************************************************
 // *                                                                                                                   *
@@ -649,7 +598,9 @@ void BimboAircraft::move( float meters ) {
     auto dest = XPlane::shift( position, meters, GetHeading() );
     drawInfo.x = dest.x;
     drawInfo.z = dest.z;
-    vcl_coordinates_from_drawinfo_to_condition();
+    
+    auto location = get_location();
+    vcl_condition.location = location;
 
 #else
     
@@ -678,112 +629,55 @@ void BimboAircraft::update_from( vehicle_condition_t & vc, aircraft_condition_t 
     // Существующая прижатость к земле - возможно, понадобится ее 
     // восстановить как была в X-Plane. Чтобы не дергался по высоте.
     auto is_clamped_to_ground = vcl_condition.is_clamped_to_ground;
-    auto drawInfo_altitude = drawInfo.y;
-    auto drawInfo_pitch = drawInfo.pitch;
+    auto altitude = drawInfo.y;
+    auto pitch = drawInfo.pitch;
 #endif
     
     AbstractAircraft::update_from( vc, ac );
-    
-#ifdef INSIDE_XPLANE
-    
-    vcl_coordinates_from_condition_to_drawinfo();    
-        
-#endif    
-        
+            
     if ( ! graph->current_state_is( vc.current_state ))
             graph->set_active_state( vc.current_state );
     
     if ( ! graph->current_action_is( vc.current_action ) ) 
-            graph->set_active_action( vc.current_action );
-    
-    auto new_location = vc.location;
-
+            graph->set_active_action( vc.current_action );        
+        
 #ifdef INSIDE_XPLANE
     
-    // Попытка убрать дергание меток, раздражает сильно.
     
-    auto new_position = XPlane::location_to_position( vc.location );
+    auto distance = xenon::distance2d(get_location(), vc.location );
+    if ( distance >= 1.0 ) {
+        set_location( vc.location );
+    };
     
-    // Сохраняем при посадке локальное значение is_clamped_to_ground,
-    // чтобы избежать резких "прыжков" по высоте на экране.
-    /*
+    float rotation_threshold = 1.0f;
+    auto rotation = get_rotation();
+    if (
+        ( abs( rotation.heading - vc.rotation.heading ) >= rotation_threshold )
+        || ( abs( rotation.pitch - vc.rotation.pitch ) >= rotation_threshold )
+        || ( abs( rotation.roll - vc.rotation.roll ) >= rotation_threshold )
+    ) {
+        set_rotation( vc.rotation );
+    }
+    
     if ( 
-        graph->current_action_is( ACF_DOES_LANDING )
-        || graph->current_action_is( ACF_DOES_TAKE_OFF )    
+            graph->current_action_is( ACF_DOES_LANDING )
+            || graph->current_action_is( ACF_DOES_TAKE_OFF )
+            || graph->current_state_is ( ACF_STATE_ON_FINAL )       
     ) {
         
         vcl_condition.is_clamped_to_ground = is_clamped_to_ground;
-        vc.is_clamped_to_ground = is_clamped_to_ground;
+        
+        drawInfo.y = altitude;
+        vcl_condition.location.altitude = altitude;
+        
+        drawInfo.pitch = pitch;
+        vcl_condition.rotation.pitch = pitch;
         
     }
-        
-    if ( vc.is_clamped_to_ground ) hit_to_ground( new_position );
-    */
-    
-    // Изменение координат происходит только в том случае,
-    // если разбаланс между локальными и полученными координатами
-    // "достаточно большой". Иначе он будет дергаться взад-вперед.
-    // А при рулении - вообще не делаем коррекции. X-Plane рулится
-    // полностью самостоятельно на основании полетного плана.
-    
-    //if ( 
-    //    ! graph->current_action_is( ACF_DOES_PUSH_BACK )
-    //    && ! graph->current_action_is( ACF_DOES_NORMAL_TAXING ) 
-    //    && ! graph->current_action_is( ACF_DOES_LANDING )
-    // ) {
-    
-        // auto old_position = get_position();
-        // auto distance = XPlane::distance2d(old_position, new_position);
-        
-        // if ( distance >= 10.0 ) {
-            // if ( 
-            //     graph->current_action_is( ACF_DOES_LANDING )
-            //     || graph->current_action_is( ACF_DOES_TAKE_OFF )
-            //     || graph->current_state_is ( ACF_STATE_ON_FINAL )
-            // ) {
-                // Переставляем - без высоты. Потому что высОты 
-                // скорректированы в X-Plane под текущий уровень земли.
-                drawInfo.x = new_position.x;
-                drawInfo.z = new_position.z;
-                
-                // А высоту - сохраняем.
-                vcl_condition.location.altitude = drawInfo_altitude;
-                drawInfo.y = drawInfo_altitude;
-
-            // } else {
-            //     XPlane::log(vcl_condition.agent_name + ", set position, distance=" + std::to_string( distance ) );
-            //     set_position( new_position );
-            // }
-        // }
-        // По углам тоже чтобы не сильно дергалась.
-        // auto current_rotation = get_rotation();        
-        // float threshold_degrees = 3.0;        
-        // if ( 
-        //     abs(current_rotation.heading - vc.rotation.heading ) >= threshold_degrees
-        //     || abs( current_rotation.pitch - vc.rotation.pitch ) >= threshold_degrees
-        //     || abs( current_rotation.roll - vc.rotation.roll ) >= threshold_degrees
-        // ) {
-            if ( 
-                graph->current_action_is( ACF_DOES_LANDING )
-                || graph->current_action_is( ACF_DOES_TAKE_OFF )
-            ) {
-                // Без тангажа, только два остальных угла.
-                drawInfo.roll = vc.rotation.roll;
-                drawInfo.heading = vc.rotation.heading;
-                // Тангаж - сохраняем.
-                drawInfo.pitch = drawInfo_pitch;
-                vcl_condition.rotation.pitch = drawInfo_pitch;        
-
-            } else set_rotation( vc.rotation );
-        // }
-    //}
-        
-#else               
-    set_location( new_location );                
+#else
+    set_location( vc.location );
     set_rotation( vc.rotation );
-#endif                
-
-
+#endif    
     _acf_mutex.unlock();
 }
 

@@ -69,8 +69,7 @@ namespace xenon {
             position_with_angles_t get_position_with_angles();
             void set_position( const position_t & position ) override;
             void set_location( const location_t & location ) override;
-            void vcl_coordinates_from_condition_to_drawinfo();
-            void vcl_coordinates_from_drawinfo_to_condition();
+            
 #else
             // Мы находимся - не внутри X-Plane. Перекрытие имен 
             // и функций таким образом, чтобы оно тоже работало.

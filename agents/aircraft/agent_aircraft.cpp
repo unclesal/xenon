@@ -186,7 +186,7 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
     } else if ( uuid == B763_SAS ) {
         
         // Boeing 767-300 El-Al
-        __ptr_acf = new BimboAircraft( "B763", "ELY", "ELY" );
+        __ptr_acf = new BimboAircraft( "B763", "SAS", "SAS" );
         __ptr_acf->vcl_condition.agent_name = "Boeing 767-300 SAS";
         gate = usss.get_startup_locations()["8"];
         __start_time += 7000;
@@ -205,8 +205,8 @@ void AgentAircraft::__temporary_make_aircraft_by_uuid( const std::string & uuid 
         __ptr_acf->vcl_condition.agent_uuid = uuid;
         __ptr_acf->vcl_condition.agent_type = AGENT_AIRCRAFT; 
         
-        __test_landing();        
-        // __test_fly_circle( usss, gate );
+        // __test_landing();        
+        __test_fly_circle( usss, gate );
                                                                        
     }
     

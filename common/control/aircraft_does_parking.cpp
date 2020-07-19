@@ -51,7 +51,7 @@ void AircraftDoesParking::_internal_start() {
 
 void AircraftDoesParking::__becoming( const waypoint_t & wp, const float & elapsed_since_last_call ) {
     
-    _head_steering( elapsed_since_last_call, 3.0);
+    _head_steering( elapsed_since_last_call, 1.0);
     
     if ( _taxi_turn_started( wp ) ) {
         __phase = PHASE_TURN;

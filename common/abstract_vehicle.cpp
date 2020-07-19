@@ -109,7 +109,9 @@ void AbstractVehicle::clamp_to_ground() {
     auto pos = get_position();
     hit_to_ground( pos );
     set_position( pos );
-
+    
+    auto location = XPlane::position_to_location( pos );
+    vcl_condition.location = location;
 }
 #endif
 
@@ -120,11 +122,15 @@ void AbstractVehicle::clamp_to_ground() {
 // *********************************************************************************************************************
 
 void AbstractVehicle::set_location( const location_t & location ) {
+
 #ifdef INSIDE_XPLANE
     
     // Внутри X-Plane plugin'а.
     position_t position = XPlane::location_to_position( location );
     set_position( position );
+    
+    vcl_condition.location = location;
+    
 #else
     
     // Не в плагине. Например - во внешнем агенте.
