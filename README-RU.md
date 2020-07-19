@@ -26,7 +26,7 @@
 на дополнительные файлы в подкаталоге [Resources](https://github.com/TwinFan/XPMP2/tree/master/Resources) - они понадобятся.
 
 4. Саму библиотеку 3D моделей формата OBJ8 CSL, собранную [Oktalist](https://forums.x-plane.org/index.php?/files/file/37041-bluebell-obj8-csl-packages/). 
-Вы также можете скачать ее с [Гугл Диска])(https://drive.google.com/drive/folders/0B8hGoqCV5Z5AcTM4ZWhIX2RZT2M), если
+Вы также можете скачать ее с [Гугл Диска](https://drive.google.com/drive/folders/0B8hGoqCV5Z5AcTM4ZWhIX2RZT2M), если
 такой способ более удобен для Вас. Важно, чтобы в каталоге **X-Plane ROOT/Resources/plugins/xenon** был подкаталог
 **Resources/CSL** с указанными моделями.
 
@@ -34,3 +34,4 @@
 
 1. [Улет в пампасы](https://www.youtube.com/watch?v=wfAPAnU-FBk)
 2. [Посадка](https://www.youtube.com/watch?v=SvydTdDbwhs)
+3. [Коробочка (полет по кругу)](https://youtu.be/CE1rVc9RiTU?list=PLnt2A94rJYDaAttvRDuDdlWqQyYRg16bf)

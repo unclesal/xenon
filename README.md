@@ -26,7 +26,7 @@ statically. But please pay attention to additional files in the [Resources](http
 subdirectory - they will be needed.
 
 4. OBJ8 CSL 3D models package made by [Oktalist](https://forums.x-plane.org/index.php?/files/file/37041-bluebell-obj8-csl-packages/). 
-You can also download it from [Google Disk])(https://drive.google.com/drive/folders/0B8hGoqCV5Z5AcTM4ZWhIX2RZT2M), if this 
+You can also download it from [Google Disk](https://drive.google.com/drive/folders/0B8hGoqCV5Z5AcTM4ZWhIX2RZT2M), if this 
 method is more convenient for you. It is important that the **X-Plane ROOT/Resources/plugins/xenon** directory has a subdirectory
 **Resources/CSL** with the specified models.
 
@@ -34,3 +34,4 @@ method is more convenient for you. It is important that the **X-Plane ROOT/Resou
 
 1. [Flying out to pampas](https://www.youtube.com/watch?v=wfAPAnU-FBk)
 2. [Landing](https://www.youtube.com/watch?v=SvydTdDbwhs)
+3. [Circle flying](https://youtu.be/CE1rVc9RiTU?list=PLnt2A94rJYDaAttvRDuDdlWqQyYRg16bf)
